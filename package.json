@@ -1,0 +1,22 @@
+{
+	"name": "libreria-online",
+	"version": "1.0.0",
+	"description": "SPA de librería online - Práctica Web",
+	"type": "module",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"dev": "node server.js",
+		"test": "echo \"Tests pendientes\" && exit 0"
+	},
+	"keywords": [
+		"spa",
+		"libreria",
+		"express"
+	],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"express": "^4.18.2"
+	}
+}

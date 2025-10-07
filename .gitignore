@@ -1,48 +1,39 @@
-# Dependencias# Dependencias
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
 
-node_modules/node_modules/
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
 
-package-lock.jsonpackage-lock.json
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
+# Build output
+dist/
+build/
+*.log
 
+# OS
+Thumbs.db
+.DS_Store
 
-# Logs# Logs
+# Testing
+coverage/
+.nyc_output/
 
-logs/logs/
-
-*.log*.log
-
-npm-debug.log*npm-debug.log*
-
-yarn-debug.log*yarn-debug.log*
-
-yarn-error.log*yarn-error.log*
-
-
-
-# Variables de entorno# Variables de entorno
-
-.env.env
-
-.env.local.env.local
-
-.env.*.local.env.*.local
-
-
-
-# IDE
-
-.vscode/.vscode/
-
-
-
-
-
-
-
-# Temporales# Temporales
-
-*.tmp*.tmp
-
-*.temp*.temp
-
+# Temporary files
+*.tmp
+*.temp
