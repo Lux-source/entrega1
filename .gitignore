@@ -1,0 +1,48 @@
+# Dependencias# Dependencias
+
+node_modules/node_modules/
+
+package-lock.jsonpackage-lock.json
+
+
+
+# Logs# Logs
+
+logs/logs/
+
+*.log*.log
+
+npm-debug.log*npm-debug.log*
+
+yarn-debug.log*yarn-debug.log*
+
+yarn-error.log*yarn-error.log*
+
+
+
+# Variables de entorno# Variables de entorno
+
+.env.env
+
+.env.local.env.local
+
+.env.*.local.env.*.local
+
+
+
+# IDE
+
+.vscode/.vscode/
+
+
+
+
+
+
+
+# Temporales# Temporales
+
+*.tmp*.tmp
+
+*.temp*.temp
+
