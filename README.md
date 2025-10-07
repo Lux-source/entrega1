@@ -1,5 +1,3 @@
-¡Vamos! He revisado tu PDF de la práctica y te propongo un plan de frontend **SPA** completo, alineado con los roles, pantallas, navegación y módulos “common / components / main / model” que exige el documento (Router, Presenter, LibreriaSession), además de los RF/RNF y las pruebas en el navegador.
-
 # 1) Stack y principios
 
 - **Stack**: Node.js + **Express** (servidor estático + fallback `/*` a `index.html`), **JS (ESM)** sin framework (para seguir el modelo de Presenter/Router del enunciado), **Mocha + Chai** para tests in-browser.
