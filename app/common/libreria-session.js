@@ -5,16 +5,16 @@ class LibreriaSession {
 
     // Gestión de usuario
     setUser(usuario) {
-        sessionStorage.setItem('usuario', JSON.stringify(usuario));
+        localStorage.setItem('usuario', JSON.stringify(usuario));
     }
 
     getUser() {
-        const data = sessionStorage.getItem('usuario');
+        const data = localStorage.getItem('usuario');
         return data ? JSON.parse(data) : null;
     }
 
     clearUser() {
-        sessionStorage.removeItem('usuario');
+        localStorage.removeItem('usuario');
     }
 
     getRole() {

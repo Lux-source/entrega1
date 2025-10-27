@@ -8,11 +8,40 @@ import { InvitadoVerLibro } from '../components/invitado/ver-libro.js';
 import { Login } from '../components/invitado/login.js';
 import { Registro } from '../components/invitado/registro.js';
 
-// Registrar rutas de invitado
+// Admin
+import { AdminHome } from '../components/admin/home.js';
+import { AdminLibros } from '../components/admin/libros.js';
+import { AdminLibroForm } from '../components/admin/libro-form.js';
+import { AdminPerfil } from '../components/admin/perfil.js';
+
+// Cliente
+import { ClienteHome } from '../components/cliente/home.js';
+import { ClienteLibros } from '../components/cliente/libros.js';
+import { ClienteVerLibro } from '../components/cliente/ver-libro.js';
+import { ClienteCarro } from '../components/cliente/carro.js';
+import { ClienteCompras } from '../components/cliente/compras.js';
+import { ClientePerfil } from '../components/cliente/perfil.js';
+
+// ==================== RUTAS INVITADO ====================
 router.register('/', InvitadoHome);
 router.register('/libros/:id', InvitadoVerLibro);
 router.register('/login', Login);
 router.register('/registro', Registro);
+
+// ==================== RUTAS ADMIN ====================
+router.register('/a', AdminHome, ['admin']);
+router.register('/a/libros', AdminLibros, ['admin']);
+router.register('/a/libros/nuevo', AdminLibroForm, ['admin']);
+router.register('/a/libros/editar/:id', AdminLibroForm, ['admin']);
+router.register('/a/perfil', AdminPerfil, ['admin']);
+
+// ==================== RUTAS CLIENTE ====================
+router.register('/c', ClienteHome, ['cliente']);
+router.register('/c/libros', ClienteLibros, ['cliente']);
+router.register('/c/libros/:id', ClienteVerLibro, ['cliente']);
+router.register('/c/carro', ClienteCarro, ['cliente']);
+router.register('/c/compras', ClienteCompras, ['cliente']);
+router.register('/c/perfil', ClientePerfil, ['cliente']);
 
 // Inicializar layout
 const navbar = new Navbar();
