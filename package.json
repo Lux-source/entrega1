@@ -7,7 +7,7 @@
 	"scripts": {
 		"start": "node server.js",
 		"dev": "node server.js",
-		"test": "echo \"Tests pendientes\" && exit 0"
+		"test": "echo \"Abrir http://localhost:3000/test.html en el navegador\" && node server.js"
 	},
 	"keywords": [
 		"spa",
@@ -18,5 +18,9 @@
 	"license": "ISC",
 	"dependencies": {
 		"express": "^4.18.2"
+	},
+	"devDependencies": {
+		"mocha": "^10.2.0",
+		"chai": "^4.3.10"
 	}
 }
