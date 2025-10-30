@@ -29,7 +29,8 @@ import { Error404 } from "../components/error/404.js";
 import { Error403 } from "../components/error/403.js";
 
 // ==================== RUTAS INVITADO ====================
-router.register("/", InvitadoHome);
+router.register("/", InvitadoHome); // Redirige a home de invitado
+router.register("/invitado-home", InvitadoHome);
 router.register("/libros/:id", InvitadoVerLibro);
 router.register("/login", Login);
 router.register("/registro", Registro);
@@ -62,9 +63,16 @@ const messages = new Messages();
 navbar.render();
 messages.render();
 
-// Escuchar cambios de navegación para actualizar navbar
-window.addEventListener("popstate", () => navbar.render());
-window.addEventListener("pushstate", () => navbar.render());
+// Escuchar cambios para re-renderizar navbar (ya se hace en Navbar con auth-store)
+window.addEventListener("user-logged-in", () => {
+	navbar.render();
+	messages.render();
+});
+
+window.addEventListener("user-logged-out", () => {
+	navbar.render();
+	messages.render();
+});
 
 // Iniciar router
 router.start();

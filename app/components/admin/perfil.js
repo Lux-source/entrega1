@@ -1,16 +1,16 @@
-import { Presenter } from '../../common/presenter.js';
-import { session } from '../../common/libreria-session.js';
-import { model } from '../../model/index.js';
+import { Presenter } from "../../common/presenter.js";
+import { session } from "../../common/libreria-session.js";
+import { model } from "../../model/index.js";
 
 export class AdminPerfil extends Presenter {
-    constructor() {
-        super(model, 'admin-perfil');
-    }
+	constructor() {
+		super(model, "admin-perfil");
+	}
 
-    template() {
-        const user = session.getUser();
+	template() {
+		const user = session.getUser();
 
-        return `
+		return `
             <div class="perfil-container">
                 <h1>Mi Perfil</h1>
                 
@@ -18,7 +18,7 @@ export class AdminPerfil extends Presenter {
                     <div class="perfil-header">
                         <span class="perfil-icon">👤</span>
                         <div class="perfil-info">
-                            <h2>${user.nombre}</h2>
+                            <h2>${user.nombre} ${user.apellidos || ""}</h2>
                             <span class="badge badge-admin">Administrador</span>
                         </div>
                     </div>
@@ -27,6 +27,18 @@ export class AdminPerfil extends Presenter {
                         <div class="detail-row">
                             <span class="detail-label">Email:</span>
                             <span class="detail-value">${user.email}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">DNI:</span>
+                            <span class="detail-value">${user.dni}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Teléfono:</span>
+                            <span class="detail-value">${user.telefono}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value">${user.direccion}</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">ID:</span>
@@ -46,14 +58,14 @@ export class AdminPerfil extends Presenter {
                 </div>
             </div>
         `;
-    }
+	}
 
-    bind() {
-        const btnPassword = this.container.querySelector('#btn-cambiar-password');
-        if (btnPassword) {
-            btnPassword.addEventListener('click', () => {
-                session.pushInfo('Funcionalidad en desarrollo');
-            });
-        }
-    }
+	bind() {
+		const btnPassword = this.container.querySelector("#btn-cambiar-password");
+		if (btnPassword) {
+			btnPassword.addEventListener("click", () => {
+				session.pushInfo("Funcionalidad en desarrollo");
+			});
+		}
+	}
 }
