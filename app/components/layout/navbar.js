@@ -40,7 +40,7 @@ export class Navbar extends Presenter {
                         <button id="btn-logout">Cerrar Sesión</button>
                     `
 												: `
-                        <a href="/a" data-link>Admin Home</a>
+                        <a href="/a" data-link>Inicio</a>
                         <a href="/a/libros" data-link>Gestionar Libros</a>
                         <a href="/a/libros/nuevo" data-link>Nuevo Libro</a>
                         <a href="/a/perfil" data-link>Perfil</a>

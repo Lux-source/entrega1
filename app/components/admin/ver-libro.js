@@ -24,7 +24,7 @@ export class AdminVerLibro extends Presenter {
                 <div class="page-header">
                     <h1>Detalles del Libro</h1>
                     <div class="header-actions">
-                        <a href="/a/libros/editar/${
+                        <a href="/admin-ver-libro/${
 													libro.id
 												}" data-link class="btn btn-primary">
                             ✏️ Editar

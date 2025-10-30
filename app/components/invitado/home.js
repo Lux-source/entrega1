@@ -9,6 +9,19 @@ export class InvitadoHome extends Presenter {
 		this.itemsPerPage = 12;
 	}
 
+	heroContent() {
+		return `
+			<section class="hero">
+				<h1>Bienvenido a nuestra Librería Online</h1>
+				<p>Descubre miles de libros al mejor precio</p>
+				<div class="hero-actions">
+					<a href="/login" data-link class="btn btn-primary">Iniciar Sesión</a>
+					<a href="/registro" data-link class="btn btn-secondary">Registrarse</a>
+				</div>
+			</section>
+		`;
+	}
+
 	template() {
 		const totalLibros = this.model.libros.length;
 		const totalPages = Math.ceil(totalLibros / this.itemsPerPage);
@@ -17,15 +30,8 @@ export class InvitadoHome extends Presenter {
 		const librosPaginados = this.model.libros.slice(startIndex, endIndex);
 
 		return `
-            <div class="invitado-home">
-                <section class="hero">
-                    <h1>Bienvenido a nuestra Librería Online</h1>
-                    <p>Descubre miles de libros al mejor precio</p>
-                    <div class="hero-actions">
-                        <a href="/login" data-link class="btn btn-primary">Iniciar Sesión</a>
-                        <a href="/registro" data-link class="btn btn-secondary">Registrarse</a>
-                    </div>
-                </section>
+			<div class="invitado-home">
+				${this.heroContent()}
 
                 <section class="catalog-section">
                     <h2>Catálogo de Libros</h2>
