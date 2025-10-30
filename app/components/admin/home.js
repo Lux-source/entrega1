@@ -14,6 +14,9 @@ export class AdminHome extends InvitadoHome {
 			<section class="hero admin-hero">
 				<h1>Bienvenido, ${nombre}</h1>
 				<p>Gestiona el catálogo directamente desde tu panel de administrador.</p>
+				<div class="hero-actions">
+					<a href="/a/libros/nuevo" data-link class="btn btn-primary">Nuevo Libro</a>
+				</div>
 			</section>
 		`;
 	}

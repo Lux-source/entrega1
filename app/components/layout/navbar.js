@@ -18,20 +18,20 @@ export class Navbar extends Presenter {
 		const role = session.getRole();
 
 		return `
-            <nav class="navbar">
-                <div class="navbar-brand">
-                    📚 Librería Online
-                </div>
-                <div class="navbar-menu">
-                    ${
-											role === "invitado"
-												? `
+		    <nav class="navbar">
+		        <div class="navbar-brand">
+		            📚 Librería Online
+		        </div>
+		        <div class="navbar-menu">
+		            ${
+									role === "invitado"
+										? `
                         <a href="/invitado-home" data-link>Inicio</a>
                         <a href="/login" data-link>Iniciar Sesión</a>
                         <a href="/registro" data-link>Registrarse</a>
                     `
-												: role === "cliente"
-												? `
+										: role === "cliente"
+										? `
                         <a href="/c" data-link>Mi Inicio</a>
                         <a href="/c/libros" data-link>Catálogo</a>
                         <a href="/c/carro" data-link>🛒 Carro</a>
@@ -39,14 +39,12 @@ export class Navbar extends Presenter {
                         <a href="/c/perfil" data-link>Perfil</a>
                         <button id="btn-logout">Cerrar Sesión</button>
                     `
-												: `
+										: `
                         <a href="/a" data-link>Inicio</a>
-                        <a href="/a/libros" data-link>Gestionar Libros</a>
-                        <a href="/a/libros/nuevo" data-link>Nuevo Libro</a>
                         <a href="/a/perfil" data-link>Perfil</a>
                         <button id="btn-logout">Cerrar Sesión</button>
                     `
-										}
+								}
                 </div>
                 ${
 									user ? `<div class="navbar-user">👤 ${user.nombre}</div>` : ""
