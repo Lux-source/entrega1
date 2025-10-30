@@ -23,12 +23,14 @@ export class AdminLibroForm extends Presenter {
 
 			if (!this.libro) {
 				session.pushError("Libro no encontrado");
-				router.navigate("/a/libros");
+				router.navigate("/a");
 				return "";
 			}
 		}
 
 		const libro = this.libro || {};
+		const cancelHref =
+			this.isEdit && this.libro ? `/a/libros/${this.libro.id}` : "/a";
 
 		return `
             <div class="admin-libro-form">
@@ -129,7 +131,7 @@ export class AdminLibroForm extends Presenter {
                         <button type="submit" class="btn btn-primary">
                             ${this.isEdit ? "Guardar Cambios" : "Crear Libro"}
                         </button>
-                        <a href="/a/libros" data-link class="btn btn-secondary">Cancelar</a>
+						<a href="${cancelHref}" data-link class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
             </div>
@@ -160,11 +162,13 @@ export class AdminLibroForm extends Presenter {
 				: null,
 			idioma: formData.get("idioma"),
 		};
+		let libroId;
 
 		if (this.isEdit) {
 			// Actualizar libro existente
 			Object.assign(this.libro, data);
 			session.pushSuccess("Libro actualizado correctamente");
+			libroId = this.libro.id;
 		} else {
 			// Crear nuevo libro
 			const nuevoId = Math.max(...this.model.libros.map((l) => l.id), 0) + 1;
@@ -184,8 +188,9 @@ export class AdminLibroForm extends Presenter {
 			);
 			this.model.libros.push(nuevoLibro);
 			session.pushSuccess("Libro creado correctamente");
+			libroId = nuevoId;
 		}
 
-		router.navigate("/a/libros");
+		router.navigate(`/a/libros/${libroId}`);
 	}
 }

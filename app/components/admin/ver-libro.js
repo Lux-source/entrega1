@@ -15,7 +15,7 @@ export class AdminVerLibro extends Presenter {
 
 		if (!libro) {
 			session.pushError("Libro no encontrado");
-			router.navigate("/a/libros");
+			router.navigate("/a");
 			return "";
 		}
 
@@ -24,7 +24,7 @@ export class AdminVerLibro extends Presenter {
                 <div class="page-header">
                     <h1>Detalles del Libro</h1>
                     <div class="header-actions">
-                        <a href="/admin-ver-libro/${
+                        <a href="/a/libros/editar/${
 													libro.id
 												}" data-link class="btn btn-primary">
                             ✏️ Editar
@@ -32,8 +32,8 @@ export class AdminVerLibro extends Presenter {
                         <button id="btn-eliminar" class="btn btn-danger">
                             🗑️ Eliminar
                         </button>
-                        <a href="/a/libros" data-link class="btn btn-secondary">
-                            ← Volver al listado
+                        <a href="/a" data-link class="btn btn-secondary">
+                            ← Volver al inicio
                         </a>
                     </div>
                 </div>
@@ -160,7 +160,7 @@ export class AdminVerLibro extends Presenter {
 		if (index !== -1) {
 			this.model.libros.splice(index, 1);
 			session.pushSuccess("Libro eliminado correctamente");
-			router.navigate("/a/libros");
+			router.navigate("/a");
 		} else {
 			session.pushError("Error al eliminar el libro");
 		}

@@ -9,6 +9,10 @@ export class InvitadoHome extends Presenter {
 		this.itemsPerPage = 12;
 	}
 
+	getLibroLink(libro) {
+		return `/libros/${libro.id}`;
+	}
+
 	heroContent() {
 		return `
 			<section class="hero">
@@ -42,24 +46,24 @@ export class InvitadoHome extends Presenter {
 			totalLibros
 		)} de ${totalLibros} libros</p>
                     
-                    <div class="books-grid">
-                        ${librosPaginados
-													.map(
-														(libro) => `
+					<div class="books-grid">
+						${librosPaginados
+							.map(
+								(libro) => `
                             <div class="book-card">
                                 <img src="${libro.portada}" alt="${
-															libro.titulo
-														}">
+									libro.titulo
+								}">
                                 <h3>${libro.titulo}</h3>
                                 <p class="author">${libro.autor}</p>
                                 <p class="price">${libro.precio.toFixed(2)}€</p>
-                                <a href="/libros/${
-																	libro.id
-																}" data-link class="btn btn-small">Ver detalles</a>
+	                                <a href="${this.getLibroLink(
+																		libro
+																	)}" data-link class="btn btn-small">Ver detalles</a>
                             </div>
                         `
-													)
-													.join("")}
+							)
+							.join("")}
                     </div>
 
                     ${

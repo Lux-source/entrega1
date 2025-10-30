@@ -7,6 +7,10 @@ export class AdminHome extends InvitadoHome {
 		this.name = "admin-home";
 	}
 
+	getLibroLink(libro) {
+		return `/a/libros/${libro.id}`;
+	}
+
 	heroContent() {
 		const user = session.getUser();
 		const nombre = user?.nombre || "Administrador";
