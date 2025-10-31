@@ -94,9 +94,6 @@ export class ClienteCarro extends Presenter {
                         <a href="/c/pago" data-link class="btn btn-primary btn-block">
                             Proceder al Pago
                         </a>
-						<a href="/c" data-link class="btn btn-secondary btn-block">
-                            Seguir Comprando
-                        </a>
                     </div>
                 </div>
             </div>
