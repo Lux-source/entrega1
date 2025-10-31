@@ -203,7 +203,7 @@ export class ClientePago extends Presenter {
 		localStorage.removeItem("carro");
 
 		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
-		router.navigate("/c/compras");
+		router.navigate("/c");
 	}
 
 	actualizarCantidad(index, action) {
