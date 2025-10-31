@@ -38,8 +38,8 @@ export class ClientePago extends Presenter {
 
                 <div class="pago-content">
                     <!-- Formulario de envío -->
-                    <div class="pago-forms">
-                        <div class="form-section">
+					<div class="pago-forms">
+						<div class="form-section">
                             <h2>📦 Dirección de Envío</h2>
                             <form id="form-envio">
                                 <div class="form-group">
@@ -71,47 +71,6 @@ export class ClientePago extends Presenter {
                                     <label for="telefono">Teléfono *</label>
                                     <input type="tel" id="telefono" name="telefono" 
                                         pattern="[0-9]{9}" required>
-                                </div>
-                            </form>
-                        </div>
-
-                        <div class="form-section">
-                            <h2>💳 Método de Pago</h2>
-                            <form id="form-pago">
-                                <div class="form-group">
-                                    <label>Tipo de tarjeta *</label>
-                                    <select id="tipo-tarjeta" name="tipo" required>
-                                        <option value="">Selecciona...</option>
-                                        <option value="visa">Visa</option>
-                                        <option value="mastercard">Mastercard</option>
-                                        <option value="amex">American Express</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="numero-tarjeta">Número de tarjeta *</label>
-                                    <input type="text" id="numero-tarjeta" name="numero" 
-                                        placeholder="1234 5678 9012 3456"
-                                        pattern="[0-9]{16}" maxlength="16" required>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="caducidad">Caducidad (MM/AA) *</label>
-                                        <input type="text" id="caducidad" name="caducidad" 
-                                            placeholder="12/25" pattern="[0-9]{2}/[0-9]{2}" 
-                                            maxlength="5" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cvv">CVV *</label>
-                                        <input type="text" id="cvv" name="cvv" 
-                                            pattern="[0-9]{3,4}" maxlength="4" required>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="titular">Titular de la tarjeta *</label>
-                                    <input type="text" id="titular" name="titular" 
-                                        value="${
-																					usuario?.nombre || ""
-																				}" required>
                                 </div>
                             </form>
                         </div>
@@ -170,14 +129,9 @@ export class ClientePago extends Presenter {
                         <button id="btn-confirmar-pago" class="btn btn-primary btn-block">
                             Confirmar y Pagar
                         </button>
-                        <a href="/c/carro" data-link class="btn btn-secondary btn-block">
-                            Volver al carro
-                        </a>
+                        
 
-                        <div class="pago-seguro">
-                            <span class="icon">🔒</span>
-                            <p>Pago seguro garantizado</p>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -191,31 +145,10 @@ export class ClientePago extends Presenter {
 				this.procesarPago();
 			});
 		}
-
-		// Formatear número de tarjeta mientras se escribe
-		const inputTarjeta = this.container.querySelector("#numero-tarjeta");
-		if (inputTarjeta) {
-			inputTarjeta.addEventListener("input", (e) => {
-				e.target.value = e.target.value.replace(/\D/g, "");
-			});
-		}
-
-		// Formatear caducidad
-		const inputCaducidad = this.container.querySelector("#caducidad");
-		if (inputCaducidad) {
-			inputCaducidad.addEventListener("input", (e) => {
-				let value = e.target.value.replace(/\D/g, "");
-				if (value.length >= 2) {
-					value = value.slice(0, 2) + "/" + value.slice(2, 4);
-				}
-				e.target.value = value;
-			});
-		}
 	}
 
 	procesarPago() {
 		const formEnvio = this.container.querySelector("#form-envio");
-		const formPago = this.container.querySelector("#form-pago");
 
 		// Validar formularios
 		if (!formEnvio.checkValidity()) {
@@ -224,24 +157,8 @@ export class ClientePago extends Presenter {
 			return;
 		}
 
-		if (!formPago.checkValidity()) {
-			session.pushError("Por favor, completa todos los datos de pago");
-			formPago.reportValidity();
-			return;
-		}
-
 		// Obtener datos
 		const datosEnvio = new FormData(formEnvio);
-		const datosPago = new FormData(formPago);
-
-		// Validar caducidad
-		const caducidad = datosPago.get("caducidad");
-		const [mes, año] = caducidad.split("/");
-		const fechaCaducidad = new Date(2000 + parseInt(año), parseInt(mes) - 1);
-		if (fechaCaducidad < new Date()) {
-			session.pushError("La tarjeta ha caducado");
-			return;
-		}
 
 		// Procesar compra
 		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
@@ -275,10 +192,6 @@ export class ClientePago extends Presenter {
 				ciudad: datosEnvio.get("ciudad"),
 				cp: datosEnvio.get("cp"),
 				telefono: datosEnvio.get("telefono"),
-			},
-			pago: {
-				tipo: datosPago.get("tipo"),
-				ultimos4: datosPago.get("numero").slice(-4),
 			},
 		};
 
