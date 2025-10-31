@@ -28,114 +28,105 @@ export class ClientePago extends Presenter {
 			0
 		);
 		const envio = 0; // Envío gratuito
-		const total = subtotal + envio;
-
+		const totalGeneral = subtotal + envio;
+		const totalConIVA = totalGeneral * 1.21;
 		const usuario = session.getUser();
 
 		return `
-            <div class="pago-container">
-                <h1>Finalizar Compra</h1>
+			<div class="pago-container">
+				<h1>Finalizar Compra</h1>
 
-                <div class="pago-content">
-                    <!-- Formulario de envío -->
+				<div class="pago-content">
 					<div class="pago-forms">
 						<div class="form-section">
-                            <h2>📦 Dirección de Envío</h2>
-                            <form id="form-envio">
-                                <div class="form-group">
-                                    <label for="nombre">Nombre completo *</label>
-                                    <input type="text" id="nombre" name="nombre" 
-                                        value="${
-																					usuario?.nombre || ""
-																				}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="direccion">Dirección *</label>
-                                    <input type="text" id="direccion" name="direccion" 
-                                        value="${
-																					usuario?.direccion || ""
-																				}" required>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="ciudad">Ciudad *</label>
-                                        <input type="text" id="ciudad" name="ciudad" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cp">Código Postal *</label>
-                                        <input type="text" id="cp" name="cp" 
-                                            pattern="[0-9]{5}" required>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="telefono">Teléfono *</label>
-                                    <input type="tel" id="telefono" name="telefono" 
-                                        pattern="[0-9]{9}" required>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+							<h2>📦 Dirección de Envío</h2>
+							<form id="form-envio">
+								<div class="form-group">
+									<label for="nombre">Nombre completo *</label>
+									<input type="text" id="nombre" name="nombre" value="${
+										usuario?.nombre || ""
+									}" required>
+								</div>
+								<div class="form-group">
+									<label for="direccion">Dirección *</label>
+									<input type="text" id="direccion" name="direccion" value="${
+										usuario?.direccion || ""
+									}" required>
+								</div>
+								<div class="form-row">
+									<div class="form-group">
+										<label for="ciudad">Ciudad *</label>
+										<input type="text" id="ciudad" name="ciudad" required>
+									</div>
+									<div class="form-group">
+										<label for="cp">Código Postal *</label>
+										<input type="text" id="cp" name="cp" pattern="[0-9]{5}" required>
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="telefono">Teléfono *</label>
+									<input type="tel" id="telefono" name="telefono" pattern="[0-9]{9}" required>
+								</div>
+							</form>
+						</div>
+					</div>
 
-                    <!-- Resumen del pedido -->
-                    <div class="pago-resumen">
-                        <h2>Resumen del Pedido</h2>
-                        
-                        <div class="resumen-items">
-                            ${items
-															.map(
-																(item) => `
-                                <div class="resumen-item">
-                                    <img src="${item.libro.portada}" alt="${
-																	item.libro.titulo
-																}">
-                                    <div class="item-info">
-                                        <p class="item-titulo">${
-																					item.libro.titulo
-																				}</p>
-                                        <p class="item-cantidad">x${
-																					item.cantidad
-																				}</p>
-                                    </div>
-                                    <span class="item-precio">
-                                        ${(
-																					item.libro.precio * item.cantidad
-																				).toFixed(2)}€
-                                    </span>
-                                </div>
-                            `
-															)
-															.join("")}
-                        </div>
+					<div class="pago-resumen">
+						<h2>Resumen del Pedido</h2>
 
-                        <div class="resumen-totales">
-                            <div class="total-row">
-                                <span>Subtotal:</span>
-                                <span>${subtotal.toFixed(2)}€</span>
-                            </div>
-                            <div class="total-row">
-                                <span>Envío:</span>
-                                <span>${
-																	envio === 0
-																		? "Gratis"
-																		: envio.toFixed(2) + "€"
-																}</span>
-                            </div>
-                            <div class="total-row total-final">
-                                <span>Total:</span>
-                                <span>${total.toFixed(2)}€</span>
-                            </div>
-                        </div>
+						<div class="resumen-items">
+							${items
+								.map(
+									(item, index) => `
+								<div class="resumen-item">
+									<img src="${item.libro.portada}" alt="${item.libro.titulo}">
+									<div class="item-info">
+										<p class="item-titulo">${item.libro.titulo}</p>
+										<p class="item-precio-unitario">Precio unitario: ${item.libro.precio.toFixed(
+											2
+										)}€</p>
+									</div>
+									<div class="item-acciones">
+										<div class="item-cantidad">
+											<button class="btn-cantidad" data-index="${index}" data-action="decrease">-</button>
+											<span class="cantidad">${item.cantidad}</span>
+											<button class="btn-cantidad" data-index="${index}" data-action="increase">+</button>
+										</div>
+										
+									</div>
+									<div class="item-total">${(item.libro.precio * item.cantidad).toFixed(2)}€</div>
+								</div>
+							`
+								)
+								.join("")}
+						</div>
 
-                        <button id="btn-confirmar-pago" class="btn btn-primary btn-block">
-                            Confirmar y Pagar
-                        </button>
-                        
+						<div class="resumen-totales">
+							<div class="total-row">
+								<span>Subtotal:</span>
+								<span>${subtotal.toFixed(2)}€</span>
+							</div>
+							<div class="total-row">
+								<span>Envío:</span>
+								<span>${envio === 0 ? "Gratis" : envio.toFixed(2) + "€"}</span>
+							</div>
+							<div class="total-row">
+								<span>Total general:</span>
+								<span>${totalGeneral.toFixed(2)}€</span>
+							</div>
+							<div class="total-row total-final">
+								<span>Total con IVA (21%):</span>
+								<span>${totalConIVA.toFixed(2)}€</span>
+							</div>
+						</div>
 
-                        
-                    </div>
-                </div>
-            </div>
-        `;
+						<button id="btn-confirmar-pago" class="btn btn-primary btn-block">
+							Confirmar y Pagar
+						</button>
+					</div>
+				</div>
+			</div>
+		`;
 	}
 
 	bind() {
@@ -145,25 +136,37 @@ export class ClientePago extends Presenter {
 				this.procesarPago();
 			});
 		}
+
+		const btnsCantidad = this.container.querySelectorAll(".btn-cantidad");
+		btnsCantidad.forEach((btn) => {
+			btn.addEventListener("click", (e) => {
+				const index = parseInt(e.target.dataset.index, 10);
+				const action = e.target.dataset.action;
+				this.actualizarCantidad(index, action);
+			});
+		});
+
+		const btnsRemove = this.container.querySelectorAll(".btn-remove");
+		btnsRemove.forEach((btn) => {
+			btn.addEventListener("click", (e) => {
+				const index = parseInt(e.target.dataset.index, 10);
+				this.eliminarItem(index);
+			});
+		});
 	}
 
 	procesarPago() {
 		const formEnvio = this.container.querySelector("#form-envio");
 
-		// Validar formularios
 		if (!formEnvio.checkValidity()) {
 			session.pushError("Por favor, completa todos los datos de envío");
 			formEnvio.reportValidity();
 			return;
 		}
 
-		// Obtener datos
 		const datosEnvio = new FormData(formEnvio);
-
-		// Procesar compra
 		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
 
-		// Reducir stock
 		carro.forEach((item) => {
 			const libro = this.model.libros.find((l) => l.id === item.libroId);
 			if (libro) {
@@ -176,7 +179,6 @@ export class ClientePago extends Presenter {
 			}
 		});
 
-		// Crear compra
 		const compras = JSON.parse(localStorage.getItem("compras") || "[]");
 		const nuevaCompra = {
 			id: Date.now(),
@@ -198,10 +200,50 @@ export class ClientePago extends Presenter {
 		compras.push(nuevaCompra);
 		localStorage.setItem("compras", JSON.stringify(compras));
 
-		// Vaciar carro
 		localStorage.removeItem("carro");
 
 		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
 		router.navigate("/c/compras");
+	}
+
+	actualizarCantidad(index, action) {
+		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const item = carro[index];
+
+		if (!item) {
+			return;
+		}
+
+		if (action === "increase") {
+			const libro = this.model.libros.find((l) => l.id === item.libroId);
+			if (!libro) {
+				return;
+			}
+			if (item.cantidad < libro.stock) {
+				item.cantidad++;
+			} else {
+				session.pushError("No hay más stock disponible");
+				return;
+			}
+		} else {
+			item.cantidad--;
+			if (item.cantidad <= 0) {
+				carro.splice(index, 1);
+			}
+		}
+
+		localStorage.setItem("carro", JSON.stringify(carro));
+		this.render();
+	}
+
+	eliminarItem(index) {
+		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		if (!carro[index]) {
+			return;
+		}
+		carro.splice(index, 1);
+		localStorage.setItem("carro", JSON.stringify(carro));
+		session.pushSuccess("Producto eliminado del pedido");
+		this.render();
 	}
 }
