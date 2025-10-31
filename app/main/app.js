@@ -22,6 +22,7 @@ import { ClienteCarro } from "../components/cliente/carro.js";
 import { ClientePago } from "../components/cliente/pago.js";
 import { ClienteCompras } from "../components/cliente/compras.js";
 import { ClientePerfil } from "../components/cliente/perfil.js";
+import { ClienteModificarPerfil } from "../components/cliente/modificar-perfil.js";
 
 // Páginas de error
 import { Error404 } from "../components/error/404.js";
@@ -49,6 +50,7 @@ router.register("/c/carro", ClienteCarro, ["cliente"]);
 router.register("/c/pago", ClientePago, ["cliente"]);
 router.register("/c/compras", ClienteCompras, ["cliente"]);
 router.register("/c/perfil", ClientePerfil, ["cliente"]);
+router.register("/c/modificar-perfil", ClienteModificarPerfil, ["cliente"]);
 
 // ==================== RUTAS DE ERROR ====================
 router.register("/404", Error404);
