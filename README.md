@@ -8,42 +8,42 @@
 # 2) Estructura de carpetas
 
 ```
-/app
-  /common
-    router.js          // Enrutado cliente + guards
-    presenter.js       // Clase base de componentes (render + eventos)
-    libreria-session.js// sesión (usuario/rol) + bus de mensajes
-  /components
-    layout/
-      navbar.js
-      messages.js
-    invitado/
-      home.js          // invitado-home
-      ver-libro.js     // invitado-ver-libro
-      login.js         // invitado-ingreso
-      registro.js      // invitado-registro
-    cliente/
-      home.js          // cliente-home
-      ver-libro.js     // cliente-ver-libro
-      carro.js         // cliente-carro
-      checkout.js      // cliente-comprar-carro + pagar
-      compras.js       // cliente-lista-compras
-      compra-detalle.js// cliente-ver-compra
-      perfil.js        // cliente-perfil
-    admin/
-      home.js          // admin-home
-      ver-libro.js     // admin-ver-libro
-      libro-nuevo.js   // admin-agregar-libro
-      libro-editar.js  // admin-modificar-libro
-      perfil.js        // admin-perfil
-  /model
-    index.js           // seed + agregados
-    libro.js, usuario.js, carro.js, pedido.js, pago.js ...
-  /main
-    app.js             // punto de entrada, bootstrapping
 /public
   index.html
   styles.css
+  /libreria
+    /js
+      /commons
+        router.js          // Enrutado cliente + guards
+        presenter.js       // Clase base de componentes (render + eventos)
+        libreria-session.js// sesión (usuario/rol) + bus de mensajes
+      /components
+        layout/
+          navbar.js
+          messages.js
+        invitado/
+          home.js          // invitado-home
+          ver-libro.js     // invitado-ver-libro
+          login.js         // invitado-ingreso
+          registro.js      // invitado-registro
+        cliente/
+          home.js          // cliente-home
+          ver-libro.js     // cliente-ver-libro
+          carro.js         // cliente-carro
+          checkout.js      // cliente-comprar-carro + pagar
+          compras.js       // cliente-lista-compras
+          compra-detalle.js// cliente-ver-compra
+          perfil.js        // cliente-perfil
+        admin/
+          home.js          // admin-home
+          ver-libro.js     // admin-ver-libro
+          libro-nuevo.js   // admin-agregar-libro
+          libro-editar.js  // admin-modificar-libro
+          perfil.js        // admin-perfil
+      /model
+        index.js           // seed + agregados
+        libro.js, usuario.js, carro.js, pedido.js, pago.js ...
+      main.mjs             // punto de entrada, bootstrapping
 /test
   model.spec.js
   flows.spec.js
@@ -116,7 +116,6 @@ Cubriendo la rúbrica de **Pruebas**: getters/setters, excepciones, agregar/modi
 import express from "express";
 const app = express();
 app.use(express.static("public"));
-app.use("/app", express.static("app"));
 app.get("*", (_, res) => res.sendFile(process.cwd() + "/public/index.html"));
 app.listen(3000);
 ```
