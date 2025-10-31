@@ -1,5 +1,5 @@
-import { Libro } from "../app/model/libro.js";
-import { Usuario } from "../app/model/usuario.js";
+import { Libro } from "../public/libreria/js/model/libro.js";
+import { Usuario } from "../public/libreria/js/model/usuario.js";
 
 // Tests para la clase Libro
 describe("Modelo: Libro", () => {
