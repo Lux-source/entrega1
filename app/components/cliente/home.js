@@ -40,12 +40,7 @@ export class ClienteHome extends Presenter {
 									<h3>${libro.titulo}</h3>
 									<p class="author">${libro.autor}</p>
 									<p class="price">${libro.precio.toFixed(2)}€</p>
-									<div class="card-actions">
-										<a href="/c/libros/${libro.id}" data-link class="btn btn-small">Ver detalles</a>
-										<button class="btn btn-primary btn-small" data-id="${libro.id}">
-											🛒 Añadir
-										</button>
-									</div>
+									<a href="/c/libros/${libro.id}" data-link class="btn btn-small">Ver detalles</a>
 								</div>
 							`
 							)
@@ -77,16 +72,6 @@ export class ClienteHome extends Presenter {
 	}
 
 	bind() {
-		const addButtons = this.container.querySelectorAll(".btn-primary[data-id]");
-		addButtons.forEach((btn) => {
-			btn.addEventListener("click", (event) => {
-				const id = Number.parseInt(event.currentTarget.dataset.id, 10);
-				if (!Number.isNaN(id)) {
-					this.agregarAlCarro(id);
-				}
-			});
-		});
-
 		const btnPrev = this.container.querySelector("#btn-prev");
 		const btnNext = this.container.querySelector("#btn-next");
 
@@ -111,19 +96,5 @@ export class ClienteHome extends Presenter {
 				}
 			});
 		}
-	}
-
-	agregarAlCarro(libroId) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
-		const item = carro.find((i) => i.libroId === libroId);
-
-		if (item) {
-			item.cantidad++;
-		} else {
-			carro.push({ libroId, cantidad: 1 });
-		}
-
-		localStorage.setItem("carro", JSON.stringify(carro));
-		session.pushSuccess("Libro añadido al carro");
 	}
 }
