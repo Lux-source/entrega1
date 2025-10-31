@@ -67,6 +67,15 @@ class AuthStore {
 		this.notifyObservers();
 	}
 
+	updateUser(user) {
+		this.user = user;
+		localStorage.setItem("auth_user", JSON.stringify(user));
+		if (this.token) {
+			localStorage.setItem("auth_token", this.token);
+		}
+		this.notifyObservers();
+	}
+
 	clearError() {
 		this.error = null;
 		this.notifyObservers();

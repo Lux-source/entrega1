@@ -51,21 +51,12 @@ export class AdminPerfil extends Presenter {
                     </div>
 
                     <div class="perfil-actions">
-                        <button id="btn-cambiar-password" class="btn btn-secondary">
-                            Cambiar Contraseña
-                        </button>
+                        <a href="/a/modificar-perfil" data-link class="btn btn-primary">
+                            Modificar
+                        </a>
                     </div>
                 </div>
             </div>
         `;
-	}
-
-	bind() {
-		const btnPassword = this.container.querySelector("#btn-cambiar-password");
-		if (btnPassword) {
-			btnPassword.addEventListener("click", () => {
-				session.pushInfo("Funcionalidad en desarrollo");
-			});
-		}
 	}
 }

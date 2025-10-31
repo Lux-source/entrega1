@@ -13,6 +13,7 @@ import { AdminHome } from "../components/admin/home.js";
 import { AdminVerLibro } from "../components/admin/ver-libro.js";
 import { AdminLibroForm } from "../components/admin/libro-form.js";
 import { AdminPerfil } from "../components/admin/perfil.js";
+import { AdminModificarPerfil } from "../components/admin/modificar-perfil.js";
 
 // Cliente
 import { ClienteHome } from "../components/cliente/home.js";
@@ -40,6 +41,7 @@ router.register("/a/libros/nuevo", AdminLibroForm, ["admin"]);
 router.register("/a/libros/:id", AdminVerLibro, ["admin"]);
 router.register("/a/libros/editar/:id", AdminLibroForm, ["admin"]);
 router.register("/a/perfil", AdminPerfil, ["admin"]);
+router.register("/a/modificar-perfil", AdminModificarPerfil, ["admin"]);
 
 // ==================== RUTAS CLIENTE ====================
 router.register("/c", ClienteHome, ["cliente"]);
