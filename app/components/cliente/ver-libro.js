@@ -14,7 +14,7 @@ export class ClienteVerLibro extends Presenter {
 		const match = path.match(/\/c\/libros\/(\d+)/);
 
 		if (!match) {
-			router.navigate("/c/libros");
+			router.navigate("/c");
 			return "";
 		}
 
@@ -23,14 +23,14 @@ export class ClienteVerLibro extends Presenter {
 
 		if (!this.libro) {
 			session.pushError("Libro no encontrado");
-			router.navigate("/c/libros");
+			router.navigate("/c");
 			return "";
 		}
 
 		return `
             <div class="libro-detalle">
                 <div class="detalle-header">
-                    <a href="/c/libros" data-link class="btn btn-secondary">← Volver al catálogo</a>
+					<a href="/c" data-link class="btn btn-secondary">← Volver al catálogo</a>
                 </div>
 
                 <div class="detalle-content">

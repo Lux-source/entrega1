@@ -17,7 +17,7 @@ export class ClienteCarro extends Presenter {
                     <span class="carro-icon">🛒</span>
                     <h2>Tu carro está vacío</h2>
                     <p>¡Explora nuestro catálogo y añade libros!</p>
-                    <a href="/c/libros" data-link class="btn btn-primary">Ir al catálogo</a>
+					<a href="/c" data-link class="btn btn-primary">Ir al catálogo</a>
                 </div>
             `;
 		}
@@ -94,7 +94,7 @@ export class ClienteCarro extends Presenter {
                         <a href="/c/pago" data-link class="btn btn-primary btn-block">
                             Proceder al Pago
                         </a>
-                        <a href="/c/libros" data-link class="btn btn-secondary btn-block">
+						<a href="/c" data-link class="btn btn-secondary btn-block">
                             Seguir Comprando
                         </a>
                     </div>

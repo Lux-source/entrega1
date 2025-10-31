@@ -17,7 +17,6 @@ import { AdminModificarPerfil } from "../components/admin/modificar-perfil.js";
 
 // Cliente
 import { ClienteHome } from "../components/cliente/home.js";
-import { ClienteLibros } from "../components/cliente/libros.js";
 import { ClienteVerLibro } from "../components/cliente/ver-libro.js";
 import { ClienteCarro } from "../components/cliente/carro.js";
 import { ClientePago } from "../components/cliente/pago.js";
@@ -45,7 +44,6 @@ router.register("/a/modificar-perfil", AdminModificarPerfil, ["admin"]);
 
 // ==================== RUTAS CLIENTE ====================
 router.register("/c", ClienteHome, ["cliente"]);
-router.register("/c/libros", ClienteLibros, ["cliente"]);
 router.register("/c/libros/:id", ClienteVerLibro, ["cliente"]);
 router.register("/c/carro", ClienteCarro, ["cliente"]);
 router.register("/c/pago", ClientePago, ["cliente"]);
