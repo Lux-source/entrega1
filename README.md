@@ -1,9 +1,10 @@
 # 1) Stack y principios
 
 - **Stack**: Node.js + **Express** (servidor estático + fallback `/*` a `index.html`), **JS (ESM)** sin framework (para seguir el modelo de Presenter/Router del enunciado), **Mocha + Chai** para tests in-browser.
-- **SPA con History API**: enrutado cliente, guardas por **rol** (invitado / cliente / admin) y **persistencia de sesión** (usuario+rol) en `sessionStorage` tal como pide RNF.
+- **SPA con History API**: enrutado cliente, guardas por **rol** (invitado / cliente / admin) y **persistencia de sesión** (usuario+rol) en `localStorage` tal como pide RNF.
 - **Mock de dominio en cliente**: clases JS (Libro, Usuario, Carro, Pedido, etc.) como backend simulado.
 - **Mensajes de feedback** centralizados (éxito/info/errores) y **páginas de error**.
+- **Arquitectura de Presenters**: Cada componente tiene un archivo `.mjs` (presenter) que carga un template HTML correspondiente, maneja el DOM y eventos. Los templates se cargan dinámicamente usando `fetch` y `import.meta.url` para mantener separación de lógica y vista.
 
 # 2) Estructura de carpetas
 
@@ -14,35 +15,60 @@
   /libreria
     /js
       /commons
-        router.js          // Enrutado cliente + guards
-        presenter.js       // Clase base de componentes (render + eventos)
-        libreria-session.js// sesión (usuario/rol) + bus de mensajes
+        router.mjs          // Enrutado cliente + guards
+        presenter.mjs       // Clase base de componentes (render + eventos)
+        libreria-session.mjs// sesión (usuario/rol) + bus de mensajes
       /components
         layout/
-          navbar.js
-          messages.js
+          navbar.html       // Template HTML para navbar
+          navbar.mjs        // Presenter para navbar
+          messages.html     // Template HTML para mensajes
+          messages.mjs      // Presenter para mensajes
+        error/
+          403.html          // Template HTML para error 403
+          403.mjs           // Presenter para error 403
+          404.html          // Template HTML para error 404
+          404.mjs           // Presenter para error 404
         invitado/
-          home.js          // invitado-home
-          ver-libro.js     // invitado-ver-libro
-          login.js         // invitado-ingreso
-          registro.js      // invitado-registro
+          home.html         // Template HTML para home invitado
+          home.mjs          // Presenter para home invitado
+          ver-libro.html    // Template HTML para ver libro invitado
+          ver-libro.mjs     // Presenter para ver libro invitado
+          login.html        // Template HTML para login
+          login.mjs         // Presenter para login
+          registro.html     // Template HTML para registro
+          registro.mjs      // Presenter para registro
         cliente/
-          home.js          // cliente-home
-          ver-libro.js     // cliente-ver-libro
-          carro.js         // cliente-carro
-          checkout.js      // cliente-comprar-carro + pagar
-          compras.js       // cliente-lista-compras
-          compra-detalle.js// cliente-ver-compra
-          perfil.js        // cliente-perfil
+          home.html         // Template HTML para home cliente
+          home.mjs          // Presenter para home cliente
+          ver-libro.html    // Template HTML para ver libro cliente
+          ver-libro.mjs     // Presenter para ver libro cliente
+          carro.html        // Template HTML para carro
+          carro.mjs         // Presenter para carro
+          pago.html         // Template HTML para pago
+          pago.mjs          // Presenter para pago
+          compras.html      // Template HTML para compras
+          compras.mjs       // Presenter para compras
+          perfil.html       // Template HTML para perfil cliente
+          perfil.mjs        // Presenter para perfil cliente
+          modificar-perfil.html // Template HTML para modificar perfil
+          modificar-perfil.mjs // Presenter para modificar perfil
         admin/
-          home.js          // admin-home
-          ver-libro.js     // admin-ver-libro
-          libro-nuevo.js   // admin-agregar-libro
-          libro-editar.js  // admin-modificar-libro
-          perfil.js        // admin-perfil
+          home.html         // Template HTML para home admin
+          home.mjs          // Presenter para home admin
+          ver-libro.html    // Template HTML para ver libro admin
+          ver-libro.mjs     // Presenter para ver libro admin
+          libro-form.html   // Template HTML para formulario de libro
+          libro-form.mjs    // Presenter para formulario de libro
+          perfil.html       // Template HTML para perfil admin
+          perfil.mjs        // Presenter para perfil admin
+          modificar-perfil.html // Template HTML para modificar perfil admin
+          modificar-perfil.mjs // Presenter para modificar perfil admin
       /model
         index.js           // seed + agregados
         libro.js, usuario.js, carro.js, pedido.js, pago.js ...
+        auth-store.js      // Gestión reactiva de autenticación
+        auth-service.js    // Servicios de autenticación
       main.mjs             // punto de entrada, bootstrapping
 /test
   model.spec.js
@@ -50,50 +76,65 @@
 server.js              // Express para servir la SPA
 ```
 
-Esta organización sigue el diagrama de **componentes** y los módulos indicados.
+Esta organización sigue el diagrama de **componentes** y los módulos indicados, con separación clara entre templates HTML y lógica JS en módulos ESM (.mjs).
 
-# 3) Rutas y guardas por rol
+# 3) Cómo funciona el sistema de Presenters
+
+Cada componente de la aplicación sigue el patrón Presenter:
+
+- **Template HTML**: Archivo `.html` que define la estructura de la vista con atributos `data-element` para identificar elementos DOM.
+- **Presenter (.mjs)**: Clase que extiende `Presenter`, carga el template usando `fetch(new URL('./template.html', import.meta.url))`, renderiza el HTML en el contenedor, y maneja eventos y lógica.
+- **Flujo típico**:
+  1. El router instancia el presenter correspondiente.
+  2. `render()` inserta el HTML en el DOM.
+  3. `bind()` cachea elementos DOM y añade event listeners.
+  4. `unmount()` limpia listeners y recursos.
+
+Esto permite separación de responsabilidades: HTML para markup, JS para lógica, facilitando mantenimiento y reutilización.
+
+# 4) Rutas y guardas por rol
 
 Mapeo directo a los **RF** (nombres entre paréntesis del enunciado):
 
-- Invitado: `/`, `/libros`, `/libros/:id`, `/login`, `/registro`.
-- Cliente: `/c`, `/c/libros`, `/c/libros/:id`, `/c/carro`, `/c/checkout`, `/c/pagar`, `/c/compras`, `/c/compras/:id`, `/c/perfil`.
-- Admin: `/a`, `/a/libros`, `/a/libros/:id`, `/a/libros/nuevo`, `/a/libros/:id/editar`, `/a/perfil`.
+- Invitado: `/`, `/libros/:id`, `/login`, `/registro`.
+- Cliente: `/c`, `/c/libros/:id`, `/c/carro`, `/c/pago`, `/c/compras`, `/c/perfil`, `/c/modificar-perfil`.
+- Admin: `/a`, `/a/libros/:id`, `/a/libros/nuevo`, `/a/libros/:id/editar`, `/a/perfil`, `/a/modificar-perfil`.
 - **Guards**: si no hay sesión → invitado; si rol ≠ requerido → redirigir a _home_ de su perfil (el enunciado pide “en todo momento” enlace a home de cada perfil).
 
-# 4) Componentes clave (UI)
+# 5) Componentes clave (UI)
 
 - **Layout**: `Navbar` (switch de perfil, enlace constante al _home_ de cada perfil), `Messages` (pila de notificaciones/errores).
 - **Catálogo/Listado** (invitado/cliente/admin): grid de tarjetas, búsqueda mínima (client-side), paginación simple.
 - **Detalle de libro**: portada, metadatos, acciones contextuales: _Agregar al carro_ (cliente), _Editar/Eliminar_ (admin).
 - **Carro**: línea editable (cantidad), totales, CTA a checkout.
-- **Checkout & Pago**: pasos “Resumen → Dirección → Pago → Confirmación” (se puede simplificar a una sola pantalla si prefieres), feedback en cada etapa.
+- **Pago**: resumen del carro, formulario de envío, confirmación de compra.
 - **Compras**: lista y detalle (cliente).
 - **Administración libros**: crear, editar (campos con validación), **eliminar** con confirmación.
 - **Perfiles**: formularios de perfil para admin/cliente.
 - **Errores**: 404/403/500 según corresponda.
 
-# 5) Dominio (mock en cliente)
+# 6) Dominio (mock en cliente)
 
-Basado en el **diagrama de clases** del PDF; clases mínimas: `Libro`, `Usuario{rol}`, `Carro{items}`, `Pedido{lineas, total}`, `Pago`, `Compra`. Persistencia en memoria + `sessionStorage` para usuario/rol.
+Basado en el **diagrama de clases** del PDF; clases mínimas: `Libro`, `Usuario{rol}`, `Carro{items}`, `Pedido{lineas, total}`, `Pago`, `Compra`. Persistencia en memoria + `localStorage` para usuario/rol y carro/compras.
 
 > **Cálculo básico**
 > ( \displaystyle \text{totalCarro}=\sum_i \text{precio}\_i \cdot \text{cantidad}\_i )
 > Validaciones: stock ≥ 0, cantidad ≥ 1; excepciones con mensajes al `Messages`.
 
-# 6) Common: Router / Presenter / LibreriaSession
+# 7) Common: Router / Presenter / LibreriaSession / AuthStore
 
 **Router**: tabla de rutas → clase de componente; `navigate(path, state)`; intercepta `<a>`; `history.pushState`.
 **Presenter**: `constructor(model, name, mountSelector='main')`; `render(props)`, `bind()`, `unmount()`.
 **LibreriaSession**: `{getUser(), setUser(u), clearUser(), getRole()}` + **bus de mensajes** `{pushInfo, pushError, consume()}`. Todo conforme al doc.
+**AuthStore**: Gestión reactiva de autenticación con observers para cambios de estado.
 
-# 7) Flujo de RNF
+# 8) Flujo de RNF
 
-- **Mensajes de feedback** en acciones: login/registro, CRUD de libros, carro/checkout/pago.
+- **Mensajes de feedback** en acciones: login/registro, CRUD de libros, carro/pago.
 - **Persistencia de sesión**: usuario+rol (RNF 4).
 - **Páginas de error**: cobertura de rutas prohibidas/no encontradas.
 
-# 8) Tests (Mocha + Chai, en navegador)
+# 9) Tests (Mocha + Chai, en navegador)
 
 Cubriendo la rúbrica de **Pruebas**: getters/setters, excepciones, agregar/modificar/eliminar, y cálculos.
 
@@ -106,10 +147,10 @@ Cubriendo la rúbrica de **Pruebas**: getters/setters, excepciones, agregar/modi
 
 - `flows.spec.js`:
 
-  - Navegación invitado→detalle→login→cliente→carro→checkout→confirmación.
+  - Navegación invitado→detalle→login→cliente→carro→pago→confirmación.
   - Admin: crear/editar/eliminar libro y ver reflejo en catálogo.
 
-# 9) Express mínimo (RNF: NodeJS+Express)
+# 10) Express mínimo (RNF: NodeJS+Express)
 
 ```js
 // server.js
@@ -122,14 +163,12 @@ app.listen(3000);
 
 Sirve SPA y cumple RNF sin meter lógica de backend real.
 
-# 10) Entregables y criterio de corrección
+# 11) Entregables y criterio de corrección
 
-- **Funcional (60 pts)**: todas las vistas por rol, carro/checkout/pago, CRUD admin, perfiles (mapa RF del PDF).
+- **Funcional (60 pts)**: todas las vistas por rol, carro/pago, CRUD admin, perfiles (mapa RF del PDF).
 - **No funcional (15 pts)**: feedback, persistencia de sesión.
 - **Pruebas (25 pts)**: batería descrita arriba. **Evitar errores de navegación/recarga** (historial y guards bien hechos).
 
-# 11) Roadmap sugerido (rápido)
+# 12) Roadmap sugerido (rápido)
 
-1. **Model + seed** → 2) **Router + Layout** → 3) **Catálogo y detalle (invitado)** → 4) **Login/registro + sesión** →
-2. **Flujo cliente (carro→checkout→pago→compras)** → 6) **Admin CRUD + perfil** → 7) **Perfiles cliente/admin** →
-3. **Mensajes y errores** → 9) **Tests** → 10) **Pulido UI/UX**.
+1. **Model + seed** → 2) **Router + Layout** → 3) **Catálogo y detalle (invitado)** → 4) **Login/registro + sesión** → 5) **Flujo cliente (carro→pago→compras)** → 6) **Admin CRUD + perfil** → 7) **Perfiles cliente/admin** → 8) **Mensajes y errores** → 9) **Tests** → 10) **Pulido UI/UX**.
