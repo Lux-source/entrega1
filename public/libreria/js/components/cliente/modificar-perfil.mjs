@@ -5,104 +5,119 @@ import { model } from "../../model/index.js";
 import { authStore } from "../../model/auth-store.js";
 import { authService } from "../../model/auth-service.js";
 
+const templateUrl = new URL("./modificar-perfil.html", import.meta.url);
+let templateHtml = "";
+
+try {
+	const response = await fetch(templateUrl);
+	if (!response.ok) {
+		throw new Error(
+			`Error ${response.status} al cargar cliente/modificar-perfil.html`
+		);
+	}
+	templateHtml = await response.text();
+} catch (error) {
+	console.error(error);
+	templateHtml =
+		'<div class="error">No se pudo cargar el formulario de perfil.</div>';
+}
+
 export class ClienteModificarPerfil extends Presenter {
 	constructor() {
 		super(model, "cliente-modificar-perfil");
+		this.onSubmit = this.onSubmit.bind(this);
 	}
 
 	template() {
-		const user = session.getUser();
-		if (!user) {
-			session.pushError("Sesión no encontrada. Inicia sesión nuevamente.");
-			router.navigate("/login");
-			return "";
-		}
-
-		return `
-		<div class="perfil-container">
-			<h1>Modificar Perfil</h1>
-			<form id="form-modificar-perfil" class="perfil-form">
-				<div class="form-row">
-					<div class="form-group">
-						<label for="id">ID</label>
-						<input type="text" id="id" value="${user.id}" disabled>
-					</div>
-					<div class="form-group">
-						<label for="rol">Rol</label>
-						<input type="text" id="rol" value="${user.rol}" disabled>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-group">
-						<label for="nombre">Nombre *</label>
-						<input type="text" id="nombre" name="nombre" value="${
-							user.nombre || ""
-						}" required>
-					</div>
-					<div class="form-group">
-						<label for="apellidos">Apellidos *</label>
-						<input type="text" id="apellidos" name="apellidos" value="${
-							user.apellidos || ""
-						}" required>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-group">
-						<label for="dni">DNI *</label>
-						<input type="text" id="dni" name="dni" value="${user.dni || ""}" required>
-					</div>
-					<div class="form-group">
-						<label for="email">Email *</label>
-						<input type="email" id="email" name="email" value="${
-							user.email || ""
-						}" required>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-group">
-						<label for="telefono">Teléfono *</label>
-						<input type="tel" id="telefono" name="telefono" value="${
-							user.telefono || ""
-						}" required>
-					</div>
-					<div class="form-group">
-						<label for="direccion">Dirección *</label>
-						<input type="text" id="direccion" name="direccion" value="${
-							user.direccion || ""
-						}" required>
-					</div>
-				</div>
-
-				<div class="form-group">
-					<label for="password">Contraseña *</label>
-					<input type="password" id="password" name="password" value="${
-						user.password || ""
-					}" required>
-				</div>
-
-				<div class="form-actions">
-					<button type="submit" class="btn btn-primary">Guardar cambios</button>
-					<a href="/c/perfil" data-link class="btn btn-secondary">Cancelar</a>
-				</div>
-			</form>
-		</div>
-		`;
+		return templateHtml;
 	}
 
 	bind() {
-		const form = this.container.querySelector("#form-modificar-perfil");
-		if (form) {
-			form.addEventListener("submit", (event) => {
-				event.preventDefault();
-				this.handleSubmit(new FormData(form));
-			});
+		this.cacheDom();
+		const user = session.getUser();
+
+		if (!user) {
+			session.pushError("Sesión no encontrada. Inicia sesión nuevamente.");
+			router.navigate("/login");
+			return;
+		}
+
+		this.populateForm(user);
+
+		if (this.form) {
+			this.form.addEventListener("submit", this.onSubmit);
 		}
 	}
 
-	handleSubmit(formData) {
+	cacheDom() {
+		this.form = this.container.querySelector("#form-modificar-perfil");
+		if (!this.form) {
+			return;
+		}
+
+		this.fields = {
+			id: this.form.querySelector('[data-element="input-id"]'),
+			rol: this.form.querySelector('[data-element="input-rol"]'),
+			nombre: this.form.querySelector('[data-element="input-nombre"]'),
+			apellidos: this.form.querySelector('[data-element="input-apellidos"]'),
+			dni: this.form.querySelector('[data-element="input-dni"]'),
+			email: this.form.querySelector('[data-element="input-email"]'),
+			telefono: this.form.querySelector('[data-element="input-telefono"]'),
+			direccion: this.form.querySelector('[data-element="input-direccion"]'),
+			password: this.form.querySelector('[data-element="input-password"]'),
+			submit: this.form.querySelector('[data-element="submit-button"]'),
+		};
+	}
+
+	populateForm(user) {
+		if (!this.fields) {
+			return;
+		}
+
+		if (this.fields.id) {
+			this.fields.id.value = user.id ?? "";
+		}
+
+		if (this.fields.rol) {
+			this.fields.rol.value = user.rol ?? "CLIENTE";
+		}
+
+		if (this.fields.nombre) {
+			this.fields.nombre.value = user.nombre ?? "";
+		}
+
+		if (this.fields.apellidos) {
+			this.fields.apellidos.value = user.apellidos ?? "";
+		}
+
+		if (this.fields.dni) {
+			this.fields.dni.value = user.dni ?? "";
+		}
+
+		if (this.fields.email) {
+			this.fields.email.value = user.email ?? "";
+		}
+
+		if (this.fields.telefono) {
+			this.fields.telefono.value = (user.telefono ?? "").replace(/\s+/g, "");
+		}
+
+		if (this.fields.direccion) {
+			this.fields.direccion.value = user.direccion ?? "";
+		}
+
+		if (this.fields.password) {
+			this.fields.password.value = user.password ?? "";
+		}
+	}
+
+	onSubmit(event) {
+		event.preventDefault();
+
+		if (!this.form) {
+			return;
+		}
+
 		const user = session.getUser();
 		if (!user) {
 			session.pushError(
@@ -112,6 +127,7 @@ export class ClienteModificarPerfil extends Presenter {
 			return;
 		}
 
+		const formData = new FormData(this.form);
 		const nombre = (formData.get("nombre") ?? "").toString().trim();
 		const apellidos = (formData.get("apellidos") ?? "").toString().trim();
 		const dni = (formData.get("dni") ?? "").toString().trim().toUpperCase();
@@ -213,5 +229,15 @@ export class ClienteModificarPerfil extends Presenter {
 				new CustomEvent("user-logged-in", { detail: updatedUser })
 			);
 		}, 100);
+	}
+
+	destroy() {
+		if (this.form) {
+			this.form.removeEventListener("submit", this.onSubmit);
+		}
+
+		if (typeof super.destroy === "function") {
+			super.destroy();
+		}
 	}
 }

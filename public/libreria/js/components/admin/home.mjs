@@ -1,4 +1,4 @@
-import { InvitadoHome } from "../invitado/home.js";
+import { InvitadoHome } from "../invitado/home.mjs";
 import { session } from "../../commons/libreria-session.mjs";
 
 export class AdminHome extends InvitadoHome {
@@ -8,12 +8,13 @@ export class AdminHome extends InvitadoHome {
 	}
 
 	getLibroLink(libro) {
-		return `/a/libros/${libro.id}`;
+		const id = libro?.id ?? "";
+		return `/a/libros/${id}`;
 	}
 
 	heroContent() {
 		const user = session.getUser();
-		const nombre = user?.nombre || "Administrador";
+		const nombre = user?.nombre ?? "Administrador";
 		return `
 			<section class="hero admin-hero">
 				<h1>Bienvenido, ${nombre}</h1>

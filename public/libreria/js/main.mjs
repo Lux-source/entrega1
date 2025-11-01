@@ -1,32 +1,36 @@
 import { router } from "./commons/router.mjs";
-import { Navbar } from "./components/layout/navbar.js";
-import { Messages } from "./components/layout/messages.js";
+import { Navbar } from "./components/layout/navbar.mjs";
+import { Messages } from "./components/layout/messages.mjs";
 
 // Invitado
-import { InvitadoHome } from "./components/invitado/home.js";
-import { InvitadoVerLibro } from "./components/invitado/ver-libro.js";
-import { Login } from "./components/invitado/login.js";
-import { Registro } from "./components/invitado/registro.js";
+// import { InvitadoHome } from "./components/invitado/home.js";
+// import { InvitadoVerLibro } from "./components/invitado/ver-libro.js";
+// import { Login } from "./components/invitado/login.js";
+// import { Registro } from "./components/invitado/registro.js";
+import { InvitadoHome } from "./components/invitado/home.mjs";
+import { InvitadoVerLibro } from "./components/invitado/ver-libro.mjs";
+import { Login } from "./components/invitado/login.mjs";
+import { Registro } from "./components/invitado/registro.mjs";
 
 // Admin
-import { AdminHome } from "./components/admin/home.js";
-import { AdminVerLibro } from "./components/admin/ver-libro.js";
-import { AdminLibroForm } from "./components/admin/libro-form.js";
-import { AdminPerfil } from "./components/admin/perfil.js";
-import { AdminModificarPerfil } from "./components/admin/modificar-perfil.js";
+import { AdminHome } from "./components/admin/home.mjs";
+import { AdminVerLibro } from "./components/admin/ver-libro.mjs";
+import { AdminLibroForm } from "./components/admin/libro-form.mjs";
+import { AdminPerfil } from "./components/admin/perfil.mjs";
+import { AdminModificarPerfil } from "./components/admin/modificar-perfil.mjs";
 
 // Cliente
-import { ClienteHome } from "./components/cliente/home.js";
-import { ClienteVerLibro } from "./components/cliente/ver-libro.js";
-import { ClienteCarro } from "./components/cliente/carro.js";
-import { ClientePago } from "./components/cliente/pago.js";
-import { ClienteCompras } from "./components/cliente/compras.js";
-import { ClientePerfil } from "./components/cliente/perfil.js";
-import { ClienteModificarPerfil } from "./components/cliente/modificar-perfil.js";
+import { ClienteHome } from "./components/cliente/home.mjs";
+import { ClienteVerLibro } from "./components/cliente/ver-libro.mjs";
+import { ClienteCarro } from "./components/cliente/carro.mjs";
+import { ClientePago } from "./components/cliente/pago.mjs";
+import { ClienteCompras } from "./components/cliente/compras.mjs";
+import { ClientePerfil } from "./components/cliente/perfil.mjs";
+import { ClienteModificarPerfil } from "./components/cliente/modificar-perfil.mjs";
 
 // Páginas de error
-import { Error404 } from "./components/error/404.js";
-import { Error403 } from "./components/error/403.js";
+import { Error404 } from "./components/error/404.mjs";
+import { Error403 } from "./components/error/403.mjs";
 
 // ==================== RUTAS INVITADO ====================
 router.register("/", InvitadoHome); // Redirige a home de invitado

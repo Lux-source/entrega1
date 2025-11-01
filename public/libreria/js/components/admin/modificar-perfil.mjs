@@ -5,107 +5,120 @@ import { model } from "../../model/index.js";
 import { authStore } from "../../model/auth-store.js";
 import { authService } from "../../model/auth-service.js";
 
+const templateUrl = new URL("./modificar-perfil.html", import.meta.url);
+let templateHtml = "";
+
+try {
+	const response = await fetch(templateUrl);
+	if (!response.ok) {
+		throw new Error(
+			`Error ${response.status} al cargar admin/modificar-perfil.html`
+		);
+	}
+	templateHtml = await response.text();
+} catch (error) {
+	console.error(error);
+	templateHtml =
+		'<div class="error">No se pudo cargar la vista de modificación de perfil.</div>';
+}
+
 export class AdminModificarPerfil extends Presenter {
 	constructor() {
 		super(model, "admin-modificar-perfil");
 	}
 
 	template() {
+		return templateHtml;
+	}
+
+	bind() {
+		this.cacheDom();
 		const user = session.getUser();
 
 		if (!user) {
 			session.pushError("Sesión no encontrada. Inicia sesión nuevamente.");
 			router.navigate("/login");
-			return "";
+			return;
 		}
 
-		return `
-			<div class="perfil-container">
-				<h1>Modificar Perfil</h1>
-				<form id="form-modificar-perfil" class="perfil-form">
-					<div class="form-row">
-						<div class="form-group">
-							<label for="id">ID</label>
-							<input type="text" id="id" value="${user.id}" disabled>
-						</div>
-						<div class="form-group">
-							<label for="rol">Rol</label>
-							<input type="text" id="rol" value="${user.rol}" disabled>
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group">
-							<label for="nombre">Nombre *</label>
-							<input type="text" id="nombre" name="nombre" value="${
-								user.nombre || ""
-							}" required>
-						</div>
-						<div class="form-group">
-							<label for="apellidos">Apellidos *</label>
-							<input type="text" id="apellidos" name="apellidos" value="${
-								user.apellidos || ""
-							}" required>
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group">
-							<label for="dni">DNI *</label>
-							<input type="text" id="dni" name="dni" value="${user.dni || ""}" required>
-						</div>
-						<div class="form-group">
-							<label for="email">Email *</label>
-							<input type="email" id="email" name="email" value="${
-								user.email || ""
-							}" required>
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group">
-							<label for="telefono">Teléfono *</label>
-							<input type="tel" id="telefono" name="telefono" value="${
-								user.telefono || ""
-							}" required>
-						</div>
-						<div class="form-group">
-							<label for="direccion">Dirección *</label>
-							<input type="text" id="direccion" name="direccion" value="${
-								user.direccion || ""
-							}" required>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="password">Contraseña *</label>
-						<input type="password" id="password" name="password" value="${
-							user.password || ""
-						}" required>
-					</div>
-
-					<div class="form-actions">
-						<button type="submit" class="btn btn-primary">Guardar cambios</button>
-						<a href="/a/perfil" data-link class="btn btn-secondary">Cancelar</a>
-					</div>
-				</form>
-			</div>
-		`;
+		this.populateForm(user);
+		this.attachEvents();
 	}
 
-	bind() {
-		const form = this.container.querySelector("#form-modificar-perfil");
-		if (form) {
-			form.addEventListener("submit", (event) => {
-				event.preventDefault();
-				this.handleSubmit(new FormData(form));
-			});
+	cacheDom() {
+		this.form = this.container.querySelector("#form-modificar-perfil");
+		if (!this.form) {
+			return;
+		}
+
+		this.inputs = {
+			id: this.form.querySelector("#id"),
+			rol: this.form.querySelector("#rol"),
+			nombre: this.form.querySelector("#nombre"),
+			apellidos: this.form.querySelector("#apellidos"),
+			dni: this.form.querySelector("#dni"),
+			email: this.form.querySelector("#email"),
+			telefono: this.form.querySelector("#telefono"),
+			direccion: this.form.querySelector("#direccion"),
+			password: this.form.querySelector("#password"),
+		};
+	}
+
+	populateForm(user) {
+		if (!this.inputs) {
+			return;
+		}
+
+		if (this.inputs.id) {
+			this.inputs.id.value = user.id ?? "";
+		}
+		if (this.inputs.rol) {
+			this.inputs.rol.value = user.rol ?? "ADMIN";
+		}
+
+		this.inputs.nombre.value = user.nombre ?? "";
+		this.inputs.apellidos.value = user.apellidos ?? "";
+		this.inputs.dni.value = user.dni ?? "";
+		this.inputs.email.value = user.email ?? "";
+		this.inputs.telefono.value = user.telefono ?? "";
+		this.inputs.direccion.value = user.direccion ?? "";
+		this.inputs.password.value = user.password ?? "";
+	}
+
+	attachEvents() {
+		if (!this.form) {
+			return;
+		}
+
+		this.onSubmit = (event) => {
+			event.preventDefault();
+			this.handleSubmit(new FormData(this.form));
+		};
+
+		this.form.addEventListener("submit", this.onSubmit);
+
+		if (this.inputs?.dni) {
+			this.onDniInput = (event) => {
+				event.currentTarget.value = event.currentTarget.value
+					.replace(/[^0-9a-zA-Z]/g, "")
+					.toUpperCase();
+			};
+			this.inputs.dni.addEventListener("input", this.onDniInput);
+		}
+
+		if (this.inputs?.telefono) {
+			this.onTelefonoInput = (event) => {
+				event.currentTarget.value = event.currentTarget.value
+					.replace(/[^0-9]/g, "")
+					.trim();
+			};
+			this.inputs.telefono.addEventListener("input", this.onTelefonoInput);
 		}
 	}
 
 	handleSubmit(formData) {
-		const user = session.getUser();
-		if (!user) {
+		const currentUser = session.getUser();
+		if (!currentUser) {
 			session.pushError(
 				"No se pudo actualizar el perfil. Intenta iniciar sesión nuevamente."
 			);
@@ -162,7 +175,8 @@ export class AdminModificarPerfil extends Presenter {
 		}
 
 		const emailExiste = this.model.usuarios.some(
-			(u) => u.id !== user.id && u.email?.toLowerCase() === email
+			(usuario) =>
+				usuario.id !== currentUser.id && usuario.email?.toLowerCase() === email
 		);
 		if (emailExiste) {
 			session.pushError("Este email ya está registrado por otro usuario");
@@ -170,14 +184,17 @@ export class AdminModificarPerfil extends Presenter {
 		}
 
 		const dniExiste = this.model.usuarios.some(
-			(u) => u.id !== user.id && u.dni?.toUpperCase() === dni
+			(usuario) =>
+				usuario.id !== currentUser.id && usuario.dni?.toUpperCase() === dni
 		);
 		if (dniExiste) {
 			session.pushError("Este DNI ya está registrado por otro usuario");
 			return;
 		}
 
-		const usuarioModel = this.model.usuarios.find((u) => u.id === user.id);
+		const usuarioModel = this.model.usuarios.find(
+			(usuario) => usuario.id === currentUser.id
+		);
 		if (!usuarioModel) {
 			session.pushError("No se encontró el usuario en el sistema");
 			return;
@@ -214,5 +231,23 @@ export class AdminModificarPerfil extends Presenter {
 				new CustomEvent("user-logged-in", { detail: updatedUser })
 			);
 		}, 100);
+	}
+
+	destroy() {
+		if (this.form && this.onSubmit) {
+			this.form.removeEventListener("submit", this.onSubmit);
+		}
+
+		if (this.inputs?.dni && this.onDniInput) {
+			this.inputs.dni.removeEventListener("input", this.onDniInput);
+		}
+
+		if (this.inputs?.telefono && this.onTelefonoInput) {
+			this.inputs.telefono.removeEventListener("input", this.onTelefonoInput);
+		}
+
+		if (typeof super.destroy === "function") {
+			super.destroy();
+		}
 	}
 }
