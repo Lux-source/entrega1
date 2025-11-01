@@ -1,17 +1,17 @@
-import { Presenter } from '../../common/presenter.js';
-import { router } from '../../common/router.js';
-import { session } from '../../common/libreria-session.js';
-import { model } from '../../model/index.js';
+import { Presenter } from "../../commons/presenter.mjs";
+import { router } from "../../commons/router.mjs";
+import { session } from "../../commons/libreria-session.mjs";
+import { model } from "../../model/index.js";
 
 export class AdminLibros extends Presenter {
-    constructor() {
-        super(model, 'admin-libros');
-    }
+	constructor() {
+		super(model, "admin-libros");
+	}
 
-    template() {
-        const libros = this.model.libros;
+	template() {
+		const libros = this.model.libros;
 
-        return `
+		return `
             <div class="admin-libros">
                 <div class="page-header">
                     <h1>Gestión de Libros</h1>
@@ -35,46 +35,56 @@ export class AdminLibros extends Presenter {
                             </tr>
                         </thead>
                         <tbody>
-                            ${libros.map(libro => `
+                            ${libros
+															.map(
+																(libro) => `
                                 <tr>
                                     <td>${libro.id}</td>
-                                    <td><img src="${libro.portada}" alt="${libro.titulo}" class="table-img"></td>
+                                    <td><img src="${libro.portada}" alt="${
+																	libro.titulo
+																}" class="table-img"></td>
                                     <td>${libro.titulo}</td>
                                     <td>${libro.autor}</td>
                                     <td>${libro.isbn}</td>
                                     <td>${libro.precio.toFixed(2)}€</td>
                                     <td>${libro.stock}</td>
                                     <td class="actions">
-                                        <a href="/a/libros/editar/${libro.id}" data-link class="btn btn-sm btn-edit">Editar</a>
-                                        <button class="btn btn-sm btn-delete" data-id="${libro.id}">Eliminar</button>
+                                        <a href="/a/libros/editar/${
+																					libro.id
+																				}" data-link class="btn btn-sm btn-edit">Editar</a>
+                                        <button class="btn btn-sm btn-delete" data-id="${
+																					libro.id
+																				}">Eliminar</button>
                                     </td>
                                 </tr>
-                            `).join('')}
+                            `
+															)
+															.join("")}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
-    }
+	}
 
-    bind() {
-        const deleteButtons = this.container.querySelectorAll('.btn-delete');
-        deleteButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = parseInt(e.target.dataset.id);
-                if (confirm('¿Estás seguro de eliminar este libro?')) {
-                    this.eliminarLibro(id);
-                }
-            });
-        });
-    }
+	bind() {
+		const deleteButtons = this.container.querySelectorAll(".btn-delete");
+		deleteButtons.forEach((btn) => {
+			btn.addEventListener("click", (e) => {
+				const id = parseInt(e.target.dataset.id);
+				if (confirm("¿Estás seguro de eliminar este libro?")) {
+					this.eliminarLibro(id);
+				}
+			});
+		});
+	}
 
-    eliminarLibro(id) {
-        const index = this.model.libros.findIndex(l => l.id === id);
-        if (index !== -1) {
-            this.model.libros.splice(index, 1);
-            session.pushSuccess('Libro eliminado correctamente');
-            this.render();
-        }
-    }
+	eliminarLibro(id) {
+		const index = this.model.libros.findIndex((l) => l.id === id);
+		if (index !== -1) {
+			this.model.libros.splice(index, 1);
+			session.pushSuccess("Libro eliminado correctamente");
+			this.render();
+		}
+	}
 }

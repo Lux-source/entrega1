@@ -1,4 +1,4 @@
-import { router } from "./common/router.js";
+import { router } from "./commons/router.mjs";
 import { Navbar } from "./components/layout/navbar.js";
 import { Messages } from "./components/layout/messages.js";
 

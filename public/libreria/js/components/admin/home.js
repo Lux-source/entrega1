@@ -1,5 +1,5 @@
 import { InvitadoHome } from "../invitado/home.js";
-import { session } from "../../common/libreria-session.js";
+import { session } from "../../commons/libreria-session.mjs";
 
 export class AdminHome extends InvitadoHome {
 	constructor() {

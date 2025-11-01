@@ -1,4 +1,4 @@
-import { Presenter } from "../../common/presenter.js";
+import { Presenter } from "../../commons/presenter.mjs";
 import { model } from "../../model/index.js";
 
 export class ClienteCompras extends Presenter {

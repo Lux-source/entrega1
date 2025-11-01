@@ -1,6 +1,6 @@
-import { Presenter } from "../../common/presenter.js";
-import { router } from "../../common/router.js";
-import { session } from "../../common/libreria-session.js";
+import { Presenter } from "../../commons/presenter.mjs";
+import { router } from "../../commons/router.mjs";
+import { session } from "../../commons/libreria-session.mjs";
 
 export class Error404 extends Presenter {
 	constructor() {

@@ -1,6 +1,6 @@
-import { Presenter } from "../../common/presenter.js";
-import { session } from "../../common/libreria-session.js";
-import { router } from "../../common/router.js";
+import { Presenter } from "../../commons/presenter.mjs";
+import { session } from "../../commons/libreria-session.mjs";
+import { router } from "../../commons/router.mjs";
 import { authStore } from "../../model/auth-store.js";
 
 export class Navbar extends Presenter {

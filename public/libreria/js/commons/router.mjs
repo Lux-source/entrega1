@@ -1,4 +1,4 @@
-import { session } from "./libreria-session.js";
+import { session } from "./libreria-session.mjs";
 
 class Router {
 	constructor() {
@@ -6,10 +6,10 @@ class Router {
 		this.currentComponent = null;
 
 		window.addEventListener("popstate", () => this.handleRoute());
-		document.addEventListener("click", (e) => {
-			if (e.target.matches("[data-link]")) {
-				e.preventDefault();
-				this.navigate(e.target.getAttribute("href"));
+		document.addEventListener("click", (event) => {
+			if (event.target.matches("[data-link]")) {
+				event.preventDefault();
+				this.navigate(event.target.getAttribute("href"));
 			}
 		});
 	}
@@ -29,8 +29,8 @@ class Router {
 
 		// Rutas dinámicas (ej: /libros/:id)
 		if (!route) {
-			const dynamicRoute = Object.keys(this.routes).find((r) => {
-				const pattern = r.replace(/:\w+/g, "([^/]+)");
+			const dynamicRoute = Object.keys(this.routes).find((routePath) => {
+				const pattern = routePath.replace(/:\w+/g, "([^/]+)");
 				return new RegExp(`^${pattern}$`).test(path);
 			});
 			if (dynamicRoute) route = this.routes[dynamicRoute];

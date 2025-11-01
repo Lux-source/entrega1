@@ -1,5 +1,5 @@
-import { Presenter } from "../../common/presenter.js";
-import { session } from "../../common/libreria-session.js";
+import { Presenter } from "../../commons/presenter.mjs";
+import { session } from "../../commons/libreria-session.mjs";
 
 export class Error403 extends Presenter {
 	constructor() {

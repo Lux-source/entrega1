@@ -1,5 +1,5 @@
-import { Presenter } from "../../common/presenter.js";
-import { router } from "../../common/router.js";
+import { Presenter } from "../../commons/presenter.mjs";
+import { router } from "../../commons/router.mjs";
 import { model } from "../../model/index.js";
 
 export class InvitadoHome extends Presenter {
