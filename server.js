@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware para servir archivos estáticos
 app.use(express.static('public'));
-app.use('/app', express.static('app'));
 
 // Ruta catch-all para SPA - devuelve index.html para cualquier ruta
 app.get('*', (req, res) => {

@@ -1,0 +1,51 @@
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Iniciar Sesión</h1>
+        <p class="auth-subtitle">Accede a tu cuenta</p>
+
+        <form id="form-login">
+            <div class="form-group">
+                <label for="usuario">Email o DNI *</label>
+                <input type="text" id="usuario" name="usuario" autocomplete="username"
+                    placeholder="correo@ejemplo.com o DNI" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña *</label>
+                <input type="password" id="password" name="password" autocomplete="current-password"
+                    placeholder="Contraseña" required>
+            </div>
+
+            <div class="form-group">
+                <label for="rol">Rol *</label>
+                <select id="rol" name="rol" required autocomplete="off">
+                    <option value="">-- Selecciona tu rol --</option>
+                    <option value="CLIENTE">Cliente</option>
+                    <option value="ADMIN">Administrador</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" data-element="submit-btn">
+                🔐 Iniciar Sesión
+            </button>
+        </form>
+
+        <div class="auth-divider">o</div>
+
+        <p class="auth-link">
+            ¿No tienes cuenta? <a href="/registro" data-link>Regístrate aquí</a>
+        </p>
+
+        <hr class="auth-separator">
+
+        <div class="demo-credentials">
+            <p><strong>Credenciales de prueba:</strong></p>
+            <div class="demo-item">
+                <p><strong>Admin:</strong> admin@libreria.com / Admin123</p>
+            </div>
+            <div class="demo-item">
+                <p><strong>Cliente:</strong> juan@mail.com / Juanperez123</p>
+            </div>
+        </div>
+    </div>
+</div>

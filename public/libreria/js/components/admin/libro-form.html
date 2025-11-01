@@ -1,0 +1,79 @@
+<div class="admin-libro-form" data-element="wrapper">
+    <div class="page-header">
+        <h1 data-element="title"></h1>
+        <a href="/a" data-link class="btn btn-secondary">
+            ← Volver
+        </a>
+    </div>
+
+    <form id="form-libro" class="libro-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="titulo">Título *</label>
+                <input type="text" id="titulo" name="titulo" required>
+            </div>
+            <div class="form-group">
+                <label for="autor">Autor *</label>
+                <input type="text" id="autor" name="autor" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="isbn">ISBN *</label>
+                <input type="text" id="isbn" name="isbn" required>
+            </div>
+            <div class="form-group">
+                <label for="editorial">Editorial</label>
+                <input type="text" id="editorial" name="editorial">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="precio">Precio (€) *</label>
+                <input type="number" id="precio" name="precio" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="stock">Stock *</label>
+                <input type="number" id="stock" name="stock" min="0" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="anio">Año de publicación</label>
+                <input type="number" id="anio" name="anio" min="1000" max="2025">
+            </div>
+            <div class="form-group">
+                <label for="paginas">Páginas</label>
+                <input type="number" id="paginas" name="paginas" min="1">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="idioma">Idioma</label>
+            <select id="idioma" name="idioma">
+                <option value="Español">Español</option>
+                <option value="Inglés">Inglés</option>
+                <option value="Francés">Francés</option>
+                <option value="Alemán">Alemán</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="portada">URL de la portada *</label>
+            <input type="url" id="portada" name="portada" required>
+        </div>
+
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" name="descripcion" rows="4"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-element="submit-button"></button>
+            <a href="/a" data-link class="btn btn-secondary" data-element="cancel-link">Cancelar</a>
+        </div>
+    </form>
+</div>

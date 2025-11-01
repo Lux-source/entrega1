@@ -1,0 +1,58 @@
+<div class="perfil-container" data-element="wrapper">
+    <h1>Modificar Perfil</h1>
+    <form id="form-modificar-perfil" class="perfil-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id">ID</label>
+                <input type="text" id="id" disabled data-element="input-id">
+            </div>
+            <div class="form-group">
+                <label for="rol">Rol</label>
+                <input type="text" id="rol" disabled data-element="input-rol">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombre">Nombre *</label>
+                <input type="text" id="nombre" name="nombre" required data-element="input-nombre">
+            </div>
+            <div class="form-group">
+                <label for="apellidos">Apellidos *</label>
+                <input type="text" id="apellidos" name="apellidos" required data-element="input-apellidos">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="dni">DNI *</label>
+                <input type="text" id="dni" name="dni" required data-element="input-dni">
+            </div>
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required data-element="input-email">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="telefono">Teléfono *</label>
+                <input type="tel" id="telefono" name="telefono" required data-element="input-telefono">
+            </div>
+            <div class="form-group">
+                <label for="direccion">Dirección *</label>
+                <input type="text" id="direccion" name="direccion" required data-element="input-direccion">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Contraseña *</label>
+            <input type="password" id="password" name="password" required data-element="input-password">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-element="submit-button">Guardar cambios</button>
+            <a href="/c/perfil" data-link class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
