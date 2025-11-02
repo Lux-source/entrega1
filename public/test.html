@@ -20,7 +20,7 @@
         window.expect = chai.expect;
 
         // Importar y ejecutar tests
-        import '../test/model.spec.js';
+        await import('../test/model.spec.js');
 
         // Ejecutar tests
         mocha.run();
