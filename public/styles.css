@@ -96,7 +96,7 @@ main {
 .hero {
     text-align: center;
     padding: 4rem 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background:  #6f4626;
     color: white;
     border-radius: 8px;
     margin-bottom: 3rem;
@@ -409,13 +409,7 @@ h2 {
     margin-bottom: 3rem;
 }
 
-.stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    text-align: center;
-}
+
 
 .stat-icon {
     font-size: 3rem;
@@ -570,14 +564,7 @@ h2 {
 }
 
 /* Cliente Styles */
-.hero-cliente {
-    text-align: center;
-    padding: 3rem 0;
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: white;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-}
+
 
 .card-actions {
     display: flex;
@@ -967,7 +954,7 @@ h2 {
     align-items: center;
     gap: 1.5rem;
     padding: 2rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background:  #6f4626;
     color: white;
 }
 
