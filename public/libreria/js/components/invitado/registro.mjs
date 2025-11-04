@@ -86,11 +86,11 @@ export class Registro extends Presenter {
 
 		if (this.isLoading) {
 			this.submitButton.disabled = true;
-			this.submitButton.textContent = "⏳ Registrando...";
+			this.submitButton.textContent = "Registrando...";
 			this.submitButton.classList.add("is-loading");
 		} else {
 			this.submitButton.disabled = false;
-			this.submitButton.textContent = "✓ Crear Cuenta";
+			this.submitButton.textContent = "Crear Cuenta";
 			this.submitButton.classList.remove("is-loading");
 		}
 	}

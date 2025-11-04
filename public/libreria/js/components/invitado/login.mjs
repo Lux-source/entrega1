@@ -58,11 +58,11 @@ export class Login extends Presenter {
 
 		if (this.isLoading) {
 			this.submitButton.disabled = true;
-			this.submitButton.textContent = "⏳ Iniciando sesión...";
+			this.submitButton.textContent = "Iniciando sesión...";
 			this.submitButton.classList.add("is-loading");
 		} else {
 			this.submitButton.disabled = false;
-			this.submitButton.textContent = "🔐 Iniciar Sesión";
+			this.submitButton.textContent = "Iniciar Sesión";
 			this.submitButton.classList.remove("is-loading");
 		}
 	}
