@@ -19,7 +19,6 @@ try {
 export class Error404 extends Presenter {
 	constructor() {
 		super(null, "error-404");
-		this.onBackClick = this.onBackClick.bind(this);
 	}
 
 	template() {
@@ -29,17 +28,10 @@ export class Error404 extends Presenter {
 	bind() {
 		this.cacheDom();
 		this.renderContent();
-
-		if (this.backButton) {
-			this.backButton.addEventListener("click", this.onBackClick);
-		}
 	}
 
 	cacheDom() {
 		this.homeLink = this.container?.querySelector('[data-element="home-link"]');
-		this.backButton = this.container?.querySelector(
-			'[data-element="back-button"]'
-		);
 	}
 
 	renderContent() {
@@ -55,18 +47,5 @@ export class Error404 extends Presenter {
 		if (this.homeLink) {
 			this.homeLink.setAttribute("href", homeUrl);
 		}
-	}
-
-	onBackClick() {
-		window.history.back();
-	}
-
-	unmount() {
-		if (this.backButton) {
-			this.backButton.removeEventListener("click", this.onBackClick);
-			this.backButton = null;
-		}
-
-		super.unmount();
 	}
 }
