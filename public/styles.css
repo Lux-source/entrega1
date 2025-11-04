@@ -745,12 +745,6 @@ h2 {
     padding: 4rem 2rem;
 }
 
-.carro-icon {
-    font-size: 5rem;
-    display: block;
-    margin-bottom: 1rem;
-}
-
 .carro-content {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -866,12 +860,6 @@ h2 {
 .compras-vacio {
     text-align: center;
     padding: 4rem 2rem;
-}
-
-.compras-icon {
-    font-size: 5rem;
-    display: block;
-    margin-bottom: 1rem;
 }
 
 .compras-lista {
