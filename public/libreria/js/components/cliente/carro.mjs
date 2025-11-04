@@ -132,7 +132,7 @@ export class ClienteCarro extends Presenter {
 				<div class="item-subtotal">${(item.libro.precio * item.cantidad).toFixed(
 					2
 				)}€</div>
-				<button type="button" class="btn-remove" data-index="${index}">🗑️</button>
+				<button type="button" class="btn-remove" data-index="${index}">Eliminar</button>
 			</div>
 		`;
 	}
