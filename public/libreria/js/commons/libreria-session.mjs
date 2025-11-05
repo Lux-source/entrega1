@@ -52,7 +52,7 @@ class LibreriaSession {
 	}
 
 	// Persistencia scoped por usuario
-	getScopedKey(baseKey) {
+	getKeySesionCliente(baseKey) {
 		const sanitizedKey = (baseKey || "").trim();
 		if (!sanitizedKey) {
 			throw new Error(
@@ -73,8 +73,8 @@ class LibreriaSession {
 		return `${sanitizedKey}_invitado`;
 	}
 
-	readScopedArray(baseKey) {
-		const scopedKey = this.getScopedKey(baseKey);
+	leerArrayClienteSesion(baseKey) {
+		const scopedKey = this.getKeySesionCliente(baseKey);
 		const scopedResult = this.#readArrayFromStorage(scopedKey);
 		if (scopedResult.exists) {
 			return scopedResult.value;
@@ -82,7 +82,7 @@ class LibreriaSession {
 
 		const legacyResult = this.#readArrayFromStorage(baseKey);
 		if (legacyResult.exists) {
-			this.writeScopedArray(baseKey, legacyResult.value);
+			this.escribirArrayClienteSesion(baseKey, legacyResult.value);
 			localStorage.removeItem(baseKey);
 			return legacyResult.value;
 		}
@@ -90,14 +90,14 @@ class LibreriaSession {
 		return [];
 	}
 
-	writeScopedArray(baseKey, data) {
-		const scopedKey = this.getScopedKey(baseKey);
+	escribirArrayClienteSesion(baseKey, data) {
+		const scopedKey = this.getKeySesionCliente(baseKey);
 		const safeData = Array.isArray(data) ? data : [];
 		localStorage.setItem(scopedKey, JSON.stringify(safeData));
 	}
 
-	clearScopedItem(baseKey) {
-		const scopedKey = this.getScopedKey(baseKey);
+	limpiarItemClienteSesion(baseKey) {
+		const scopedKey = this.getKeySesionCliente(baseKey);
 		localStorage.removeItem(scopedKey);
 	}
 

@@ -204,7 +204,7 @@ export class ClienteVerLibro extends Presenter {
 	}
 
 	agregarAlCarro(libroId, cantidad) {
-		const carro = session.readScopedArray("carro");
+		const carro = session.leerArrayClienteSesion("carro");
 		const item = carro.find((entry) => entry.libroId === libroId);
 
 		if (item) {
@@ -213,7 +213,7 @@ export class ClienteVerLibro extends Presenter {
 			carro.push({ libroId, cantidad });
 		}
 
-		session.writeScopedArray("carro", carro);
+		session.escribirArrayClienteSesion("carro", carro);
 		session.pushSuccess(`${cantidad} libro(s) añadido(s) al carro`);
 		router.navigate("/c/carro");
 	}

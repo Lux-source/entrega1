@@ -52,7 +52,7 @@ export class ClienteCarro extends Presenter {
 	}
 
 	renderCarro() {
-		const carroRaw = session.readScopedArray("carro");
+		const carroRaw = session.leerArrayClienteSesion("carro");
 		const items = carroRaw
 			.map((entry) => {
 				const libro = this.model.libros.find((lib) => lib.id === entry.libroId);
@@ -67,7 +67,7 @@ export class ClienteCarro extends Presenter {
 			if (this.contentSection) {
 				this.contentSection.style.display = "none";
 			}
-			session.writeScopedArray("carro", []);
+			session.escribirArrayClienteSesion("carro", []);
 			return;
 		}
 
@@ -106,7 +106,7 @@ export class ClienteCarro extends Presenter {
 
 		this.cartItems = items;
 
-		session.writeScopedArray(
+		session.escribirArrayClienteSesion(
 			"carro",
 			items.map((item) => ({
 				libroId: item.libroId,
@@ -158,7 +158,7 @@ export class ClienteCarro extends Presenter {
 	}
 
 	actualizarCantidad(index, action) {
-		const carro = session.readScopedArray("carro");
+		const carro = session.leerArrayClienteSesion("carro");
 		const item = carro[index];
 
 		if (!item) {
@@ -183,18 +183,18 @@ export class ClienteCarro extends Presenter {
 			}
 		}
 
-		session.writeScopedArray("carro", carro);
+		session.escribirArrayClienteSesion("carro", carro);
 		this.renderCarro();
 	}
 
 	eliminarItem(index) {
-		const carro = session.readScopedArray("carro");
+		const carro = session.leerArrayClienteSesion("carro");
 		if (!carro[index]) {
 			return;
 		}
 
 		carro.splice(index, 1);
-		session.writeScopedArray("carro", carro);
+		session.escribirArrayClienteSesion("carro", carro);
 		session.pushSuccess("Producto eliminado del carro");
 		this.renderCarro();
 	}

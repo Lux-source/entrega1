@@ -36,7 +36,7 @@ export class ClientePerfil extends Presenter {
 			return;
 		}
 
-		const compras = session.readScopedArray("compras");
+		const compras = session.leerArrayClienteSesion("compras");
 
 		this.renderUser(user);
 		this.renderStats(compras);

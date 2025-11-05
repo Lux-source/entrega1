@@ -46,7 +46,7 @@ export class ClienteCompras extends Presenter {
 	}
 
 	renderCompras() {
-		const compras = [...session.readScopedArray("compras")].reverse();
+		const compras = [...session.leerArrayClienteSesion("compras")].reverse();
 
 		if (!compras.length) {
 			if (this.emptySection) {

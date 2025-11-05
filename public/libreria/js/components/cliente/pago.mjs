@@ -73,7 +73,7 @@ export class ClientePago extends Presenter {
 	}
 
 	syncCart() {
-		const raw = session.readScopedArray("carro");
+		const raw = session.leerArrayClienteSesion("carro");
 		const sanitized = [];
 		const items = [];
 
@@ -98,11 +98,11 @@ export class ClientePago extends Presenter {
 		});
 
 		if (!items.length) {
-			session.writeScopedArray("carro", []);
+			session.escribirArrayClienteSesion("carro", []);
 			return false;
 		}
 
-		session.writeScopedArray("carro", sanitized);
+		session.escribirArrayClienteSesion("carro", sanitized);
 		this.cart = sanitized;
 		this.items = items;
 		return true;
@@ -200,7 +200,7 @@ export class ClientePago extends Presenter {
 	}
 
 	actualizarCantidad(index, action) {
-		const carro = session.readScopedArray("carro");
+		const carro = session.leerArrayClienteSesion("carro");
 		const item = carro[index];
 
 		if (!item) {
@@ -227,13 +227,13 @@ export class ClientePago extends Presenter {
 		}
 
 		if (!carro.length) {
-			session.writeScopedArray("carro", []);
+			session.escribirArrayClienteSesion("carro", []);
 			session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
 			router.navigate("/c/carro");
 			return;
 		}
 
-		session.writeScopedArray("carro", carro);
+		session.escribirArrayClienteSesion("carro", carro);
 
 		if (!this.syncCart()) {
 			router.navigate("/c/carro");
@@ -277,7 +277,7 @@ export class ClientePago extends Presenter {
 			}
 		}
 
-		const compras = session.readScopedArray("compras");
+		const compras = session.leerArrayClienteSesion("compras");
 		const subtotal = this.items.reduce(
 			(sum, item) => sum + item.libro.precio * item.cantidad,
 			0
@@ -300,8 +300,8 @@ export class ClientePago extends Presenter {
 		};
 
 		compras.push(nuevaCompra);
-		session.writeScopedArray("compras", compras);
-		session.clearScopedItem("carro");
+		session.escribirArrayClienteSesion("compras", compras);
+		session.limpiarItemClienteSesion("carro");
 
 		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
 		router.navigate("/c");
