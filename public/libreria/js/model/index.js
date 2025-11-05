@@ -55,7 +55,6 @@ class Model {
 				"978-84-376-0494-7",
 				15.95,
 				25,
-				"https://placehold.co/200x300/2c3e50/white?text=Don+Quijote",
 				"Obra cumbre de la literatura española"
 			),
 			new Libro(
@@ -65,7 +64,6 @@ class Model {
 				"978-84-204-2548-8",
 				18.9,
 				15,
-				"https://placehold.co/200x300/3498db/white?text=Cien+Años",
 				"Realismo mágico latinoamericano"
 			),
 			new Libro(
@@ -75,7 +73,6 @@ class Model {
 				"978-84-9759-252-5",
 				12.5,
 				30,
-				"https://placehold.co/200x300/e74c3c/white?text=1984",
 				"Distopía totalitaria"
 			),
 			new Libro(
@@ -85,7 +82,6 @@ class Model {
 				"978-84-9841-483-8",
 				9.95,
 				50,
-				"https://placehold.co/200x300/f39c12/white?text=Principito",
 				"Cuento filosófico"
 			),
 			new Libro(
@@ -95,7 +91,6 @@ class Model {
 				"978-84-9838-936-6",
 				16.95,
 				20,
-				"https://placehold.co/200x300/9b59b6/white?text=Harry+Potter",
 				"Fantasía juvenil"
 			),
 			new Libro(
@@ -105,7 +100,6 @@ class Model {
 				"978-84-08-17263-1",
 				14.9,
 				10,
-				"https://placehold.co/200x300/16a085/white?text=Da+Vinci",
 				"Thriller conspirativo"
 			)
 		);

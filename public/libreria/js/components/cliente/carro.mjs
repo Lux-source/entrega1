@@ -32,6 +32,8 @@ export class ClienteCarro extends Presenter {
 		this.renderCarro();
 
 		if (this.containerEl) {
+			// Prevent duplicated handlers if bind runs more than once on same instance
+			this.containerEl.removeEventListener("click", this.onClick);
 			this.containerEl.addEventListener("click", this.onClick);
 		}
 	}
@@ -132,7 +134,7 @@ export class ClienteCarro extends Presenter {
 				<div class="item-subtotal">${(item.libro.precio * item.cantidad).toFixed(
 					2
 				)}€</div>
-				<button type="button" class="btn-remove" data-index="${index}">🗑️</button>
+				<button type="button" class="btn-remove" data-index="${index}">Eliminar</button>
 			</div>
 		`;
 	}
@@ -199,13 +201,10 @@ export class ClienteCarro extends Presenter {
 		this.renderCarro();
 	}
 
-	destroy() {
+	unmount() {
 		if (this.containerEl) {
 			this.containerEl.removeEventListener("click", this.onClick);
 		}
-
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.unmount();
 	}
 }

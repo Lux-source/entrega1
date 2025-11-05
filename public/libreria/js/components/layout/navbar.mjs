@@ -110,7 +110,7 @@ export class Navbar extends Presenter {
 		}
 
 		if (user) {
-			this.userEl.textContent = `👤 ${user.nombre ?? ""}`.trim();
+			this.userEl.textContent = `${user.nombre ?? ""}`.trim();
 			this.userEl.style.display = "";
 		} else {
 			this.userEl.textContent = "";

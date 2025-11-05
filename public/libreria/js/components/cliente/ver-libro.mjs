@@ -166,7 +166,7 @@ export class ClienteVerLibro extends Presenter {
 		if (this.addCartButton) {
 			if (stockDisponible > 0) {
 				this.addCartButton.disabled = false;
-				this.addCartButton.textContent = "🛒 Añadir al Carro";
+				this.addCartButton.textContent = "Añadir al Carro";
 			} else {
 				this.addCartButton.disabled = true;
 				this.addCartButton.textContent = "Producto Agotado";
