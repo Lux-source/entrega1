@@ -3,11 +3,11 @@
 	"version": "1.0.0",
 	"description": "SPA de librería online - Práctica Web",
 	"type": "module",
-	"main": "server.js",
+	"main": "app.mjs",
 	"scripts": {
-		"start": "node server.js",
-		"dev": "node server.js",
-		"test": "echo \"Abrir http://localhost:3000/test.html en el navegador\" && node server.js"
+		"start": "node app.mjs",
+		"dev": "node app.mjs",
+		"test": "echo \"Abrir http://localhost:3000/test.html en el navegador\" && node app.mjs"
 	},
 	"keywords": [
 		"spa",
