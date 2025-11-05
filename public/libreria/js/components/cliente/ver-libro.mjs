@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -227,13 +227,15 @@ export class ClienteVerLibro extends Presenter {
 		section.style.display = visible ? "" : "none";
 	}
 
-	destroy() {
+	desmontar() {
+		if (this.containerEl) {
+			this.containerEl.removeEventListener("submit", this.onSubmit);
+		}
+
 		if (this.addCartButton) {
 			this.addCartButton.removeEventListener("click", this.onAddToCart);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

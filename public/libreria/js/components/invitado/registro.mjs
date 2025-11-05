@@ -1,8 +1,8 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { authStore } from "../../model/auth-store.js";
-import { authService } from "../../model/auth-service.js";
+import { almacenAutenticacion } from "../../model/auth-store.mjs";
+import { servicioAutenticacion } from "../../model/auth-service.mjs";
 
 const templateUrl = new URL("./registro.html", import.meta.url);
 let templateHtml = "";
@@ -143,10 +143,10 @@ export class Registro extends Presenter {
 			rol: (formData.get("rol") ?? "CLIENTE").toString(),
 		};
 
-		authStore.setLoading(true);
+		almacenAutenticacion.establecerCargando(true);
 
 		try {
-			const result = await authService.register(
+			const result = await servicioAutenticacion.registrar(
 				datos.dni,
 				datos.nombre,
 				datos.apellidos,
@@ -159,14 +159,14 @@ export class Registro extends Presenter {
 			);
 
 			if (!result.success) {
-				authStore.setError(result.error);
+				almacenAutenticacion.establecerError(result.error);
 				session.pushError(result.error);
 				this.isLoading = false;
 				this.updateLoadingState();
 				return;
 			}
 
-			authStore.setLogin(result.usuario, result.token);
+			almacenAutenticacion.establecerInicioSesion(result.usuario, result.token);
 			session.setUser(result.usuario);
 
 			const nombreCompleto = [result.usuario.nombre, result.usuario.apellidos]
@@ -192,11 +192,11 @@ export class Registro extends Presenter {
 			this.isLoading = false;
 			this.updateLoadingState();
 		} finally {
-			authStore.setLoading(false);
+			almacenAutenticacion.establecerCargando(false);
 		}
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.form) {
 			this.form.removeEventListener("submit", this.onSubmit);
 		}
@@ -216,8 +216,6 @@ export class Registro extends Presenter {
 			);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

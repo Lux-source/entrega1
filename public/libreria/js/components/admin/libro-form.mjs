@@ -1,8 +1,8 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
-import { Libro } from "../../model/libro.js";
+import { model } from "../../model/seeder.mjs";
+import { Libro } from "../../model/libro.mjs";
 
 const templateUrl = new URL("./libro-form.html", import.meta.url);
 let templateHtml = "";
@@ -189,13 +189,11 @@ export class AdminLibroForm extends Presenter {
 		router.navigate(`/a/libros/${nuevoLibro.id}`);
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.form && this.onSubmit) {
 			this.form.removeEventListener("submit", this.onSubmit);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

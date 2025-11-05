@@ -1,17 +1,15 @@
-/**
- * Auth Service - Maneja la lógica de autenticación
- */
-import { model } from "./index.js";
+// Servicio de Autenticación - Maneja la lógica de autenticación
 
-class AuthService {
+import { model } from "./seeder.mjs";
+
+class ServicioAutenticacion {
 	constructor() {
-		this.apiUrl = "/api";
+		this.urlApi = "/api";
 	}
 
-	/**
-	 * Login de usuario
-	 */
-	async login(usuario, password, rol) {
+	// Inicio de sesión de usuario
+
+	async iniciarSesion(usuario, password, rol) {
 		try {
 			const identificador = (usuario || "").trim();
 			const rolNormalizado = (rol || "").toUpperCase();
@@ -45,7 +43,7 @@ class AuthService {
 				};
 			}
 
-			const token = this.generateToken(candidato);
+			const token = this.generarToken(candidato);
 
 			return {
 				success: true,
@@ -63,7 +61,7 @@ class AuthService {
 	/**
 	 * Registro de nuevo usuario
 	 */
-	async register(
+	async registrar(
 		dni,
 		nombre,
 		apellidos,
@@ -100,7 +98,7 @@ class AuthService {
 				};
 			}
 
-			if (!this.isValidDni(dniLimpio)) {
+			if (!this.esDniValido(dniLimpio)) {
 				return {
 					success: false,
 					error: "DNI inválido. Usa 8 dígitos y una letra (ej: 12345678A)",
@@ -121,14 +119,14 @@ class AuthService {
 				};
 			}
 
-			if (!this.isValidEmail(emailLimpio)) {
+			if (!this.esEmailValido(emailLimpio)) {
 				return {
 					success: false,
 					error: "Email inválido",
 				};
 			}
 
-			if (!this.isValidTelefono(telefonoLimpio)) {
+			if (!this.esTelefonoValido(telefonoLimpio)) {
 				return {
 					success: false,
 					error: "Teléfono inválido. Usa solo dígitos (7-15 caracteres)",
@@ -177,7 +175,7 @@ class AuthService {
 			}
 
 			const nuevoId = Math.max(...model.usuarios.map((u) => u.id), 0) + 1;
-			const { Usuario } = await import("./usuario.js");
+			const { Usuario } = await import("./usuario.mjs");
 			const nuevoUsuario = new Usuario(
 				nuevoId,
 				dniLimpio,
@@ -192,7 +190,7 @@ class AuthService {
 
 			model.usuarios.push(nuevoUsuario);
 
-			const token = this.generateToken(nuevoUsuario);
+			const token = this.generarToken(nuevoUsuario);
 
 			return {
 				success: true,
@@ -211,17 +209,17 @@ class AuthService {
 	/**
 	 * Validar email
 	 */
-	isValidEmail(email) {
+	esEmailValido(email) {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		return emailRegex.test(email);
 	}
 
-	isValidDni(dni) {
+	esDniValido(dni) {
 		const dniRegex = /^[0-9]{7,8}[A-Z]$/;
 		return dniRegex.test(dni);
 	}
 
-	isValidTelefono(telefono) {
+	esTelefonoValido(telefono) {
 		const telefonoRegex = /^[0-9]{7,15}$/;
 		return telefonoRegex.test(telefono);
 	}
@@ -229,7 +227,7 @@ class AuthService {
 	/**
 	 * Generar token (simulado para esta SPA)
 	 */
-	generateToken(usuario) {
+	generarToken(usuario) {
 		return `token_${usuario.id}_${Date.now()}_${Math.random()
 			.toString(36)
 			.substr(2, 9)}`;
@@ -238,15 +236,15 @@ class AuthService {
 	/**
 	 * Verificar si el token es válido
 	 */
-	verifyToken(token) {
+	verificarToken(token) {
 		// Para esta SPA, simplemente verificamos que el token existe
 		return !!token && token.startsWith("token_");
 	}
 
 	/**
-	 * Logout
+	 * Cerrar sesión
 	 */
-	logout() {
+	cerrarSesion() {
 		return {
 			success: true,
 			message: "Sesión cerrada correctamente",
@@ -254,4 +252,4 @@ class AuthService {
 	}
 }
 
-export const authService = new AuthService();
+export const servicioAutenticacion = new ServicioAutenticacion();

@@ -167,7 +167,7 @@ export class Messages extends Presenter {
 		this.templateEl = null;
 	}
 
-	unmount() {
+	desmontar() {
 		window.removeEventListener("messages-updated", this.onMessagesUpdated);
 
 		if (this.messagesContainer) {
@@ -175,6 +175,6 @@ export class Messages extends Presenter {
 		}
 
 		this.clearMessages();
-		super.unmount();
+		super.desmontar();
 	}
 }

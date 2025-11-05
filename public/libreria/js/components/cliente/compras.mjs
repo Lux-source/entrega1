@@ -1,5 +1,5 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./compras.html", import.meta.url);
 let templateHtml = "";
@@ -191,13 +191,11 @@ export class ClienteCompras extends Presenter {
 		}
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.wrapper) {
 			this.wrapper.removeEventListener("click", this.onToggleClick);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

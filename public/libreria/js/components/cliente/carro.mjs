@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./carro.html", import.meta.url);
 let templateHtml = "";
@@ -201,10 +201,10 @@ export class ClienteCarro extends Presenter {
 		this.renderCarro();
 	}
 
-	unmount() {
+	desmontar() {
 		if (this.containerEl) {
 			this.containerEl.removeEventListener("click", this.onClick);
 		}
-		super.unmount();
+		super.desmontar();
 	}
 }

@@ -1,5 +1,5 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";

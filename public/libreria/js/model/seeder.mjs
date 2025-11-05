@@ -1,5 +1,5 @@
-import { Libro } from "./libro.js";
-import { Usuario } from "./usuario.js";
+import { Libro } from "./libro.mjs";
+import { Usuario } from "./usuario.mjs";
 
 class Model {
 	constructor() {

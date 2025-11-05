@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -191,13 +191,11 @@ export class AdminHome extends Presenter {
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.paginationEl) {
 			this.paginationEl.removeEventListener("click", this.onPaginationClick);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

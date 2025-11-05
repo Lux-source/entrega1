@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -206,13 +206,11 @@ export class AdminVerLibro extends Presenter {
 		router.navigate("/a");
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.deleteButton && this.deleteHandler) {
 			this.deleteButton.removeEventListener("click", this.deleteHandler);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

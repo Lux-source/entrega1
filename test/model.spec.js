@@ -1,14 +1,14 @@
 import { Libro } from "../libreria/js/model/libro.js";
 import { Usuario } from "../libreria/js/model/usuario.js";
 import { model } from "../libreria/js/model/index.js";
-import { authService } from "../libreria/js/model/auth-service.js";
-import { authStore } from "../libreria/js/model/auth-store.js";
+import { servicioAutenticacion } from "../libreria/js/model/auth-service.js";
+import { almacenAutenticacion } from "../libreria/js/model/auth-store.js";
 import { session } from "../libreria/js/commons/libreria-session.mjs";
 
 const { describe, it, beforeEach, afterEach } = window;
 const { expect } = window.chai;
 
-// Helper: remove users created during register tests to keep the seed stable.
+// Helper: nos quita los usuarios registrados por el seed por si da problemas
 const limpiarUsuarioRegistrado = (email) => {
 	const index = model.usuarios.findIndex((usr) => {
 		if (typeof usr.getEmail === "function") {
@@ -31,7 +31,7 @@ describe("Modelo: Libro", () => {
 			"9780132350884",
 			32.5,
 			12,
-			"https://placehold.co/libro"
+			"zzzzzzzzzz"
 		);
 
 		expect(libro.getId()).to.equal(99);
@@ -91,10 +91,10 @@ describe("Modelo: Usuario", () => {
 			"12345678A",
 			"Luis",
 			"Martínez",
-			"Av. Central",
+			"Av. España",
 			"600654321",
 			"luis@mail.com",
-			"Password1"
+			"Claveok"
 		);
 
 		expect(usuario.getRol()).to.equal("CLIENTE");
@@ -117,7 +117,7 @@ describe("Servicio de autenticación", () => {
 	});
 
 	it("permite iniciar sesión con credenciales y rol correctos", async () => {
-		const resultado = await authService.login(
+		const resultado = await servicioAutenticacion.iniciarSesion(
 			"admin@libreria.com",
 			"Admin123",
 			"ADMIN"
@@ -129,9 +129,9 @@ describe("Servicio de autenticación", () => {
 	});
 
 	it("rechaza login con contraseña incorrecta", async () => {
-		const resultado = await authService.login(
+		const resultado = await servicioAutenticacion.iniciarSesion(
 			"admin@libreria.com",
-			"ClaveErronea",
+			"Clavemala",
 			"ADMIN"
 		);
 
@@ -140,7 +140,7 @@ describe("Servicio de autenticación", () => {
 	});
 
 	it("rechaza login con rol incorrecto", async () => {
-		const resultado = await authService.login(
+		const resultado = await servicioAutenticacion.iniciarSesion(
 			"admin@libreria.com",
 			"Admin123",
 			"CLIENTE"
@@ -158,7 +158,7 @@ describe("Servicio de autenticación", () => {
 		});
 
 		it("valida campos obligatorios", async () => {
-			const resultado = await authService.register(
+			const resultado = await servicioAutenticacion.registrar(
 				"",
 				"",
 				"",
@@ -175,15 +175,15 @@ describe("Servicio de autenticación", () => {
 
 		it("no permite registrar DNIs y emails duplicados", async () => {
 			const existente = model.usuarios[1];
-			const resultado = await authService.register(
+			const resultado = await servicioAutenticacion.registrar(
 				existente.getDni(),
 				existente.getNombre(),
 				existente.getApellidos(),
 				existente.getDireccion(),
 				existente.getTelefono(),
 				existente.getEmail(),
-				"Password1",
-				"Password1"
+				"Claveok",
+				"Claveok"
 			);
 
 			expect(resultado.success).to.be.false;
@@ -191,15 +191,15 @@ describe("Servicio de autenticación", () => {
 		});
 
 		it("registra nuevos usuarios cliente y genera token", async () => {
-			const resultado = await authService.register(
+			const resultado = await servicioAutenticacion.registrar(
 				"34567890Z",
 				"Lucía",
 				"Fernández",
 				"Calle Luna 1",
 				"600777777",
 				emailRegistro,
-				"ClaveSegura",
-				"ClaveSegura"
+				"ClaveMeh",
+				"ClaveMeh"
 			);
 
 			expect(resultado.success).to.be.true;
@@ -215,31 +215,34 @@ describe("Servicio de autenticación", () => {
 	});
 });
 
-describe("AuthStore", () => {
+describe("AlmacenAutenticacion", () => {
 	beforeEach(() => {
 		localStorage.clear();
-		authStore.setLogout();
+		almacenAutenticacion.establecerCierreSesion();
 	});
 
 	it("almacena sesión y notifica a los suscriptores", () => {
 		const estados = [];
 		const observer = (state) => estados.push(state);
 
-		authStore.subscribe(observer);
-		authStore.setLogin({ id: 10, nombre: "Tester" }, "token_test");
+		almacenAutenticacion.suscribir(observer);
+		almacenAutenticacion.establecerInicioSesion(
+			{ id: 10, nombre: "Tester" },
+			"token_test"
+		);
 
-		expect(authStore.getState().isAuthenticated).to.be.true;
+		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.true;
 		expect(localStorage.getItem("auth_user")).to.be.a("string");
 		expect(estados).to.have.length.greaterThan(0);
 
-		authStore.unsubscribe(observer);
+		almacenAutenticacion.desuscribir(observer);
 	});
 
 	it("limpia la sesión al cerrar sesión", () => {
-		authStore.setLogin({ id: 1 }, "token");
-		authStore.setLogout();
+		almacenAutenticacion.establecerInicioSesion({ id: 1 }, "token");
+		almacenAutenticacion.establecerCierreSesion();
 
-		expect(authStore.getState().isAuthenticated).to.be.false;
+		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.false;
 		expect(localStorage.getItem("auth_user")).to.be.null;
 		expect(localStorage.getItem("auth_token")).to.be.null;
 	});
@@ -249,11 +252,11 @@ describe("AuthStore", () => {
 		localStorage.setItem("auth_user", JSON.stringify(usuario));
 		localStorage.setItem("auth_token", "token_persistente");
 
-		const restaurada = authStore.restoreSession();
+		const restaurada = almacenAutenticacion.restaurarSesion();
 
 		expect(restaurada).to.be.true;
-		expect(authStore.getState().user).to.deep.equal(usuario);
-		expect(authStore.getState().isAuthenticated).to.be.true;
+		expect(almacenAutenticacion.obtenerEstado().usuario).to.deep.equal(usuario);
+		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.true;
 	});
 });
 

@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
 import { router } from "../../commons/router.mjs";
-import { authStore } from "../../model/auth-store.js";
+import { almacenAutenticacion } from "../../model/auth-store.mjs";
 
 const templateUrl = new URL("./navbar.html", import.meta.url);
 let templateHtml = "";
@@ -25,7 +25,7 @@ export class Navbar extends Presenter {
 		this.onLogoutClick = this.onLogoutClick.bind(this);
 		this.logoutButton = null;
 
-		authStore.subscribe(this.onAuthChange);
+		almacenAutenticacion.suscribir(this.onAuthChange);
 		window.addEventListener("user-logged-in", this.onAuthChange);
 		window.addEventListener("user-logged-out", this.onAuthChange);
 	}
@@ -120,7 +120,7 @@ export class Navbar extends Presenter {
 
 	onLogoutClick() {
 		session.clearUser();
-		authStore.setLogout();
+		almacenAutenticacion.establecerCierreSesion();
 		session.pushSuccess("Sesión cerrada");
 		router.navigate("/");
 		window.dispatchEvent(new CustomEvent("user-logged-out"));
@@ -130,8 +130,8 @@ export class Navbar extends Presenter {
 		this.render();
 	}
 
-	unmount() {
-		authStore.unsubscribe(this.onAuthChange);
+	desmontar() {
+		almacenAutenticacion.desuscribir(this.onAuthChange);
 		window.removeEventListener("user-logged-in", this.onAuthChange);
 		window.removeEventListener("user-logged-out", this.onAuthChange);
 
@@ -140,6 +140,6 @@ export class Navbar extends Presenter {
 			this.logoutButton = null;
 		}
 
-		super.unmount();
+		super.desmontar();
 	}
 }
