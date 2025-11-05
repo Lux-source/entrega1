@@ -1,64 +1,61 @@
-import { Libro } from "../libreria/js/model/libro.js";
-import { Usuario } from "../libreria/js/model/usuario.js";
-import { model } from "../libreria/js/model/index.js";
-import { servicioAutenticacion } from "../libreria/js/model/auth-service.js";
-import { almacenAutenticacion } from "../libreria/js/model/auth-store.js";
+import { Libro } from "../libreria/js/model/libro.mjs";
+import { Usuario } from "../libreria/js/model/usuario.mjs";
+import { model } from "../libreria/js/model/seeder.mjs";
+import { servicioAutenticacion } from "../libreria/js/model/auth-service.mjs";
+import { almacenAutenticacion } from "../libreria/js/model/auth-store.mjs";
 import { session } from "../libreria/js/commons/libreria-session.mjs";
 
 const { describe, it, beforeEach, afterEach } = window;
 const { expect } = window.chai;
 
-// Helper: nos quita los usuarios registrados por el seed por si da problemas
 const limpiarUsuarioRegistrado = (email) => {
 	const index = model.usuarios.findIndex((usr) => {
-		if (typeof usr.getEmail === "function") {
-			return usr.getEmail()?.toLowerCase() === email.toLowerCase();
-		}
-		return usr.email?.toLowerCase() === email.toLowerCase();
+		const correo =
+			typeof usr.getEmail === "function" ? usr.getEmail() : usr.email;
+		return correo?.toLowerCase() === email.toLowerCase();
 	});
-
 	if (index >= 0) {
 		model.usuarios.splice(index, 1);
 	}
 };
 
 describe("Modelo: Libro", () => {
-	it("crea un libro con los datos obligatorios y defaults", () => {
+	it("crea un libro con valores por defecto coherentes", () => {
 		const libro = new Libro(
-			99,
+			123,
 			"Clean Code",
 			"Robert C. Martin",
 			"9780132350884",
 			32.5,
 			12,
-			"zzzzzzzzzz"
+			"https://example.com/portada.jpg"
 		);
 
-		expect(libro.getId()).to.equal(99);
+		expect(libro.getId()).to.equal(123);
 		expect(libro.getTitulo()).to.equal("Clean Code");
 		expect(libro.getPrecio()).to.equal(32.5);
 		expect(libro.getStock()).to.equal(12);
 		expect(libro.idioma).to.equal("Español");
+		expect(libro.descripcion).to.equal("");
+		expect(libro.editorial).to.equal("");
+		expect(libro.paginas).to.equal(null);
 	});
 
 	it("no permite stock negativo", () => {
-		const libro = new Libro(1, "Test", "Autor", "111", 10, 5, "url");
-
-		expect(() => libro.setStock(-4)).to.throw("El stock no puede ser negativo");
+		const libro = new Libro(1, "Test", "Autor", "ISBN-1", 10, 5, "portada");
+		expect(() => libro.setStock(-1)).to.throw("El stock no puede ser negativo");
 	});
 
 	it("no permite precios menores o iguales a cero", () => {
-		const libro = new Libro(2, "Test", "Autor", "222", 10, 5, "url");
-
+		const libro = new Libro(2, "Test", "Autor", "ISBN-2", 10, 5, "portada");
 		expect(() => libro.setPrecio(0)).to.throw("El precio debe ser mayor que 0");
 		expect(() => libro.setPrecio(-5)).to.throw(
 			"El precio debe ser mayor que 0"
 		);
 	});
 
-	it("reduce el stock respetando la disponibilidad", () => {
-		const libro = new Libro(3, "Test", "Autor", "333", 10, 3, "url");
-
+	it("reduce stock respetando la disponibilidad", () => {
+		const libro = new Libro(3, "Test", "Autor", "ISBN-3", 10, 3, "portada");
 		libro.reducirStock(2);
 		expect(libro.getStock()).to.equal(1);
 		expect(() => libro.reducirStock(5)).to.throw("Stock insuficiente");
@@ -66,7 +63,7 @@ describe("Modelo: Libro", () => {
 });
 
 describe("Modelo: Usuario", () => {
-	it("normaliza el rol y expone los getters", () => {
+	it("normaliza el rol y expone getters", () => {
 		const usuario = new Usuario(
 			50,
 			"99999999Z",
@@ -105,9 +102,13 @@ describe("Modelo: Seed de datos", () => {
 	it("carga usuarios y libros base", () => {
 		expect(model.usuarios.length).to.be.at.least(3);
 		expect(model.libros.length).to.be.at.least(6);
-
 		const admin = model.usuarios.find((usr) => usr.getRol() === "ADMIN");
 		expect(admin).to.exist;
+	});
+
+	it("garantiza que los identificadores de libros son únicos", () => {
+		const ids = model.libros.map((libro) => libro.getId());
+		expect(new Set(ids).size).to.equal(ids.length);
 	});
 });
 
@@ -116,7 +117,7 @@ describe("Servicio de autenticación", () => {
 		localStorage.clear();
 	});
 
-	it("permite iniciar sesión con credenciales y rol correctos", async () => {
+	it("permite iniciar sesión con email y rol correctos", async () => {
 		const resultado = await servicioAutenticacion.iniciarSesion(
 			"admin@libreria.com",
 			"Admin123",
@@ -126,6 +127,17 @@ describe("Servicio de autenticación", () => {
 		expect(resultado.success).to.be.true;
 		expect(resultado.usuario).to.have.property("email", "admin@libreria.com");
 		expect(resultado.token).to.match(/^token_/);
+	});
+
+	it("rechaza identificadores que no sean emails válidos", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"00000000A",
+			"Admin123",
+			"ADMIN"
+		);
+
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Email inválido");
 	});
 
 	it("rechaza login con contraseña incorrecta", async () => {
@@ -173,7 +185,51 @@ describe("Servicio de autenticación", () => {
 			expect(resultado.error).to.equal("Todos los campos son obligatorios");
 		});
 
-		it("no permite registrar DNIs y emails duplicados", async () => {
+		it("valida formato de DNI y email", async () => {
+			const resultadoDni = await servicioAutenticacion.registrar(
+				"123",
+				"Lucía",
+				"Fernández",
+				"Calle Luna 1",
+				"600777777",
+				emailRegistro,
+				"ClaveSegura",
+				"ClaveSegura"
+			);
+			expect(resultadoDni.success).to.be.false;
+			expect(resultadoDni.error).to.match(/DNI inválido/i);
+
+			const resultadoEmail = await servicioAutenticacion.registrar(
+				"34567890Z",
+				"Lucía",
+				"Fernández",
+				"Calle Luna 1",
+				"600777777",
+				"correo-invalido",
+				"ClaveSegura",
+				"ClaveSegura"
+			);
+			expect(resultadoEmail.success).to.be.false;
+			expect(resultadoEmail.error).to.equal("Email inválido");
+		});
+
+		it("detecta contraseñas que no coinciden", async () => {
+			const resultado = await servicioAutenticacion.registrar(
+				"34567890Z",
+				"Lucía",
+				"Fernández",
+				"Calle Luna 1",
+				"600777777",
+				emailRegistro,
+				"ClaveSegura",
+				"OtraClave"
+			);
+
+			expect(resultado.success).to.be.false;
+			expect(resultado.error).to.equal("Las contraseñas no coinciden");
+		});
+
+		it("no permite registrar DNIs ni emails duplicados", async () => {
 			const existente = model.usuarios[1];
 			const resultado = await servicioAutenticacion.registrar(
 				existente.getDni(),
@@ -198,8 +254,8 @@ describe("Servicio de autenticación", () => {
 				"Calle Luna 1",
 				"600777777",
 				emailRegistro,
-				"ClaveMeh",
-				"ClaveMeh"
+				"ClaveSegura",
+				"ClaveSegura"
 			);
 
 			expect(resultado.success).to.be.true;
@@ -231,20 +287,49 @@ describe("AlmacenAutenticacion", () => {
 			"token_test"
 		);
 
-		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.true;
+		const estado = almacenAutenticacion.obtenerEstado();
+		expect(estado.estaAutenticado).to.be.true;
+		expect(estado.usuario).to.deep.equal({ id: 10, nombre: "Tester" });
 		expect(localStorage.getItem("auth_user")).to.be.a("string");
 		expect(estados).to.have.length.greaterThan(0);
 
 		almacenAutenticacion.desuscribir(observer);
 	});
 
-	it("limpia la sesión al cerrar sesión", () => {
-		almacenAutenticacion.establecerInicioSesion({ id: 1 }, "token");
-		almacenAutenticacion.establecerCierreSesion();
+	it("gestiona banderas de carga y error", () => {
+		const estados = [];
+		const observer = (state) => estados.push(state);
+		almacenAutenticacion.suscribir(observer);
 
-		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.false;
-		expect(localStorage.getItem("auth_user")).to.be.null;
-		expect(localStorage.getItem("auth_token")).to.be.null;
+		almacenAutenticacion.establecerCargando(true);
+		expect(almacenAutenticacion.obtenerEstado().estaCargando).to.be.true;
+
+		almacenAutenticacion.establecerError("Fallo puntual");
+		const { error, estaCargando } = almacenAutenticacion.obtenerEstado();
+		expect(error).to.equal("Fallo puntual");
+		expect(estaCargando).to.be.false;
+		expect(estados.length).to.be.greaterThan(1);
+
+		almacenAutenticacion.limpiarError();
+		expect(almacenAutenticacion.obtenerEstado().error).to.be.null;
+
+		almacenAutenticacion.desuscribir(observer);
+	});
+
+	it("actualiza datos del usuario y sincroniza localStorage", () => {
+		almacenAutenticacion.establecerInicioSesion(
+			{ id: 99, nombre: "Inicial" },
+			"token_inicial"
+		);
+
+		almacenAutenticacion.actualizarUsuario({ id: 99, nombre: "Actualizado" });
+		const estado = almacenAutenticacion.obtenerEstado();
+
+		expect(estado.usuario).to.deep.equal({ id: 99, nombre: "Actualizado" });
+		expect(JSON.parse(localStorage.getItem("auth_user"))).to.deep.equal({
+			id: 99,
+			nombre: "Actualizado",
+		});
 	});
 
 	it("restaura automáticamente la sesión almacenada", () => {
@@ -255,8 +340,9 @@ describe("AlmacenAutenticacion", () => {
 		const restaurada = almacenAutenticacion.restaurarSesion();
 
 		expect(restaurada).to.be.true;
-		expect(almacenAutenticacion.obtenerEstado().usuario).to.deep.equal(usuario);
-		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.true;
+		const estado = almacenAutenticacion.obtenerEstado();
+		expect(estado.usuario).to.deep.equal(usuario);
+		expect(estado.estaAutenticado).to.be.true;
 	});
 });
 
@@ -280,7 +366,7 @@ describe("LibreriaSession", () => {
 		expect(session.getRole()).to.equal("invitado");
 	});
 
-	it("emite eventos y permite consumir la cola de mensajes", () => {
+	it("emite eventos al añadir mensajes y vacía la cola al consumir", () => {
 		let eventos = 0;
 		const listener = () => {
 			eventos += 1;
@@ -290,11 +376,12 @@ describe("LibreriaSession", () => {
 
 		session.pushSuccess("Operación correcta");
 		session.pushError("Ha fallado");
+		session.pushInfo("Información general");
 
 		const mensajes = session.consume();
 
-		expect(eventos).to.equal(2);
-		expect(mensajes).to.have.lengthOf(2);
+		expect(eventos).to.equal(3);
+		expect(mensajes).to.have.lengthOf(3);
 		expect(session.consume()).to.have.lengthOf(0);
 
 		window.removeEventListener("messages-updated", listener);

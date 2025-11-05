@@ -11,16 +11,26 @@ class ServicioAutenticacion {
 
 	async iniciarSesion(usuario, password, rol) {
 		try {
-			const identificador = (usuario || "").trim();
+			const email = (usuario || "").trim().toLowerCase();
 			const rolNormalizado = (rol || "").toUpperCase();
 
-			const candidato = model.usuarios.find((u) => {
-				const coincideEmail =
-					u.email?.toLowerCase() === identificador.toLowerCase();
-				const coincideDni =
-					u.dni?.toUpperCase() === identificador.toUpperCase();
-				return coincideEmail || coincideDni;
-			});
+			if (!email) {
+				return {
+					success: false,
+					error: "El email es obligatorio",
+				};
+			}
+
+			if (!this.esEmailValido(email)) {
+				return {
+					success: false,
+					error: "Email inválido",
+				};
+			}
+
+			const candidato = model.usuarios.find(
+				(u) => u.email?.toLowerCase() === email
+			);
 
 			if (!candidato) {
 				return {
