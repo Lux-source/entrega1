@@ -36,7 +36,7 @@ export class ClientePerfil extends Presenter {
 			return;
 		}
 
-		const compras = JSON.parse(localStorage.getItem("compras") || "[]");
+		const compras = session.readScopedArray("compras");
 
 		this.renderUser(user);
 		this.renderStats(compras);

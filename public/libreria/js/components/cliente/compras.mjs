@@ -1,4 +1,5 @@
 import { Presenter } from "../../commons/presenter.mjs";
+import { session } from "../../commons/libreria-session.mjs";
 import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./compras.html", import.meta.url);
@@ -45,9 +46,7 @@ export class ClienteCompras extends Presenter {
 	}
 
 	renderCompras() {
-		const compras = JSON.parse(
-			localStorage.getItem("compras") || "[]"
-		).reverse();
+		const compras = [...session.readScopedArray("compras")].reverse();
 
 		if (!compras.length) {
 			if (this.emptySection) {

@@ -73,7 +73,7 @@ export class ClientePago extends Presenter {
 	}
 
 	syncCart() {
-		const raw = JSON.parse(localStorage.getItem("carro") || "[]");
+		const raw = session.readScopedArray("carro");
 		const sanitized = [];
 		const items = [];
 
@@ -98,11 +98,11 @@ export class ClientePago extends Presenter {
 		});
 
 		if (!items.length) {
-			localStorage.setItem("carro", "[]");
+			session.writeScopedArray("carro", []);
 			return false;
 		}
 
-		localStorage.setItem("carro", JSON.stringify(sanitized));
+		session.writeScopedArray("carro", sanitized);
 		this.cart = sanitized;
 		this.items = items;
 		return true;
@@ -200,7 +200,7 @@ export class ClientePago extends Presenter {
 	}
 
 	actualizarCantidad(index, action) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.readScopedArray("carro");
 		const item = carro[index];
 
 		if (!item) {
@@ -227,13 +227,13 @@ export class ClientePago extends Presenter {
 		}
 
 		if (!carro.length) {
-			localStorage.setItem("carro", "[]");
+			session.writeScopedArray("carro", []);
 			session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
 			router.navigate("/c/carro");
 			return;
 		}
 
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.writeScopedArray("carro", carro);
 
 		if (!this.syncCart()) {
 			router.navigate("/c/carro");
@@ -277,17 +277,19 @@ export class ClientePago extends Presenter {
 			}
 		}
 
-		const compras = JSON.parse(localStorage.getItem("compras") || "[]");
+		const compras = session.readScopedArray("compras");
 		const subtotal = this.items.reduce(
 			(sum, item) => sum + item.libro.precio * item.cantidad,
 			0
 		);
+		const usuario = session.getUser();
 
 		const nuevaCompra = {
 			id: Date.now(),
 			fecha: new Date().toISOString(),
 			items: this.cart,
 			total: subtotal,
+			usuarioId: usuario?.id ?? null,
 			envio: {
 				nombre: datosEnvio.get("nombre"),
 				direccion: datosEnvio.get("direccion"),
@@ -298,8 +300,8 @@ export class ClientePago extends Presenter {
 		};
 
 		compras.push(nuevaCompra);
-		localStorage.setItem("compras", JSON.stringify(compras));
-		localStorage.removeItem("carro");
+		session.writeScopedArray("compras", compras);
+		session.clearScopedItem("carro");
 
 		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
 		router.navigate("/c");

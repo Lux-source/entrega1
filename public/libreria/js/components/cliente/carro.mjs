@@ -52,7 +52,7 @@ export class ClienteCarro extends Presenter {
 	}
 
 	renderCarro() {
-		const carroRaw = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carroRaw = session.readScopedArray("carro");
 		const items = carroRaw
 			.map((entry) => {
 				const libro = this.model.libros.find((lib) => lib.id === entry.libroId);
@@ -67,7 +67,7 @@ export class ClienteCarro extends Presenter {
 			if (this.contentSection) {
 				this.contentSection.style.display = "none";
 			}
-			localStorage.setItem("carro", "[]");
+			session.writeScopedArray("carro", []);
 			return;
 		}
 
@@ -106,14 +106,12 @@ export class ClienteCarro extends Presenter {
 
 		this.cartItems = items;
 
-		localStorage.setItem(
+		session.writeScopedArray(
 			"carro",
-			JSON.stringify(
-				items.map((item) => ({
-					libroId: item.libroId,
-					cantidad: item.cantidad,
-				}))
-			)
+			items.map((item) => ({
+				libroId: item.libroId,
+				cantidad: item.cantidad,
+			}))
 		);
 	}
 
@@ -160,7 +158,7 @@ export class ClienteCarro extends Presenter {
 	}
 
 	actualizarCantidad(index, action) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.readScopedArray("carro");
 		const item = carro[index];
 
 		if (!item) {
@@ -185,18 +183,18 @@ export class ClienteCarro extends Presenter {
 			}
 		}
 
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.writeScopedArray("carro", carro);
 		this.renderCarro();
 	}
 
 	eliminarItem(index) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.readScopedArray("carro");
 		if (!carro[index]) {
 			return;
 		}
 
 		carro.splice(index, 1);
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.writeScopedArray("carro", carro);
 		session.pushSuccess("Producto eliminado del carro");
 		this.renderCarro();
 	}

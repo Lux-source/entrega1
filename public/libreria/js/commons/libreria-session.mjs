@@ -50,6 +50,72 @@ class LibreriaSession {
 	notifyMessages() {
 		window.dispatchEvent(new CustomEvent("messages-updated"));
 	}
+
+	// Persistencia scoped por usuario
+	getScopedKey(baseKey) {
+		const sanitizedKey = (baseKey || "").trim();
+		if (!sanitizedKey) {
+			throw new Error(
+				"La clave base es obligatoria para la persistencia scoped"
+			);
+		}
+
+		const user = this.getUser();
+		if (user) {
+			if (user.id !== undefined && user.id !== null) {
+				return `${sanitizedKey}_${user.id}`;
+			}
+			if (user.email) {
+				return `${sanitizedKey}_${user.email.toLowerCase()}`;
+			}
+		}
+
+		return `${sanitizedKey}_invitado`;
+	}
+
+	readScopedArray(baseKey) {
+		const scopedKey = this.getScopedKey(baseKey);
+		const scopedResult = this.#readArrayFromStorage(scopedKey);
+		if (scopedResult.exists) {
+			return scopedResult.value;
+		}
+
+		const legacyResult = this.#readArrayFromStorage(baseKey);
+		if (legacyResult.exists) {
+			this.writeScopedArray(baseKey, legacyResult.value);
+			localStorage.removeItem(baseKey);
+			return legacyResult.value;
+		}
+
+		return [];
+	}
+
+	writeScopedArray(baseKey, data) {
+		const scopedKey = this.getScopedKey(baseKey);
+		const safeData = Array.isArray(data) ? data : [];
+		localStorage.setItem(scopedKey, JSON.stringify(safeData));
+	}
+
+	clearScopedItem(baseKey) {
+		const scopedKey = this.getScopedKey(baseKey);
+		localStorage.removeItem(scopedKey);
+	}
+
+	#readArrayFromStorage(key) {
+		const raw = localStorage.getItem(key);
+		if (raw === null) {
+			return { exists: false, value: [] };
+		}
+
+		try {
+			const parsed = JSON.parse(raw);
+			return { exists: true, value: Array.isArray(parsed) ? parsed : [] };
+		} catch (error) {
+			console.warn(`No se pudo parsear los datos almacenados en ${key}`, error);
+			localStorage.removeItem(key);
+			return { exists: false, value: [] };
+		}
+	}
 }
 
 export const session = new LibreriaSession();
