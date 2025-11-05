@@ -3,10 +3,6 @@ import { Navbar } from "./components/layout/navbar.mjs";
 import { Messages } from "./components/layout/messages.mjs";
 
 // Invitado
-// import { InvitadoHome } from "./components/invitado/home.js";
-// import { InvitadoVerLibro } from "./components/invitado/ver-libro.js";
-// import { Login } from "./components/invitado/login.js";
-// import { Registro } from "./components/invitado/registro.js";
 import { InvitadoHome } from "./components/invitado/home.mjs";
 import { InvitadoVerLibro } from "./components/invitado/ver-libro.mjs";
 import { Login } from "./components/invitado/login.mjs";
@@ -32,14 +28,14 @@ import { ClienteModificarPerfil } from "./components/cliente/modificar-perfil.mj
 import { Error404 } from "./components/error/404.mjs";
 import { Error403 } from "./components/error/403.mjs";
 
-// ==================== RUTAS INVITADO ====================
+// RUTAS INVITADO
 router.register("/", InvitadoHome); // Redirige a home de invitado
 router.register("/invitado-home", InvitadoHome);
 router.register("/libros/:id", InvitadoVerLibro);
 router.register("/login", Login);
 router.register("/registro", Registro);
 
-// ==================== RUTAS ADMIN ====================
+// RUTAS ADMIN
 router.register("/a", AdminHome, ["admin"]);
 router.register("/a/libros/nuevo", AdminLibroForm, ["admin"]);
 router.register("/a/libros/:id", AdminVerLibro, ["admin"]);
@@ -47,7 +43,7 @@ router.register("/a/libros/editar/:id", AdminLibroForm, ["admin"]);
 router.register("/a/perfil", AdminPerfil, ["admin"]);
 router.register("/a/modificar-perfil", AdminModificarPerfil, ["admin"]);
 
-// ==================== RUTAS CLIENTE ====================
+// RUTAS CLIENTE
 router.register("/c", ClienteHome, ["cliente"]);
 router.register("/c/libros/:id", ClienteVerLibro, ["cliente"]);
 router.register("/c/carro", ClienteCarro, ["cliente"]);
@@ -56,18 +52,17 @@ router.register("/c/compras", ClienteCompras, ["cliente"]);
 router.register("/c/perfil", ClientePerfil, ["cliente"]);
 router.register("/c/modificar-perfil", ClienteModificarPerfil, ["cliente"]);
 
-// ==================== RUTAS DE ERROR ====================
+// RUTAS DE ERROR
 router.register("/404", Error404);
 router.register("/403", Error403);
 
-// Inicializar layout
 const navbar = new Navbar();
 const messages = new Messages();
 
 navbar.render();
 messages.render();
 
-// Escuchar cambios para re-renderizar navbar (ya se hace en Navbar con auth-store)
+// Escuchar cambios para re-renderizar navbar
 window.addEventListener("user-logged-in", () => {
 	navbar.render();
 	messages.render();
