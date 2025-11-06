@@ -8,8 +8,7 @@ import { session } from "../libreria/js/commons/libreria-session.mjs";
 const { describe, it, beforeEach, afterEach } = window;
 const { expect } = window.chai;
 
-const crearLibro = () =>
-	new Libro(200, "Pruebas", "QA", "qa-isbn", 25, 10, "portada");
+const crearLibro = () => new Libro(200, "Pruebas", "QA", "qa-isbn", 25, 10);
 
 const crearUsuario = () =>
 	new Usuario(
@@ -218,9 +217,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("permite añadir manualmente un libro al catálogo", () => {
-		model.libros.push(
-			new Libro(999, "Manual", "Autor", "crud-isbn", 10, 1, "")
-		);
+		model.libros.push(new Libro(999, "Manual", "Autor", "crud-isbn", 10, 1));
 		const encontrado = model.libros.find((libro) => libro.isbn === "crud-isbn");
 		expect(encontrado).to.exist;
 		limpiarLibroRegistrado("crud-isbn");
@@ -234,7 +231,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("permite eliminar un libro del catálogo local", () => {
-		const libro = new Libro(800, "Eliminar", "Autor", "crud-isbn", 10, 1, "");
+		const libro = new Libro(800, "Eliminar", "Autor", "crud-isbn", 10, 1);
 		model.libros.push(libro);
 		const index = model.libros.indexOf(libro);
 		model.libros.splice(index, 1);

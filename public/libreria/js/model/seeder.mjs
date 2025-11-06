@@ -9,7 +9,7 @@ class Model {
 	}
 
 	seed() {
-		// Usuarios de prueba
+		// Usuarios
 		this.usuarios.push(
 			new Usuario(
 				1,
@@ -46,62 +46,12 @@ class Model {
 			)
 		);
 
-		// Libros de prueba
+		// Libros
 		this.libros.push(
-			new Libro(
-				1,
-				"Don Quijote de la Mancha",
-				"Miguel de Cervantes",
-				"978-84-376-0494-7",
-				15.95,
-				25,
-				"Obra cumbre de la literatura española"
-			),
-			new Libro(
-				2,
-				"Cien años de soledad",
-				"Gabriel García Márquez",
-				"978-84-204-2548-8",
-				18.9,
-				15,
-				"Realismo mágico latinoamericano"
-			),
-			new Libro(
-				3,
-				"1984",
-				"George Orwell",
-				"978-84-9759-252-5",
-				12.5,
-				30,
-				"Distopía totalitaria"
-			),
-			new Libro(
-				4,
-				"El principito",
-				"Antoine de Saint-Exupéry",
-				"978-84-9841-483-8",
-				9.95,
-				50,
-				"Cuento filosófico"
-			),
-			new Libro(
-				5,
-				"Harry Potter y la piedra filosofal",
-				"J.K. Rowling",
-				"978-84-9838-936-6",
-				16.95,
-				20,
-				"Fantasía juvenil"
-			),
-			new Libro(
-				6,
-				"El código Da Vinci",
-				"Dan Brown",
-				"978-84-08-17263-1",
-				14.9,
-				10,
-				"Thriller conspirativo"
-			)
+			new Libro(1, "Libro 1", "Lucian", "978-84-376-0494-7", 15.95, 25),
+			new Libro(2, "Libro 2", "Loren", "978-84-204-2548-8", 18.9, 15),
+			new Libro(3, "Libro 3", "Juanpi", "978-84-9759-252-5", 12.5, 30),
+			new Libro(4, "Libro 4", "Héctor", "978-84-9841-483-8", 9.95, 50)
 		);
 	}
 }

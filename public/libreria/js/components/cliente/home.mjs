@@ -138,11 +138,9 @@ export class ClienteHome extends Presenter {
 		const titulo = libro?.titulo ?? "Título no disponible";
 		const autor = libro?.autor ?? "Autor desconocido";
 		const precio = Number.isFinite(libro?.precio) ? libro.precio : 0;
-		const portada = libro?.portada ?? "";
 
 		return `
 			<article class="book-card">
-				<img src="${portada}" alt="${titulo}" loading="lazy">
 				<h3>${titulo}</h3>
 				<p class="author">${autor}</p>
 				<p class="price">${precio.toFixed(2)}€</p>

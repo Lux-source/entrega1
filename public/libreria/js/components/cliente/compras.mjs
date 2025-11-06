@@ -89,7 +89,6 @@ export class ClienteCompras extends Presenter {
 				const totalLinea = libro.precio * item.cantidad;
 				return `
 					<div class="compra-item">
-						<img src="${libro.portada}" alt="${libro.titulo}">
 						<div class="item-detalle">
 							<h4>${libro.titulo}</h4>
 							<p>${libro.autor}</p>

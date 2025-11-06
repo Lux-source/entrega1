@@ -164,7 +164,6 @@ export class ClientePago extends Presenter {
 	createItemMarkup(item, index) {
 		return `
 			<div class="resumen-item">
-				<img src="${item.libro.portada}" alt="${item.libro.titulo}">
 				<div class="item-info">
 					<p class="item-titulo">${item.libro.titulo}</p>
 					<p class="item-precio-unitario">Precio unitario: ${item.libro.precio.toFixed(

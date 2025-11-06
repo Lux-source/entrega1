@@ -118,7 +118,6 @@ export class ClienteCarro extends Presenter {
 	createItemMarkup(item, index) {
 		return `
 			<div class="carro-item">
-				<img src="${item.libro.portada}" alt="${item.libro.titulo}">
 				<div class="item-info">
 					<h3>${item.libro.titulo}</h3>
 					<p class="item-autor">${item.libro.autor}</p>

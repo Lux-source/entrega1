@@ -210,15 +210,9 @@ main {
 
 .libro-header {
 	display: grid;
-	grid-template-columns: 300px 1fr;
-	gap: 3rem;
-	margin-bottom: 3rem;
-}
-
-.libro-portada {
-	width: 100%;
-	border-radius: 8px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	grid-template-columns: 1fr;
+	gap: 2rem;
+	margin-bottom: 2rem;
 }
 
 .libro-info h1 {
@@ -496,14 +490,8 @@ h2 {
 
 .detalle-content {
 	display: grid;
-	grid-template-columns: 350px 1fr;
-	gap: 3rem;
-}
-
-.detalle-imagen img {
-	width: 100%;
-	border-radius: 8px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	grid-template-columns: 1fr;
+	gap: 2rem;
 }
 
 .detalle-info h1 {
@@ -541,14 +529,6 @@ h2 {
 .info-value {
 	color: #2c3e50;
 	font-size: 1rem;
-}
-
-.descripcion {
-	margin-bottom: 2rem;
-}
-
-.descripcion h3 {
-	margin-bottom: 0.5rem;
 }
 
 .compra-info {
@@ -1104,24 +1084,12 @@ h2 {
 
 .libro-detalle-admin {
 	display: grid;
-	grid-template-columns: 350px 1fr;
-	gap: 3rem;
+	grid-template-columns: 1fr;
+	gap: 2rem;
 	background: white;
 	padding: 2rem;
 	border-radius: 8px;
 	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.libro-portada-section {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-}
-
-.libro-portada-grande {
-	width: 100%;
-	border-radius: 8px;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .libro-stats {
@@ -1193,20 +1161,6 @@ h2 {
 	color: #2c3e50;
 }
 
-.libro-descripcion {
-	margin-bottom: 1.5rem;
-}
-
-.libro-descripcion h3 {
-	color: #2c3e50;
-	margin-bottom: 0.75rem;
-}
-
-.libro-descripcion p {
-	color: #666;
-	line-height: 1.8;
-}
-
 .libro-admin-info {
 	display: flex;
 	gap: 1rem;
@@ -1230,7 +1184,7 @@ h2 {
 	color: #f57c00;
 }
 
-/* Responsive */
+/* Responsive pa que se adapte */
 @media (max-width: 768px) {
 	.detalle-content,
 	.carro-content,
@@ -1265,7 +1219,7 @@ h2 {
 	}
 }
 
-/* ==================== PAGINACIÓN ==================== */
+/* PAGINACIÓN */
 .pagination {
 	display: flex;
 	justify-content: center;
@@ -1300,7 +1254,7 @@ h2 {
 	color: #333;
 }
 
-/* ==================== CATÁLOGO INVITADO ==================== */
+/* CATÁLOGO INVITADO */
 .catalog-section {
 	padding: 2rem;
 	max-width: 1400px;

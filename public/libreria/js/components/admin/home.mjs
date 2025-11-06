@@ -137,13 +137,13 @@ export class AdminHome extends Presenter {
 		const titulo = libro?.titulo ?? "Título no disponible";
 		const autor = libro?.autor ?? "Autor desconocido";
 		const stock = Number.isFinite(libro?.stock) ? libro.stock : 0;
-		const portada = libro?.portada ?? "";
+		const precio = Number.isFinite(libro?.precio) ? libro.precio : 0;
 
 		return `
             <article class="book-card admin-card">
-                <img src="${portada}" alt="${titulo}" loading="lazy">
                 <h3>${titulo}</h3>
                 <p class="author">${autor}</p>
+				<p class="price">Precio: ${precio.toFixed(2)}€</p>
                 <p class="stock">Stock: ${stock}</p>
                 <div class="card-actions">
                     <a href="${this.getLibroLink(

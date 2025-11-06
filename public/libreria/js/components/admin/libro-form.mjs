@@ -80,14 +80,8 @@ export class AdminLibroForm extends Presenter {
 			titulo: this.form.querySelector("#titulo"),
 			autor: this.form.querySelector("#autor"),
 			isbn: this.form.querySelector("#isbn"),
-			editorial: this.form.querySelector("#editorial"),
 			precio: this.form.querySelector("#precio"),
 			stock: this.form.querySelector("#stock"),
-			anio: this.form.querySelector("#anio"),
-			paginas: this.form.querySelector("#paginas"),
-			idioma: this.form.querySelector("#idioma"),
-			portada: this.form.querySelector("#portada"),
-			descripcion: this.form.querySelector("#descripcion"),
 		};
 	}
 
@@ -119,14 +113,8 @@ export class AdminLibroForm extends Presenter {
 		this.inputs.titulo.value = libro.titulo ?? "";
 		this.inputs.autor.value = libro.autor ?? "";
 		this.inputs.isbn.value = libro.isbn ?? "";
-		this.inputs.editorial.value = libro.editorial ?? "";
 		this.inputs.precio.value = libro.precio ?? "";
 		this.inputs.stock.value = libro.stock ?? 0;
-		this.inputs.anio.value = libro.anio ?? "";
-		this.inputs.paginas.value = libro.paginas ?? "";
-		this.inputs.idioma.value = libro.idioma ?? "Español";
-		this.inputs.portada.value = libro.portada ?? "";
-		this.inputs.descripcion.value = libro.descripcion ?? "";
 	}
 
 	attachEvents() {
@@ -143,22 +131,14 @@ export class AdminLibroForm extends Presenter {
 	}
 
 	handleSubmit(formData) {
+		const rawPrecio = Number.parseFloat(formData.get("precio"));
+		const rawStock = Number.parseInt(formData.get("stock"), 10);
 		const data = {
 			titulo: (formData.get("titulo") ?? "").toString().trim(),
 			autor: (formData.get("autor") ?? "").toString().trim(),
 			isbn: (formData.get("isbn") ?? "").toString().trim(),
-			precio: Number.parseFloat(formData.get("precio")),
-			stock: Number.parseInt(formData.get("stock"), 10),
-			portada: (formData.get("portada") ?? "").toString().trim(),
-			descripcion: (formData.get("descripcion") ?? "").toString().trim(),
-			editorial: (formData.get("editorial") ?? "").toString().trim(),
-			anio: formData.get("anio")
-				? Number.parseInt(formData.get("anio"), 10)
-				: null,
-			paginas: formData.get("paginas")
-				? Number.parseInt(formData.get("paginas"), 10)
-				: null,
-			idioma: (formData.get("idioma") ?? "Español").toString(),
+			precio: Number.isFinite(rawPrecio) && rawPrecio > 0 ? rawPrecio : 0,
+			stock: Number.isInteger(rawStock) && rawStock >= 0 ? rawStock : 0,
 		};
 
 		if (this.isEdit && this.libro) {
@@ -175,13 +155,7 @@ export class AdminLibroForm extends Presenter {
 			data.autor,
 			data.isbn,
 			Number.isFinite(data.precio) ? data.precio : 0,
-			Number.isFinite(data.stock) ? data.stock : 0,
-			data.portada,
-			data.descripcion,
-			data.editorial,
-			Number.isFinite(data.anio) ? data.anio : null,
-			Number.isFinite(data.paginas) ? data.paginas : null,
-			data.idioma
+			Number.isFinite(data.stock) ? data.stock : 0
 		);
 
 		this.model.libros.push(nuevoLibro);
