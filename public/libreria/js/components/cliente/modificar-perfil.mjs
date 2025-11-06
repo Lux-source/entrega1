@@ -1,9 +1,9 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
-import { authStore } from "../../model/auth-store.js";
-import { authService } from "../../model/auth-service.js";
+import { model } from "../../model/seeder.mjs";
+import { almacenAutenticacion } from "../../model/auth-store.mjs";
+import { servicioAutenticacion } from "../../model/auth-service.mjs";
 
 const templateUrl = new URL("./modificar-perfil.html", import.meta.url);
 let templateHtml = "";
@@ -152,19 +152,19 @@ export class ClienteModificarPerfil extends Presenter {
 			return;
 		}
 
-		if (!authService.isValidDni(dni)) {
+		if (!servicioAutenticacion.esDniValido(dni)) {
 			session.pushError(
 				"DNI inválido. Usa 7-8 dígitos y una letra (ej: 12345678A)"
 			);
 			return;
 		}
 
-		if (!authService.isValidEmail(email)) {
+		if (!servicioAutenticacion.esEmailValido(email)) {
 			session.pushError("Email inválido");
 			return;
 		}
 
-		if (!authService.isValidTelefono(telefono)) {
+		if (!servicioAutenticacion.esTelefonoValido(telefono)) {
 			session.pushError(
 				"Teléfono inválido. Usa solo dígitos (7-15 caracteres)"
 			);
@@ -219,7 +219,7 @@ export class ClienteModificarPerfil extends Presenter {
 		};
 
 		session.setUser(updatedUser);
-		authStore.updateUser(updatedUser);
+		almacenAutenticacion.actualizarUsuario(updatedUser);
 		session.pushSuccess("Perfil actualizado correctamente");
 
 		router.navigate("/c/perfil");
@@ -231,13 +231,11 @@ export class ClienteModificarPerfil extends Presenter {
 		}, 100);
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.form) {
 			this.form.removeEventListener("submit", this.onSubmit);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

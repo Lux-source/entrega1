@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./carro.html", import.meta.url);
 let templateHtml = "";
@@ -52,7 +52,7 @@ export class ClienteCarro extends Presenter {
 	}
 
 	renderCarro() {
-		const carroRaw = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carroRaw = session.leerArrayClienteSesion("carro");
 		const items = carroRaw
 			.map((entry) => {
 				const libro = this.model.libros.find((lib) => lib.id === entry.libroId);
@@ -67,7 +67,7 @@ export class ClienteCarro extends Presenter {
 			if (this.contentSection) {
 				this.contentSection.style.display = "none";
 			}
-			localStorage.setItem("carro", "[]");
+			session.escribirArrayClienteSesion("carro", []);
 			return;
 		}
 
@@ -106,21 +106,18 @@ export class ClienteCarro extends Presenter {
 
 		this.cartItems = items;
 
-		localStorage.setItem(
+		session.escribirArrayClienteSesion(
 			"carro",
-			JSON.stringify(
-				items.map((item) => ({
-					libroId: item.libroId,
-					cantidad: item.cantidad,
-				}))
-			)
+			items.map((item) => ({
+				libroId: item.libroId,
+				cantidad: item.cantidad,
+			}))
 		);
 	}
 
 	createItemMarkup(item, index) {
 		return `
 			<div class="carro-item">
-				<img src="${item.libro.portada}" alt="${item.libro.titulo}">
 				<div class="item-info">
 					<h3>${item.libro.titulo}</h3>
 					<p class="item-autor">${item.libro.autor}</p>
@@ -160,7 +157,7 @@ export class ClienteCarro extends Presenter {
 	}
 
 	actualizarCantidad(index, action) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.leerArrayClienteSesion("carro");
 		const item = carro[index];
 
 		if (!item) {
@@ -185,26 +182,26 @@ export class ClienteCarro extends Presenter {
 			}
 		}
 
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.escribirArrayClienteSesion("carro", carro);
 		this.renderCarro();
 	}
 
 	eliminarItem(index) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.leerArrayClienteSesion("carro");
 		if (!carro[index]) {
 			return;
 		}
 
 		carro.splice(index, 1);
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.escribirArrayClienteSesion("carro", carro);
 		session.pushSuccess("Producto eliminado del carro");
 		this.renderCarro();
 	}
 
-	unmount() {
+	desmontar() {
 		if (this.containerEl) {
 			this.containerEl.removeEventListener("click", this.onClick);
 		}
-		super.unmount();
+		super.desmontar();
 	}
 }

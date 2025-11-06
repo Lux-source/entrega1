@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -137,13 +137,13 @@ export class AdminHome extends Presenter {
 		const titulo = libro?.titulo ?? "Título no disponible";
 		const autor = libro?.autor ?? "Autor desconocido";
 		const stock = Number.isFinite(libro?.stock) ? libro.stock : 0;
-		const portada = libro?.portada ?? "";
+		const precio = Number.isFinite(libro?.precio) ? libro.precio : 0;
 
 		return `
             <article class="book-card admin-card">
-                <img src="${portada}" alt="${titulo}" loading="lazy">
                 <h3>${titulo}</h3>
                 <p class="author">${autor}</p>
+				<p class="price">Precio: ${precio.toFixed(2)}€</p>
                 <p class="stock">Stock: ${stock}</p>
                 <div class="card-actions">
                     <a href="${this.getLibroLink(
@@ -191,13 +191,11 @@ export class AdminHome extends Presenter {
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.paginationEl) {
 			this.paginationEl.removeEventListener("click", this.onPaginationClick);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

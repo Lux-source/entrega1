@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -48,7 +48,6 @@ export class AdminVerLibro extends Presenter {
 		this.deleteButton = this.container.querySelector(
 			'[data-element="delete-button"]'
 		);
-		this.coverEl = this.container.querySelector('[data-element="cover"]');
 		this.stockValueEl = this.container.querySelector(
 			'[data-element="stock-value"]'
 		);
@@ -58,21 +57,8 @@ export class AdminVerLibro extends Presenter {
 		this.titleEl = this.container.querySelector('[data-element="title"]');
 		this.authorEl = this.container.querySelector('[data-element="author"]');
 		this.isbnEl = this.container.querySelector('[data-element="isbn"]');
-		this.editorialEl = this.container.querySelector(
-			'[data-element="editorial"]'
-		);
-		this.anioEl = this.container.querySelector('[data-element="anio"]');
-		this.paginasEl = this.container.querySelector('[data-element="paginas"]');
-		this.idiomaEl = this.container.querySelector('[data-element="idioma"]');
-		this.descriptionEl = this.container.querySelector(
-			'[data-element="description"]'
-		);
 		this.idBadgeEl = this.container.querySelector('[data-element="id-badge"]');
 		this.sections = {
-			editorial: this.container.querySelector('[data-section="editorial"]'),
-			anio: this.container.querySelector('[data-section="anio"]'),
-			paginas: this.container.querySelector('[data-section="paginas"]'),
-			descripcion: this.container.querySelector('[data-section="descripcion"]'),
 			lowStock: this.container.querySelector('[data-section="low-stock"]'),
 		};
 	}
@@ -100,11 +86,6 @@ export class AdminVerLibro extends Presenter {
 			this.editLink.href = `/a/libros/editar/${this.libro.id}`;
 		}
 
-		if (this.coverEl) {
-			this.coverEl.src = this.libro.portada ?? "";
-			this.coverEl.alt = this.libro.titulo ?? "Portada del libro";
-		}
-
 		if (this.stockValueEl) {
 			this.stockValueEl.textContent = `${this.libro.stock ?? 0}`;
 			this.stockValueEl.classList.toggle(
@@ -130,31 +111,6 @@ export class AdminVerLibro extends Presenter {
 
 		if (this.isbnEl) {
 			this.isbnEl.textContent = this.libro.isbn ?? "N/A";
-		}
-
-		this.toggleSection("editorial", Boolean(this.libro.editorial));
-		if (this.editorialEl) {
-			this.editorialEl.textContent = this.libro.editorial ?? "";
-		}
-
-		this.toggleSection("anio", Boolean(this.libro.anio));
-		if (this.anioEl) {
-			this.anioEl.textContent = this.libro.anio ?? "";
-		}
-
-		this.toggleSection("paginas", Boolean(this.libro.paginas));
-		if (this.paginasEl) {
-			this.paginasEl.textContent = this.libro.paginas ?? "";
-		}
-
-		if (this.idiomaEl) {
-			this.idiomaEl.textContent = this.libro.idioma ?? "Español";
-		}
-
-		const descripcion = this.libro.descripcion?.trim();
-		this.toggleSection("descripcion", Boolean(descripcion));
-		if (this.descriptionEl) {
-			this.descriptionEl.textContent = descripcion ?? "";
 		}
 
 		if (this.idBadgeEl) {
@@ -206,13 +162,11 @@ export class AdminVerLibro extends Presenter {
 		router.navigate("/a");
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.deleteButton && this.deleteHandler) {
 			this.deleteButton.removeEventListener("click", this.deleteHandler);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

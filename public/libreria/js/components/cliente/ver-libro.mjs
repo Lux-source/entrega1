@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -47,19 +47,9 @@ export class ClienteVerLibro extends Presenter {
 
 	cacheDom() {
 		this.wrapper = this.container.querySelector('[data-element="wrapper"]');
-		this.coverEl = this.container.querySelector('[data-element="cover"]');
 		this.titleEl = this.container.querySelector('[data-element="title"]');
 		this.authorEl = this.container.querySelector('[data-element="author"]');
-		this.editorialEl = this.container.querySelector(
-			'[data-element="editorial"]'
-		);
-		this.anioEl = this.container.querySelector('[data-element="anio"]');
-		this.paginasEl = this.container.querySelector('[data-element="paginas"]');
-		this.idiomaEl = this.container.querySelector('[data-element="idioma"]');
 		this.isbnEl = this.container.querySelector('[data-element="isbn"]');
-		this.descriptionEl = this.container.querySelector(
-			'[data-element="description"]'
-		);
 		this.priceEl = this.container.querySelector('[data-element="price"]');
 		this.stockEl = this.container.querySelector('[data-element="stock"]');
 		this.quantityWrapper = this.container.querySelector(
@@ -71,12 +61,6 @@ export class ClienteVerLibro extends Presenter {
 		this.addCartButton = this.container.querySelector(
 			'[data-element="add-cart"]'
 		);
-		this.sections = {
-			editorial: this.container.querySelector('[data-section="editorial"]'),
-			anio: this.container.querySelector('[data-section="anio"]'),
-			paginas: this.container.querySelector('[data-section="paginas"]'),
-			descripcion: this.container.querySelector('[data-section="descripcion"]'),
-		};
 	}
 
 	getLibroFromRoute() {
@@ -98,11 +82,6 @@ export class ClienteVerLibro extends Presenter {
 			return;
 		}
 
-		if (this.coverEl) {
-			this.coverEl.src = this.libro.portada ?? "";
-			this.coverEl.alt = this.libro.titulo ?? "Portada";
-		}
-
 		if (this.titleEl) {
 			this.titleEl.textContent = this.libro.titulo ?? "Título no disponible";
 		}
@@ -113,33 +92,8 @@ export class ClienteVerLibro extends Presenter {
 			}`;
 		}
 
-		this.toggleSection("editorial", Boolean(this.libro.editorial));
-		if (this.editorialEl) {
-			this.editorialEl.textContent = this.libro.editorial ?? "";
-		}
-
-		this.toggleSection("anio", Boolean(this.libro.anio));
-		if (this.anioEl) {
-			this.anioEl.textContent = this.libro.anio ?? "";
-		}
-
-		this.toggleSection("paginas", Boolean(this.libro.paginas));
-		if (this.paginasEl) {
-			this.paginasEl.textContent = this.libro.paginas ?? "";
-		}
-
-		if (this.idiomaEl) {
-			this.idiomaEl.textContent = this.libro.idioma ?? "Español";
-		}
-
 		if (this.isbnEl) {
 			this.isbnEl.textContent = this.libro.isbn ?? "N/A";
-		}
-
-		const descripcion = this.libro.descripcion?.trim();
-		this.toggleSection("descripcion", Boolean(descripcion));
-		if (this.descriptionEl) {
-			this.descriptionEl.textContent = descripcion ?? "";
 		}
 
 		if (this.priceEl) {
@@ -204,7 +158,7 @@ export class ClienteVerLibro extends Presenter {
 	}
 
 	agregarAlCarro(libroId, cantidad) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.leerArrayClienteSesion("carro");
 		const item = carro.find((entry) => entry.libroId === libroId);
 
 		if (item) {
@@ -213,27 +167,20 @@ export class ClienteVerLibro extends Presenter {
 			carro.push({ libroId, cantidad });
 		}
 
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.escribirArrayClienteSesion("carro", carro);
 		session.pushSuccess(`${cantidad} libro(s) añadido(s) al carro`);
 		router.navigate("/c/carro");
 	}
 
-	toggleSection(key, visible) {
-		const section = this.sections?.[key];
-		if (!section) {
-			return;
+	desmontar() {
+		if (this.containerEl) {
+			this.containerEl.removeEventListener("submit", this.onSubmit);
 		}
 
-		section.style.display = visible ? "" : "none";
-	}
-
-	destroy() {
 		if (this.addCartButton) {
 			this.addCartButton.removeEventListener("click", this.onAddToCart);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

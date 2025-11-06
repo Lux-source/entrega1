@@ -23,7 +23,7 @@ export class Presenter {
 		// Override para eventos
 	}
 
-	unmount() {
+	desmontar() {
 		if (this.container) {
 			this.container.innerHTML = "";
 		}

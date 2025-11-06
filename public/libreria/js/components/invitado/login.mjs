@@ -1,8 +1,8 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { authStore } from "../../model/auth-store.js";
-import { authService } from "../../model/auth-service.js";
+import { almacenAutenticacion } from "../../model/auth-store.mjs";
+import { servicioAutenticacion } from "../../model/auth-service.mjs";
 
 const templateUrl = new URL("./login.html", import.meta.url);
 let templateHtml = "";
@@ -76,7 +76,7 @@ export class Login extends Presenter {
 
 		this.isLoading = true;
 		this.updateLoadingState();
-		authStore.setLoading(true);
+		almacenAutenticacion.establecerCargando(true);
 
 		const formData = new FormData(this.form);
 		const credentials = {
@@ -86,21 +86,21 @@ export class Login extends Presenter {
 		};
 
 		try {
-			const result = await authService.login(
+			const result = await servicioAutenticacion.iniciarSesion(
 				credentials.usuario,
 				credentials.password,
 				credentials.rol
 			);
 
 			if (!result.success) {
-				authStore.setError(result.error);
+				almacenAutenticacion.establecerError(result.error);
 				session.pushError(result.error);
 				this.isLoading = false;
 				this.updateLoadingState();
 				return;
 			}
 
-			authStore.setLogin(result.usuario, result.token);
+			almacenAutenticacion.establecerInicioSesion(result.usuario, result.token);
 			session.setUser(result.usuario);
 
 			const nombreCompleto = [result.usuario.nombre, result.usuario.apellidos]
@@ -124,19 +124,17 @@ export class Login extends Presenter {
 			console.error(error);
 			session.pushError("No se pudo iniciar sesión. Inténtalo de nuevo.");
 		} finally {
-			authStore.setLoading(false);
+			almacenAutenticacion.establecerCargando(false);
 			this.isLoading = false;
 			this.updateLoadingState();
 		}
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.form) {
 			this.form.removeEventListener("submit", this.onSubmit);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

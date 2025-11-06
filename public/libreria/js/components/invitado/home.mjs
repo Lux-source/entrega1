@@ -1,5 +1,5 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -137,11 +137,9 @@ export class InvitadoHome extends Presenter {
 		const titulo = libro?.titulo ?? "Título no disponible";
 		const autor = libro?.autor ?? "Autor desconocido";
 		const precio = Number.isFinite(libro?.precio) ? libro.precio : 0;
-		const portada = libro?.portada ?? "";
 
 		return `
 			<article class="book-card">
-				<img src="${portada}" alt="${titulo}" loading="lazy">
 				<h3>${titulo}</h3>
 				<p class="author">${autor}</p>
 				<p class="price">${precio.toFixed(2)}€</p>
@@ -155,7 +153,7 @@ export class InvitadoHome extends Presenter {
 	heroContent() {
 		return `
 			<h1>Bienvenido a nuestra Librería Online</h1>
-			<p>Descubre miles de libros al mejor precio</p>
+			<p>Descubre los libros al mejor precio</p>
 			<div class="hero-actions">
 				<a href="/login" data-link class="btn btn-primary">Iniciar Sesión</a>
 				<a href="/registro" data-link class="btn btn-secondary">Registrarse</a>
@@ -185,13 +183,11 @@ export class InvitadoHome extends Presenter {
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.paginationEl) {
 			this.paginationEl.removeEventListener("click", this.onPaginationClick);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

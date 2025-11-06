@@ -1,5 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/index.js";
+import { session } from "../../commons/libreria-session.mjs";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./compras.html", import.meta.url);
 let templateHtml = "";
@@ -45,9 +46,7 @@ export class ClienteCompras extends Presenter {
 	}
 
 	renderCompras() {
-		const compras = JSON.parse(
-			localStorage.getItem("compras") || "[]"
-		).reverse();
+		const compras = [...session.leerArrayClienteSesion("compras")].reverse();
 
 		if (!compras.length) {
 			if (this.emptySection) {
@@ -90,7 +89,6 @@ export class ClienteCompras extends Presenter {
 				const totalLinea = libro.precio * item.cantidad;
 				return `
 					<div class="compra-item">
-						<img src="${libro.portada}" alt="${libro.titulo}">
 						<div class="item-detalle">
 							<h4>${libro.titulo}</h4>
 							<p>${libro.autor}</p>
@@ -191,13 +189,11 @@ export class ClienteCompras extends Presenter {
 		}
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.wrapper) {
 			this.wrapper.removeEventListener("click", this.onToggleClick);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
-		}
+		super.desmontar();
 	}
 }

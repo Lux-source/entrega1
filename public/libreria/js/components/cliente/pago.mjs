@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/index.js";
+import { model } from "../../model/seeder.mjs";
 
 const templateUrl = new URL("./pago.html", import.meta.url);
 let templateHtml = "";
@@ -73,7 +73,7 @@ export class ClientePago extends Presenter {
 	}
 
 	syncCart() {
-		const raw = JSON.parse(localStorage.getItem("carro") || "[]");
+		const raw = session.leerArrayClienteSesion("carro");
 		const sanitized = [];
 		const items = [];
 
@@ -98,11 +98,11 @@ export class ClientePago extends Presenter {
 		});
 
 		if (!items.length) {
-			localStorage.setItem("carro", "[]");
+			session.escribirArrayClienteSesion("carro", []);
 			return false;
 		}
 
-		localStorage.setItem("carro", JSON.stringify(sanitized));
+		session.escribirArrayClienteSesion("carro", sanitized);
 		this.cart = sanitized;
 		this.items = items;
 		return true;
@@ -164,7 +164,6 @@ export class ClientePago extends Presenter {
 	createItemMarkup(item, index) {
 		return `
 			<div class="resumen-item">
-				<img src="${item.libro.portada}" alt="${item.libro.titulo}">
 				<div class="item-info">
 					<p class="item-titulo">${item.libro.titulo}</p>
 					<p class="item-precio-unitario">Precio unitario: ${item.libro.precio.toFixed(
@@ -200,7 +199,7 @@ export class ClientePago extends Presenter {
 	}
 
 	actualizarCantidad(index, action) {
-		const carro = JSON.parse(localStorage.getItem("carro") || "[]");
+		const carro = session.leerArrayClienteSesion("carro");
 		const item = carro[index];
 
 		if (!item) {
@@ -227,13 +226,13 @@ export class ClientePago extends Presenter {
 		}
 
 		if (!carro.length) {
-			localStorage.setItem("carro", "[]");
+			session.escribirArrayClienteSesion("carro", []);
 			session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
 			router.navigate("/c/carro");
 			return;
 		}
 
-		localStorage.setItem("carro", JSON.stringify(carro));
+		session.escribirArrayClienteSesion("carro", carro);
 
 		if (!this.syncCart()) {
 			router.navigate("/c/carro");
@@ -277,17 +276,19 @@ export class ClientePago extends Presenter {
 			}
 		}
 
-		const compras = JSON.parse(localStorage.getItem("compras") || "[]");
+		const compras = session.leerArrayClienteSesion("compras");
 		const subtotal = this.items.reduce(
 			(sum, item) => sum + item.libro.precio * item.cantidad,
 			0
 		);
+		const usuario = session.getUser();
 
 		const nuevaCompra = {
 			id: Date.now(),
 			fecha: new Date().toISOString(),
 			items: this.cart,
 			total: subtotal,
+			usuarioId: usuario?.id ?? null,
 			envio: {
 				nombre: datosEnvio.get("nombre"),
 				direccion: datosEnvio.get("direccion"),
@@ -298,14 +299,14 @@ export class ClientePago extends Presenter {
 		};
 
 		compras.push(nuevaCompra);
-		localStorage.setItem("compras", JSON.stringify(compras));
-		localStorage.removeItem("carro");
+		session.escribirArrayClienteSesion("compras", compras);
+		session.limpiarItemClienteSesion("carro");
 
 		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
 		router.navigate("/c");
 	}
 
-	destroy() {
+	desmontar() {
 		if (this.wrapper) {
 			this.wrapper.removeEventListener("click", this.onClick);
 		}
@@ -314,8 +315,10 @@ export class ClientePago extends Presenter {
 			this.confirmButton.removeEventListener("click", this.onConfirm);
 		}
 
-		if (typeof super.destroy === "function") {
-			super.destroy();
+		if (this.form) {
+			this.form.removeEventListener("submit", this.onSubmit);
 		}
+
+		super.desmontar();
 	}
 }

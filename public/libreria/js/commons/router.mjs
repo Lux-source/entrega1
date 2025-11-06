@@ -27,7 +27,7 @@ class Router {
 		const path = window.location.pathname;
 		let route = this.routes[path];
 
-		// Rutas dinámicas (ej: /libros/:id)
+		// Rutas como /libros/:id
 		if (!route) {
 			const dynamicRoute = Object.keys(this.routes).find((routePath) => {
 				const pattern = routePath.replace(/:\w+/g, "([^/]+)");
@@ -51,9 +51,9 @@ class Router {
 			}
 		}
 
-		// Unmount anterior y mount nuevo
+		// Desmontar componente anterior y montar el nuevo
 		if (this.currentComponent) {
-			this.currentComponent.unmount();
+			this.currentComponent.desmontar();
 		}
 
 		const Component = route.componentClass;
