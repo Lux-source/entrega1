@@ -62,16 +62,4 @@ const messages = new Messages();
 navbar.render();
 messages.render();
 
-// Escuchar cambios para re-renderizar navbar
-window.addEventListener("user-logged-in", () => {
-	navbar.render();
-	messages.render();
-});
-
-window.addEventListener("user-logged-out", () => {
-	navbar.render();
-	messages.render();
-});
-
-// Iniciar router
 router.start();
