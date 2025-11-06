@@ -873,7 +873,7 @@ h2 {
 	gap: 1rem;
 }
 
-/* ==================== PÁGINAS DE ERROR ==================== */
+/*  PÁGINAS DE ERROR  */
 .error-page {
 	display: flex;
 	flex-direction: column;
@@ -923,7 +923,7 @@ h2 {
 	opacity: 0.5;
 }
 
-/* ==================== PÁGINA DE PAGO ==================== */
+/*  PÁGINA DE PAGO  */
 .pago-container {
 	max-width: 1200px;
 	margin: 0 auto;
@@ -1061,7 +1061,7 @@ h2 {
 	color: #2ecc71;
 }
 
-/* ==================== ADMIN VER LIBRO ==================== */
+/*  ADMIN VER LIBRO  */
 .ver-libro-admin {
 	max-width: 1200px;
 	margin: 0 auto;

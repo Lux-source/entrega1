@@ -51,13 +51,11 @@ class LibreriaSession {
 		window.dispatchEvent(new CustomEvent("messages-updated"));
 	}
 
-	// Persistencia scoped por usuario
+	// Persistencia por usuario
 	getKeySesionCliente(baseKey) {
 		const sanitizedKey = (baseKey || "").trim();
 		if (!sanitizedKey) {
-			throw new Error(
-				"La clave base es obligatoria para la persistencia scoped"
-			);
+			throw new Error("La clave base es obligatoria para la persistencia");
 		}
 
 		const user = this.getUser();

@@ -1,6 +1,3 @@
-/**
- * Almacén de Autenticación - Maneja el estado de autenticación de manera reactiva
- */
 class AlmacenAutenticacion {
 	constructor() {
 		this.usuario = null;

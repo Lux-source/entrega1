@@ -44,6 +44,46 @@ const limpiarLibroRegistrado = (isbn) => {
 	}
 };
 
+let contadorRegistro = 500;
+
+const generarDatosRegistro = (overrides = {}) => {
+	contadorRegistro += 1;
+	const sufijo = contadorRegistro;
+	return {
+		dni: `${String(sufijo).padStart(8, "0")}Z`,
+		nombre: "Test",
+		apellidos: "Usuario",
+		direccion: "Calle Test",
+		telefono: `7${String(sufijo).padStart(8, "0")}`,
+		email: `registro${sufijo}@mail.com`,
+		password: "Clave99",
+		passwordConfirm: "Clave99",
+		rol: "CLIENTE",
+		...overrides,
+	};
+};
+
+const registrarUsuario = (datos) =>
+	servicioAutenticacion.registrar(
+		datos.dni,
+		datos.nombre,
+		datos.apellidos,
+		datos.direccion,
+		datos.telefono,
+		datos.email,
+		datos.password,
+		datos.passwordConfirm,
+		datos.rol
+	);
+
+beforeEach(() => {
+	localStorage.clear();
+	almacenAutenticacion.observadores = [];
+	almacenAutenticacion.establecerCierreSesion();
+	almacenAutenticacion.limpiarError();
+	almacenAutenticacion.establecerCargando(false);
+});
+
 describe("Getters y Setters", () => {
 	describe("Libro", () => {
 		it("getters libros", () => {
@@ -61,6 +101,19 @@ describe("Getters y Setters", () => {
 			expect(libro.getPrecio()).to.equal(30);
 			expect(libro.getStock()).to.equal(8);
 		});
+
+		it("permite establecer stock en cero", () => {
+			const libro = crearLibro();
+			libro.setStock(0);
+			expect(libro.getStock()).to.equal(0);
+		});
+
+		it("reduce stock correctamente cuando hay unidades suficientes", () => {
+			const libro = crearLibro();
+			libro.setStock(5);
+			libro.reducirStock(2);
+			expect(libro.getStock()).to.equal(3);
+		});
 	});
 
 	describe("Usuario", () => {
@@ -71,6 +124,13 @@ describe("Getters y Setters", () => {
 			expect(usuario.getApellidos()).to.equal("Test");
 			expect(usuario.getEmail()).to.equal("qa@mail.com");
 			expect(usuario.getRol()).to.equal("CLIENTE");
+		});
+
+		it("getters de contacto devuelven valores originales", () => {
+			const usuario = crearUsuario();
+			expect(usuario.getDni()).to.equal("33333333Z");
+			expect(usuario.getTelefono()).to.equal("600000003");
+			expect(usuario.getDireccion()).to.equal("Calle QA");
 		});
 	});
 });
@@ -107,6 +167,247 @@ describe("Excepciones", () => {
 		);
 		expect(resultado.success).to.be.false;
 		expect(resultado.error).to.equal("Las contraseñas no coinciden");
+	});
+});
+
+describe("Autenticación - iniciar sesión", () => {
+	it("autentica usuario existente con credenciales válidas", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"juan@mail.com",
+			"Juanperez123",
+			"cliente"
+		);
+
+		expect(resultado.success).to.be.true;
+		expect(resultado.usuario).to.be.instanceOf(Usuario);
+		expect(resultado.token).to.be.a("string");
+		expect(resultado.token.startsWith("token_")).to.be.true;
+	});
+
+	it("rechaza inicio de sesión sin email", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"",
+			"Juanperez123",
+			"CLIENTE"
+		);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("El email es obligatorio");
+	});
+
+	it("rechaza emails con formato incorrecto", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"no-es-email",
+			"Juanperez123",
+			"CLIENTE"
+		);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Email inválido");
+	});
+
+	it("rechaza contraseñas incorrectas", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"juan@mail.com",
+			"ClaveErronea",
+			"CLIENTE"
+		);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Contraseña incorrecta");
+	});
+
+	it("rechaza roles que no coinciden con el usuario", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"juan@mail.com",
+			"Juanperez123",
+			"ADMIN"
+		);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Rol incorrecto para este usuario");
+	});
+
+	it("rechaza usuarios inexistentes", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"fantasma@mail.com",
+			"Clave999",
+			"CLIENTE"
+		);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal(
+			"Credenciales inválidas. Verifica email, contraseña y rol."
+		);
+	});
+});
+
+describe("Autenticación - registrar (validaciones)", () => {
+	it("requiere todos los campos obligatorios", async () => {
+		const datos = generarDatosRegistro({ nombre: " " });
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Todos los campos son obligatorios");
+	});
+
+	it("valida el formato del DNI", async () => {
+		const datos = generarDatosRegistro({ dni: "1234" });
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal(
+			"DNI inválido. Usa 8 dígitos y una letra (ej: 12345678A)"
+		);
+	});
+
+	it("valida el formato del email", async () => {
+		const datos = generarDatosRegistro({ email: "correo" });
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Email inválido");
+	});
+
+	it("valida el teléfono", async () => {
+		const datos = generarDatosRegistro({ telefono: "12" });
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal(
+			"Teléfono inválido. Usa solo dígitos (7-15 caracteres)"
+		);
+	});
+
+	it("exige contraseñas con longitud mínima", async () => {
+		const datos = generarDatosRegistro({
+			password: "12345",
+			passwordConfirm: "12345",
+		});
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal(
+			"La contraseña debe tener al menos 6 caracteres"
+		);
+	});
+
+	it("valida el rol permitido", async () => {
+		const datos = generarDatosRegistro({ rol: "GERENTE" });
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Rol inválido. Usa ADMIN o CLIENTE");
+	});
+
+	it("impide registrar DNIs ya existentes", async () => {
+		const existente = model.usuarios[0];
+		const datos = generarDatosRegistro({
+			dni: existente.getDni?.() ?? existente.dni,
+		});
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Este DNI ya está registrado");
+	});
+
+	it("permite registrar administradores y mantiene el rol en mayúsculas", async () => {
+		const datos = generarDatosRegistro({ rol: "ADMIN" });
+		const resultado = await registrarUsuario(datos);
+		expect(resultado.success).to.be.true;
+		expect(resultado.usuario.getRol()).to.equal("ADMIN");
+		limpiarUsuarioRegistrado(datos.email);
+	});
+});
+
+describe("Autenticación - utilidades", () => {
+	it("genera tokens únicos y válidos", () => {
+		const token1 = servicioAutenticacion.generarToken({ id: 1 });
+		const token2 = servicioAutenticacion.generarToken({ id: 1 });
+		expect(token1).to.match(/^token_/);
+		expect(token2).to.match(/^token_/);
+		expect(token1).to.not.equal(token2);
+		expect(servicioAutenticacion.verificarToken(token1)).to.be.true;
+	});
+
+	it("detecta tokens inválidos", () => {
+		expect(servicioAutenticacion.verificarToken("token_valido")).to.be.true;
+		expect(servicioAutenticacion.verificarToken("")).to.be.false;
+		expect(servicioAutenticacion.verificarToken("sin_prefijo")).to.be.false;
+	});
+
+	it("cierra sesión devolviendo confirmación", () => {
+		const resultado = servicioAutenticacion.cerrarSesion();
+		expect(resultado.success).to.be.true;
+		expect(resultado.message).to.equal("Sesión cerrada correctamente");
+	});
+});
+
+describe("Almacén de autenticación", () => {
+	it("notifica a los observadores suscritos", () => {
+		const estados = [];
+		const observador = (estado) => estados.push(estado);
+		almacenAutenticacion.suscribir(observador);
+		almacenAutenticacion.establecerCargando(true);
+		almacenAutenticacion.desuscribir(observador);
+		almacenAutenticacion.establecerCargando(false);
+		expect(estados).to.have.lengthOf(1);
+		expect(estados[0].estaCargando).to.be.true;
+	});
+
+	it("restaurarSesion devuelve false cuando no existen datos", () => {
+		const resultado = almacenAutenticacion.restaurarSesion();
+		expect(resultado).to.be.false;
+		expect(almacenAutenticacion.obtenerEstado().estaAutenticado).to.be.false;
+	});
+
+	it("gestiona el ciclo de errores limpiando tras mostrar", () => {
+		const errores = [];
+		const observador = (estado) => errores.push(estado.error);
+		almacenAutenticacion.suscribir(observador);
+		almacenAutenticacion.establecerError("Fallo crítico");
+		almacenAutenticacion.limpiarError();
+		almacenAutenticacion.desuscribir(observador);
+		expect(errores[0]).to.equal("Fallo crítico");
+		expect(errores[1]).to.be.null;
+	});
+});
+
+describe("Persistencia de sesión", () => {
+	it("obtiene claves distintas para usuarios con y sin sesión", () => {
+		session.clearUser();
+		const claveInvitado = session.getKeySesionCliente("carrito");
+		expect(claveInvitado).to.equal("carrito_invitado");
+
+		session.setUser({ id: 42, rol: "CLIENTE" });
+		const claveId = session.getKeySesionCliente("carrito");
+		expect(claveId).to.equal("carrito_42");
+
+		session.setUser({ email: "Usuario@Mail.com" });
+		const claveEmail = session.getKeySesionCliente("lista");
+		expect(claveEmail).to.equal("lista_usuario@mail.com");
+	});
+
+	it("lanza error cuando la clave base está vacía", () => {
+		expect(() => session.getKeySesionCliente(" ")).to.throw(
+			"La clave base es obligatoria para la persistencia"
+		);
+	});
+
+	it("lee y escribe arrays bajo claves escopadas", () => {
+		session.setUser({ id: 90, rol: "CLIENTE" });
+		const datos = [{ libroId: 1, cantidad: 2 }];
+		session.escribirArrayClienteSesion("carrito", datos);
+		const almacenado = JSON.parse(localStorage.getItem("carrito_90"));
+		expect(almacenado).to.deep.equal(datos);
+		const recuperado = session.leerArrayClienteSesion("carrito");
+		expect(recuperado).to.deep.equal(datos);
+	});
+
+	it("limpia los datos asociados al usuario", () => {
+		session.setUser({ id: 77, rol: "CLIENTE" });
+		session.escribirArrayClienteSesion("favoritos", [1, 2]);
+		session.limpiarItemClienteSesion("favoritos");
+		expect(localStorage.getItem("favoritos_77")).to.be.null;
+	});
+
+	it("migra datos legados a la nueva clave por usuario", () => {
+		session.setUser({ id: 51, rol: "CLIENTE" });
+		localStorage.setItem("historial", JSON.stringify(["legacy"]));
+		const resultado = session.leerArrayClienteSesion("historial");
+		expect(resultado).to.deep.equal(["legacy"]);
+		expect(localStorage.getItem("historial")).to.be.null;
+		expect(JSON.parse(localStorage.getItem("historial_51"))).to.deep.equal([
+			"legacy",
+		]);
 	});
 });
 

@@ -1,12 +1,6 @@
-// Servicio de Autenticación - Maneja la lógica de autenticación
-
 import { model } from "./seeder.mjs";
 
 class ServicioAutenticacion {
-	constructor() {
-		this.urlApi = "/api";
-	}
-
 	// Inicio de sesión de usuario
 
 	async iniciarSesion(usuario, password, rol) {
@@ -68,9 +62,6 @@ class ServicioAutenticacion {
 		}
 	}
 
-	/**
-	 * Registro de nuevo usuario
-	 */
 	async registrar(
 		dni,
 		nombre,
@@ -216,9 +207,6 @@ class ServicioAutenticacion {
 		}
 	}
 
-	/**
-	 * Validar email
-	 */
 	esEmailValido(email) {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		return emailRegex.test(email);
@@ -234,26 +222,18 @@ class ServicioAutenticacion {
 		return telefonoRegex.test(telefono);
 	}
 
-	/**
-	 * Generar token (simulado para esta SPA)
-	 */
 	generarToken(usuario) {
 		return `token_${usuario.id}_${Date.now()}_${Math.random()
 			.toString(36)
-			.substr(2, 9)}`;
+			.slice(2, 9)}`;
 	}
 
-	/**
-	 * Verificar si el token es válido
-	 */
+	// token valido?
 	verificarToken(token) {
-		// Para esta SPA, simplemente verificamos que el token existe
+		//existe token?
 		return !!token && token.startsWith("token_");
 	}
 
-	/**
-	 * Cerrar sesión
-	 */
 	cerrarSesion() {
 		return {
 			success: true,
