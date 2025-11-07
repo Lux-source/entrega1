@@ -46,7 +46,7 @@ class Router {
 			const role = session.getRole();
 			if (!route.guard.includes(role)) {
 				session.pushError("No tienes permiso para acceder a esta página");
-				this.navigate(role === "invitado" ? "/" : `/${role.charAt(0)}`);
+				this.navigate("/403");
 				return;
 			}
 		}
