@@ -1,0 +1,63 @@
+<div class="pago-view" data-element="wrapper">
+    <h1>Finalizar Compra</h1>
+    <div class="pago-content">
+        <div class="pago-forms">
+            <div class="form-section">
+                <h2>Dirección de Envío</h2>
+                <form id="form-envio">
+                    <div class="form-group">
+                        <label for="nombre">Nombre completo *</label>
+                        <input type="text" id="nombre" name="nombre" required data-element="input-nombre">
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección *</label>
+                        <input type="text" id="direccion" name="direccion" required data-element="input-direccion">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ciudad">Ciudad *</label>
+                            <input type="text" id="ciudad" name="ciudad" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cp">Código Postal *</label>
+                            <input type="text" id="cp" name="cp" pattern="[0-9]{5}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono *</label>
+                        <input type="tel" id="telefono" name="telefono" pattern="[0-9]{9}" required
+                            data-element="input-telefono">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="pago-resumen">
+            <h2>Resumen del Pedido</h2>
+            <div class="resumen-items" data-element="items"></div>
+
+            <div class="resumen-totales">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span data-element="subtotal"></span>
+                </div>
+                <div class="total-row">
+                    <span>Envío:</span>
+                    <span data-element="shipping"></span>
+                </div>
+                <div class="total-row">
+                    <span>Total general:</span>
+                    <span data-element="total"></span>
+                </div>
+                <div class="total-row total-final">
+                    <span>Total con IVA (21%):</span>
+                    <span data-element="total-iva"></span>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" data-element="confirm-button">
+                Confirmar y Pagar
+            </button>
+        </div>
+    </div>
+</div>

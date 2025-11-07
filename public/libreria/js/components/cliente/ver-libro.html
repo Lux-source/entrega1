@@ -1,0 +1,35 @@
+<div class="libro-detalle" data-element="wrapper">
+    <div class="detalle-header">
+        <a href="/c" data-link class="btn btn-secondary">Volver al catálogo</a>
+    </div>
+
+    <div class="detalle-content">
+        <div class="detalle-info">
+            <h1 data-element="title"></h1>
+            <p class="autor" data-element="author"></p>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">ISBN:</span>
+                    <span class="info-value" data-element="isbn"></span>
+                </div>
+            </div>
+
+            <div class="compra-info">
+                <div class="precio-stock">
+                    <p class="precio-grande" data-element="price"></p>
+                    <p class="stock" data-element="stock"></p>
+                </div>
+
+                <div class="cantidad-selector" data-section="quantity">
+                    <label for="cantidad">Cantidad:</label>
+                    <input type="number" id="cantidad" min="1" value="1" data-element="quantity-input">
+                </div>
+
+                <button type="button" class="btn btn-primary btn-large" data-element="add-cart">
+                    Añadir al Carro
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

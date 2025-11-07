@@ -1,0 +1,48 @@
+<div class="ver-libro-admin" data-element="wrapper">
+    <div class="page-header">
+        <h1>Detalles del Libro</h1>
+        <div class="header-actions">
+            <a href="#" data-link class="btn btn-primary" data-element="edit-link">
+                Editar
+            </a>
+            <button type="button" class="btn btn-danger" data-element="delete-button">
+                Eliminar
+            </button>
+            <a href="/a" data-link class="btn btn-secondary">
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+
+    <div class="libro-detalle-admin">
+        <div class="libro-info-section">
+            <div class="libro-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Stock disponible</span>
+                    <span class="stat-value" data-element="stock-value"></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Precio</span>
+                    <span class="stat-value" data-element="price-value"></span>
+                </div>
+            </div>
+
+            <h2 data-element="title"></h2>
+            <p class="libro-autor" data-element="author"></p>
+
+            <div class="libro-detalles">
+                <div class="detalle-item">
+                    <span class="detalle-label">ISBN:</span>
+                    <span class="detalle-valor" data-element="isbn"></span>
+                </div>
+            </div>
+
+            <div class="libro-admin-info">
+                <div class="info-badge" data-element="id-badge"></div>
+                <div class="warning-badge" data-section="low-stock">
+                    Stock bajo - Considere reabastecer
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
