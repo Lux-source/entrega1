@@ -28,7 +28,6 @@ class AlmacenAutenticacion {
 			estaCargando: this.estaCargando,
 			error: this.error,
 			estaAutenticado: this.estaAutenticado,
-			// Campos legacy para compatibilidad con código previo
 			user: this.usuario,
 			isLoading: this.estaCargando,
 			isAuthenticated: this.estaAutenticado,
