@@ -2,6 +2,7 @@ import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
 import { model } from "../../model/seeder.mjs";
+import { libreriaProxy } from "../../model/libreria-proxy.mjs";
 
 const templateUrl = new URL("./pago.html", import.meta.url);
 let templateHtml = "";
@@ -22,6 +23,7 @@ export class ClientePago extends Presenter {
 		super(model, "cliente-pago");
 		this.onClick = this.onClick.bind(this);
 		this.onConfirm = this.onConfirm.bind(this);
+		this.isSubmitting = false;
 	}
 
 	template() {
@@ -70,6 +72,8 @@ export class ClientePago extends Presenter {
 		this.confirmButton = this.container.querySelector(
 			'[data-element="confirm-button"]'
 		);
+		this.confirmButtonOriginalText =
+			this.confirmButton?.textContent?.trim() || "Confirmar y Pagar";
 	}
 
 	syncCart() {
@@ -242,19 +246,25 @@ export class ClientePago extends Presenter {
 		this.renderView();
 	}
 
-	onConfirm() {
+	async onConfirm(event) {
+		event?.preventDefault();
+
+		if (this.isSubmitting) {
+			return;
+		}
+
 		if (!this.formEnvio) {
 			return;
 		}
 
 		if (!this.formEnvio.checkValidity()) {
-			session.pushError("Por favor, completa todos los datos de envío");
+			session.pushError("Por favor, completa todos los datos de envio");
 			this.formEnvio.reportValidity();
 			return;
 		}
 
 		if (!this.syncCart()) {
-			session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
+			session.pushError("Tu carro quedo vacio. Agrega productos nuevamente.");
 			router.navigate("/c/carro");
 			return;
 		}
@@ -282,28 +292,52 @@ export class ClientePago extends Presenter {
 		);
 		const usuario = session.getUser();
 
-		// Crear la compra usando el modelo persistente del servidor
-		const nuevaCompra = this.model.addCompra({
+		const compraPayload = {
 			items: this.cart,
 			total: subtotal,
 			usuarioId: usuario?.id ?? null,
 			envio: {
-				nombre: datosEnvio.get("nombre"),
-				direccion: datosEnvio.get("direccion"),
-				ciudad: datosEnvio.get("ciudad"),
-				cp: datosEnvio.get("cp"),
-				telefono: datosEnvio.get("telefono"),
+				nombre: (datosEnvio.get("nombre") || "").trim(),
+				direccion: (datosEnvio.get("direccion") || "").trim(),
+				ciudad: (datosEnvio.get("ciudad") || "").trim(),
+				cp: (datosEnvio.get("cp") || "").trim(),
+				telefono: (datosEnvio.get("telefono") || "").trim(),
 			},
-		});
+		};
 
-		// También guardar en sesión del cliente para referencia local
-		const compras = session.leerArrayClienteSesion("compras");
-		compras.push(nuevaCompra.obtenerDetalles());
-		session.escribirArrayClienteSesion("compras", compras);
-		session.limpiarItemClienteSesion("carro");
+		this.setSubmittingState(true);
 
-		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
-		router.navigate("/c");
+		try {
+			const nuevaCompra = await libreriaProxy.addCompra(compraPayload);
+
+			const compras = session.leerArrayClienteSesion("compras");
+			compras.push(nuevaCompra);
+			session.escribirArrayClienteSesion("compras", compras);
+			session.limpiarItemClienteSesion("carro");
+
+			const mensaje = "Pago procesado con exito. Tu pedido esta en camino.";
+			session.pushSuccess(mensaje);
+			router.navigate("/c");
+		} catch (error) {
+			console.error("Error al registrar la compra:", error);
+			const mensajeError =
+				error?.message || "No se pudo registrar la compra. Intenta nuevamente.";
+			session.pushError(mensajeError);
+		} finally {
+			this.setSubmittingState(false);
+		}
+	}
+
+	setSubmittingState(isSubmitting) {
+		this.isSubmitting = isSubmitting;
+		if (!this.confirmButton) {
+			return;
+		}
+
+		this.confirmButton.disabled = isSubmitting;
+		this.confirmButton.textContent = isSubmitting
+			? "Procesando..."
+			: this.confirmButtonOriginalText;
 	}
 
 	desmontar() {

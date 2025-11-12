@@ -1,6 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
 import { model } from "../../model/seeder.mjs";
+import { libreriaProxy } from "../../model/libreria-proxy.mjs";
 
 const templateUrl = new URL("./compras.html", import.meta.url);
 let templateHtml = "";
@@ -21,30 +22,80 @@ export class ClienteCompras extends Presenter {
 	constructor() {
 		super(model, "cliente-compras");
 		this.onToggleClick = this.onToggleClick.bind(this);
+		this.state = {
+			compras: [],
+			isLoading: false,
+			error: null,
+		};
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
-		this.renderCompras();
+		await this.loadCompras();
 
 		if (this.wrapper) {
 			this.wrapper.addEventListener("click", this.onToggleClick);
 		}
 	}
 
-	obtenerComprasDelUsuario() {
+	async loadCompras() {
 		const usuario = session.getUser();
 		if (!usuario) {
-			return [];
+			this.state.compras = [];
+			this.renderCompras();
+			return;
 		}
 
-		// Obtener compras del modelo del servidor
-		const compras = this.model.getComprasPorUsuario(usuario.id);
-		return compras;
+		const usuarioId = Number.parseInt(usuario?.id ?? "", 10);
+
+		this.updateLoadingState(true);
+
+		try {
+			const compras = await libreriaProxy.getCompras();
+			this.state.compras = (compras || []).filter((compra) => {
+				const compraUsuarioId = Number.parseInt(compra?.usuarioId ?? "", 10);
+				if (Number.isFinite(usuarioId) && Number.isFinite(compraUsuarioId)) {
+					return compraUsuarioId === usuarioId;
+				}
+
+				return compra?.usuarioId === usuario?.id;
+			});
+			this.state.error = null;
+		} catch (error) {
+			console.error("Error al cargar compras:", error);
+			this.state.error = error?.message || "No se pudieron cargar tus compras.";
+			this.state.compras = [];
+		}
+
+		this.updateLoadingState(false);
+		this.renderCompras();
+	}
+
+	updateLoadingState(isLoading) {
+		this.state.isLoading = isLoading;
+		if (!this.wrapper) {
+			return;
+		}
+
+		if (isLoading) {
+			this.wrapper.setAttribute("aria-busy", "true");
+			if (this.listEl) {
+				this.listEl.innerHTML =
+					'<p class="compra-loading">Cargando tus compras...</p>';
+			}
+			if (this.emptySection) {
+				this.emptySection.style.display = "none";
+			}
+			if (this.contentSection) {
+				this.contentSection.style.display = "";
+			}
+		} else {
+			this.wrapper.removeAttribute("aria-busy");
+		}
 	}
 
 	cacheDom() {
@@ -57,8 +108,18 @@ export class ClienteCompras extends Presenter {
 	}
 
 	renderCompras() {
-		// Obtener compras del modelo del servidor y filtrar por usuario
-		const compras = [...this.obtenerComprasDelUsuario()].reverse();
+		if (this.state.error) {
+			session.pushError(this.state.error);
+		}
+
+		const compras = [...this.state.compras].sort((a, b) => {
+			const fechaA = new Date(a.fecha || 0).getTime();
+			const fechaB = new Date(b.fecha || 0).getTime();
+			if (fechaA === fechaB) {
+				return (b.id ?? 0) - (a.id ?? 0);
+			}
+			return fechaB - fechaA;
+		});
 
 		if (!compras.length) {
 			if (this.emptySection) {
