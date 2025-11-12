@@ -276,16 +276,14 @@ export class ClientePago extends Presenter {
 			}
 		}
 
-		const compras = session.leerArrayClienteSesion("compras");
 		const subtotal = this.items.reduce(
 			(sum, item) => sum + item.libro.precio * item.cantidad,
 			0
 		);
 		const usuario = session.getUser();
 
-		const nuevaCompra = {
-			id: Date.now(),
-			fecha: new Date().toISOString(),
+		// Crear la compra usando el modelo persistente del servidor
+		const nuevaCompra = this.model.addCompra({
 			items: this.cart,
 			total: subtotal,
 			usuarioId: usuario?.id ?? null,
@@ -296,9 +294,11 @@ export class ClientePago extends Presenter {
 				cp: datosEnvio.get("cp"),
 				telefono: datosEnvio.get("telefono"),
 			},
-		};
+		});
 
-		compras.push(nuevaCompra);
+		// También guardar en sesión del cliente para referencia local
+		const compras = session.leerArrayClienteSesion("compras");
+		compras.push(nuevaCompra.obtenerDetalles());
 		session.escribirArrayClienteSesion("compras", compras);
 		session.limpiarItemClienteSesion("carro");
 

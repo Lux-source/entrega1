@@ -36,6 +36,17 @@ export class ClienteCompras extends Presenter {
 		}
 	}
 
+	obtenerComprasDelUsuario() {
+		const usuario = session.getUser();
+		if (!usuario) {
+			return [];
+		}
+
+		// Obtener compras del modelo del servidor
+		const compras = this.model.getComprasPorUsuario(usuario.id);
+		return compras;
+	}
+
 	cacheDom() {
 		this.wrapper = this.container.querySelector('[data-element="wrapper"]');
 		this.emptySection = this.container.querySelector('[data-section="empty"]');
@@ -46,7 +57,8 @@ export class ClienteCompras extends Presenter {
 	}
 
 	renderCompras() {
-		const compras = [...session.leerArrayClienteSesion("compras")].reverse();
+		// Obtener compras del modelo del servidor y filtrar por usuario
+		const compras = [...this.obtenerComprasDelUsuario()].reverse();
 
 		if (!compras.length) {
 			if (this.emptySection) {
