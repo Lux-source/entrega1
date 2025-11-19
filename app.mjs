@@ -24,14 +24,18 @@ app.get("*", (req, res) => {
 });
 
 // Initialize DB and start server
-db.iniciar()
-	.then(() => {
-		app.listen(PORT, () => {
-			console.log(`Servidor corriendo en http://localhost:${PORT}`);
-			console.log("Libreria Online lista para usar");
+if (process.env.NODE_ENV !== "test") {
+	db.iniciar()
+		.then(() => {
+			app.listen(PORT, () => {
+				console.log(`Servidor corriendo en http://localhost:${PORT}`);
+				console.log("Libreria Online lista para usar");
+			});
+		})
+		.catch((err) => {
+			console.error("Error al iniciar la base de datos:", err);
+			process.exit(1);
 		});
-	})
-	.catch((err) => {
-		console.error("Error al iniciar la base de datos:", err);
-		process.exit(1);
-	});
+}
+
+export default app;
