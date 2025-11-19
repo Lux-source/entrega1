@@ -1,5 +1,5 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -20,23 +20,24 @@ try {
 
 export class InvitadoVerLibro extends Presenter {
 	constructor() {
-		super(model, "invitado-ver-libro");
+		super(libreriaStore, "invitado-ver-libro");
+		this.libro = null;
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
+		await this.loadLibro();
 
-		const libro = this.getLibroFromPath();
-		if (!libro) {
+		if (!this.libro) {
 			this.renderNotFound();
 			return;
 		}
 
-		this.populateLibro(libro);
+		this.populateLibro(this.libro);
 	}
 
 	cacheDom() {
@@ -48,19 +49,26 @@ export class InvitadoVerLibro extends Presenter {
 		this.stockEl = this.container.querySelector('[data-element="stock"]');
 	}
 
-	getLibroFromPath() {
+	async loadLibro() {
 		const path = window.location.pathname;
 		const match = path.match(/\/(?:c\/)?libros\/(\d+)/);
 		if (!match) {
-			return null;
+			this.libro = null;
+			return;
 		}
 
 		const id = Number.parseInt(match[1], 10);
 		if (Number.isNaN(id)) {
-			return null;
+			this.libro = null;
+			return;
 		}
 
-		return this.model.libros.find((libro) => libro.id === id) ?? null;
+		try {
+			this.libro = await this.model.getLibroById(id, { force: true });
+		} catch (error) {
+			console.error("Error cargando libro para invitado:", error);
+			this.libro = null;
+		}
 	}
 
 	populateLibro(libro) {

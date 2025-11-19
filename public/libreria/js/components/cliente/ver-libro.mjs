@@ -1,7 +1,8 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
+import { cartService } from "../../model/cart-service.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -22,7 +23,7 @@ try {
 
 export class ClienteVerLibro extends Presenter {
 	constructor() {
-		super(model, "cliente-ver-libro");
+		super(libreriaStore, "cliente-ver-libro");
 		this.libro = null;
 		this.onAddToCart = this.onAddToCart.bind(this);
 	}
@@ -31,9 +32,9 @@ export class ClienteVerLibro extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
-		this.libro = this.getLibroFromRoute();
+		await this.loadLibro();
 
 		if (!this.libro) {
 			session.pushError("Libro no encontrado");
@@ -63,18 +64,28 @@ export class ClienteVerLibro extends Presenter {
 		);
 	}
 
-	getLibroFromRoute() {
+	async loadLibro() {
+		const id = this.getLibroIdFromRoute();
+		if (!Number.isFinite(id)) {
+			this.libro = null;
+			return;
+		}
+
+		try {
+			this.libro = await this.model.getLibroById(id, { force: true });
+		} catch (error) {
+			console.error("Error cargando libro:", error);
+			this.libro = null;
+		}
+	}
+
+	getLibroIdFromRoute() {
 		const match = window.location.pathname.match(/\/c\/libros\/(\d+)/);
 		if (!match) {
 			return null;
 		}
-
 		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			return null;
-		}
-
-		return this.model.libros.find((libro) => libro.id === id) ?? null;
+		return Number.isFinite(id) ? id : null;
 	}
 
 	renderLibro() {
@@ -134,7 +145,7 @@ export class ClienteVerLibro extends Presenter {
 		}
 	}
 
-	onAddToCart() {
+	async onAddToCart() {
 		if (!this.libro) {
 			return;
 		}
@@ -154,29 +165,20 @@ export class ClienteVerLibro extends Presenter {
 		}
 
 		cantidad = Math.min(cantidad, stockDisponible);
-		this.agregarAlCarro(this.libro.id, cantidad);
-	}
 
-	agregarAlCarro(libroId, cantidad) {
-		const carro = session.leerArrayClienteSesion("carro");
-		const item = carro.find((entry) => entry.libroId === libroId);
-
-		if (item) {
-			item.cantidad += cantidad;
-		} else {
-			carro.push({ libroId, cantidad });
+		try {
+			await cartService.agregarItem({ libroId: this.libro.id, cantidad });
+			session.pushSuccess(`${cantidad} libro(s) añadido(s) al carro`);
+			router.navigate("/c/carro");
+		} catch (error) {
+			console.error("Error al añadir al carro:", error);
+			session.pushError(
+				error?.message || "No se pudo añadir el libro al carro"
+			);
 		}
-
-		session.escribirArrayClienteSesion("carro", carro);
-		session.pushSuccess(`${cantidad} libro(s) añadido(s) al carro`);
-		router.navigate("/c/carro");
 	}
 
 	desmontar() {
-		if (this.containerEl) {
-			this.containerEl.removeEventListener("submit", this.onSubmit);
-		}
-
 		if (this.addCartButton) {
 			this.addCartButton.removeEventListener("click", this.onAddToCart);
 		}

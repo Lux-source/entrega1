@@ -1,7 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
-import { libreriaProxy } from "../../model/libreria-proxy.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./compras.html", import.meta.url);
 let templateHtml = "";
@@ -20,13 +19,14 @@ try {
 
 export class ClienteCompras extends Presenter {
 	constructor() {
-		super(model, "cliente-compras");
+		super(libreriaStore, "cliente-compras");
 		this.onToggleClick = this.onToggleClick.bind(this);
 		this.state = {
 			compras: [],
 			isLoading: false,
 			error: null,
 		};
+		this.libros = [];
 	}
 
 	template() {
@@ -51,24 +51,27 @@ export class ClienteCompras extends Presenter {
 		}
 
 		const usuarioId = Number.parseInt(usuario?.id ?? "", 10);
+		if (!Number.isFinite(usuarioId)) {
+			this.state.compras = [];
+			this.renderCompras();
+			return;
+		}
 
 		this.updateLoadingState(true);
 
 		try {
-			const compras = await libreriaProxy.getCompras();
-			this.state.compras = (compras || []).filter((compra) => {
-				const compraUsuarioId = Number.parseInt(compra?.usuarioId ?? "", 10);
-				if (Number.isFinite(usuarioId) && Number.isFinite(compraUsuarioId)) {
-					return compraUsuarioId === usuarioId;
-				}
-
-				return compra?.usuarioId === usuario?.id;
-			});
+			const [compras, libros] = await Promise.all([
+				this.model.getFacturasPorCliente(usuarioId, { force: true }),
+				this.model.getLibros(),
+			]);
+			this.state.compras = compras || [];
+			this.libros = libros || [];
 			this.state.error = null;
 		} catch (error) {
 			console.error("Error al cargar compras:", error);
 			this.state.error = error?.message || "No se pudieron cargar tus compras.";
 			this.state.compras = [];
+			this.libros = [];
 		}
 
 		this.updateLoadingState(false);
@@ -152,7 +155,7 @@ export class ClienteCompras extends Presenter {
 
 		const articulos = (compra.items || [])
 			.map((item) => {
-				const libro = (this.model.libros || []).find(
+				const libro = (this.libros || []).find(
 					(lib) => lib.id === item.libroId
 				);
 				if (!libro) {

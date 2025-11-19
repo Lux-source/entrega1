@@ -1,6 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./perfil.html", import.meta.url);
 let templateHtml = "";
@@ -19,14 +20,14 @@ try {
 
 export class ClientePerfil extends Presenter {
 	constructor() {
-		super(null, "cliente-perfil");
+		super(libreriaStore, "cliente-perfil");
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
 		const user = session.getUser();
 
@@ -36,7 +37,14 @@ export class ClientePerfil extends Presenter {
 			return;
 		}
 
-		const compras = session.leerArrayClienteSesion("compras");
+		let compras = [];
+		try {
+			compras = await this.model.getFacturasPorCliente(user.id, {
+				force: true,
+			});
+		} catch (error) {
+			console.error("Error cargando compras para el perfil:", error);
+		}
 
 		this.renderUser(user);
 		this.renderStats(compras);

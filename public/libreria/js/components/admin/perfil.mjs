@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./perfil.html", import.meta.url);
 let templateHtml = "";
@@ -20,7 +20,7 @@ try {
 
 export class AdminPerfil extends Presenter {
 	constructor() {
-		super(model, "admin-perfil");
+		super(libreriaStore, "admin-perfil");
 	}
 
 	template() {

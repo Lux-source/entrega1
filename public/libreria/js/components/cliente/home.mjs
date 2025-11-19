@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -19,7 +19,7 @@ try {
 
 export class ClienteHome extends Presenter {
 	constructor() {
-		super(model, "cliente-home");
+		super(libreriaStore, "cliente-home");
 		this.currentPage = 1;
 		this.itemsPerPage = 12;
 		this.totalPages = 1;
@@ -30,13 +30,23 @@ export class ClienteHome extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
+		await this.loadLibros();
 		this.renderHero();
 		this.renderCatalog();
 
 		if (this.paginationEl) {
 			this.paginationEl.addEventListener("click", this.onPaginationClick);
+		}
+	}
+
+	async loadLibros() {
+		try {
+			this.libros = await this.model.getLibros();
+		} catch (error) {
+			console.error("Error cargando libros para ClienteHome:", error);
+			this.libros = [];
 		}
 	}
 
@@ -64,7 +74,7 @@ export class ClienteHome extends Presenter {
 			return;
 		}
 
-		const libros = Array.isArray(this.model.libros) ? this.model.libros : [];
+		const libros = Array.isArray(this.libros) ? this.libros : [];
 		const totalLibros = libros.length;
 
 		if (totalLibros === 0) {
