@@ -1,63 +1,57 @@
-import { model } from "./seeder.mjs";
+import { libreriaProxy } from "./libreria-proxy.mjs";
+import { libreriaStore } from "./libreria-store.mjs";
 
 class ServicioAutenticacion {
 	// Inicio de sesión de usuario
 
 	async iniciarSesion(usuario, password, rol) {
+		const email = (usuario || "").trim().toLowerCase();
+		const rolNormalizado = (rol || "CLIENTE").toUpperCase();
+
+		if (!email) {
+			return {
+				success: false,
+				error: "El email es obligatorio",
+			};
+		}
+
+		if (!this.esEmailValido(email)) {
+			return {
+				success: false,
+				error: "Email inválido",
+			};
+		}
+
+		if (!password) {
+			return {
+				success: false,
+				error: "La contraseña es obligatoria",
+			};
+		}
+
 		try {
-			const email = (usuario || "").trim().toLowerCase();
-			const rolNormalizado = (rol || "").toUpperCase();
+			const payload = { email, password };
+			const usuarioAutenticado =
+				rolNormalizado === "ADMIN"
+					? await libreriaProxy.autenticarAdmin(payload)
+					: await libreriaProxy.autenticarCliente(payload);
+			const token = this.generarToken(usuarioAutenticado);
 
-			if (!email) {
-				return {
-					success: false,
-					error: "El email es obligatorio",
-				};
+			if (rolNormalizado === "ADMIN") {
+				await libreriaStore.getAdmins({ force: true });
+			} else {
+				await libreriaStore.getClientes({ force: true });
 			}
-
-			if (!this.esEmailValido(email)) {
-				return {
-					success: false,
-					error: "Email inválido",
-				};
-			}
-
-			const candidato = model.usuarios.find(
-				(u) => u.email?.toLowerCase() === email
-			);
-
-			if (!candidato) {
-				return {
-					success: false,
-					error: "Credenciales inválidas. Verifica email, contraseña y rol.",
-				};
-			}
-
-			if (candidato.password !== password) {
-				return {
-					success: false,
-					error: "Contraseña incorrecta",
-				};
-			}
-
-			if (candidato.rol !== rolNormalizado) {
-				return {
-					success: false,
-					error: "Rol incorrecto para este usuario",
-				};
-			}
-
-			const token = this.generarToken(candidato);
 
 			return {
 				success: true,
-				usuario: candidato,
+				usuario: usuarioAutenticado,
 				token,
 			};
 		} catch (error) {
 			return {
 				success: false,
-				error: error.message,
+				error: error.message || "Credenciales inválidas",
 			};
 		}
 	}
@@ -73,136 +67,116 @@ class ServicioAutenticacion {
 		passwordConfirm,
 		rol = "CLIENTE"
 	) {
+		const rolesPermitidos = ["ADMIN", "CLIENTE"];
+		const dniLimpio = (dni || "").trim().toUpperCase();
+		const nombreLimpio = (nombre || "").trim();
+		const apellidosLimpios = (apellidos || "").trim();
+		const direccionLimpia = (direccion || "").trim();
+		const telefonoLimpio = (telefono || "").trim();
+		const emailLimpio = (email || "").trim().toLowerCase();
+		const rolNormalizado = (rol || "CLIENTE").toUpperCase();
+
+		if (
+			!dniLimpio ||
+			!nombreLimpio ||
+			!apellidosLimpios ||
+			!direccionLimpia ||
+			!telefonoLimpio ||
+			!emailLimpio ||
+			!password ||
+			!passwordConfirm
+		) {
+			return {
+				success: false,
+				error: "Todos los campos son obligatorios",
+			};
+		}
+
+		if (!this.esDniValido(dniLimpio)) {
+			return {
+				success: false,
+				error: "DNI inválido. Usa 8 dígitos y una letra (ej: 12345678A)",
+			};
+		}
+
+		if (nombreLimpio.length < 2) {
+			return {
+				success: false,
+				error: "El nombre debe tener al menos 2 caracteres",
+			};
+		}
+
+		if (apellidosLimpios.length < 2) {
+			return {
+				success: false,
+				error: "Los apellidos deben tener al menos 2 caracteres",
+			};
+		}
+
+		if (!this.esEmailValido(emailLimpio)) {
+			return {
+				success: false,
+				error: "Email inválido",
+			};
+		}
+
+		if (!this.esTelefonoValido(telefonoLimpio)) {
+			return {
+				success: false,
+				error: "Teléfono inválido. Usa solo dígitos (7-15 caracteres)",
+			};
+		}
+
+		if (password.length < 6) {
+			return {
+				success: false,
+				error: "La contraseña debe tener al menos 6 caracteres",
+			};
+		}
+
+		if (password !== passwordConfirm) {
+			return {
+				success: false,
+				error: "Las contraseñas no coinciden",
+			};
+		}
+
+		if (!rolesPermitidos.includes(rolNormalizado)) {
+			return {
+				success: false,
+				error: "Rol inválido. Usa ADMIN o CLIENTE",
+			};
+		}
+
+		const payload = {
+			dni: dniLimpio,
+			nombre: nombreLimpio,
+			apellidos: apellidosLimpios,
+			direccion: direccionLimpia,
+			telefono: telefonoLimpio,
+			email: emailLimpio,
+			password,
+			rol: rolNormalizado,
+		};
+
 		try {
-			const rolesPermitidos = ["ADMIN", "CLIENTE"];
-			const dniLimpio = (dni || "").trim().toUpperCase();
-			const nombreLimpio = (nombre || "").trim();
-			const apellidosLimpios = (apellidos || "").trim();
-			const direccionLimpia = (direccion || "").trim();
-			const telefonoLimpio = (telefono || "").trim();
-			const emailLimpio = (email || "").trim().toLowerCase();
-			const rolNormalizado = (rol || "CLIENTE").toUpperCase();
+			const usuarioCreado =
+				rolNormalizado === "ADMIN"
+					? await libreriaStore.crearAdmin(payload)
+					: await libreriaStore.crearCliente(payload);
 
-			if (
-				!dniLimpio ||
-				!nombreLimpio ||
-				!apellidosLimpios ||
-				!direccionLimpia ||
-				!telefonoLimpio ||
-				!emailLimpio ||
-				!password ||
-				!passwordConfirm
-			) {
-				return {
-					success: false,
-					error: "Todos los campos son obligatorios",
-				};
-			}
-
-			if (!this.esDniValido(dniLimpio)) {
-				return {
-					success: false,
-					error: "DNI inválido. Usa 8 dígitos y una letra (ej: 12345678A)",
-				};
-			}
-
-			if (nombreLimpio.length < 2) {
-				return {
-					success: false,
-					error: "El nombre debe tener al menos 2 caracteres",
-				};
-			}
-
-			if (apellidosLimpios.length < 2) {
-				return {
-					success: false,
-					error: "Los apellidos deben tener al menos 2 caracteres",
-				};
-			}
-
-			if (!this.esEmailValido(emailLimpio)) {
-				return {
-					success: false,
-					error: "Email inválido",
-				};
-			}
-
-			if (!this.esTelefonoValido(telefonoLimpio)) {
-				return {
-					success: false,
-					error: "Teléfono inválido. Usa solo dígitos (7-15 caracteres)",
-				};
-			}
-
-			if (password.length < 6) {
-				return {
-					success: false,
-					error: "La contraseña debe tener al menos 6 caracteres",
-				};
-			}
-
-			if (password !== passwordConfirm) {
-				return {
-					success: false,
-					error: "Las contraseñas no coinciden",
-				};
-			}
-
-			if (!rolesPermitidos.includes(rolNormalizado)) {
-				return {
-					success: false,
-					error: "Rol inválido. Usa ADMIN o CLIENTE",
-				};
-			}
-
-			const emailExiste = model.usuarios.some(
-				(u) => u.email?.toLowerCase() === emailLimpio
-			);
-			if (emailExiste) {
-				return {
-					success: false,
-					error: "Este email ya está registrado",
-				};
-			}
-
-			const dniExiste = model.usuarios.some(
-				(u) => u.dni?.toUpperCase() === dniLimpio
-			);
-			if (dniExiste) {
-				return {
-					success: false,
-					error: "Este DNI ya está registrado",
-				};
-			}
-
-			const nuevoId = Math.max(...model.usuarios.map((u) => u.id), 0) + 1;
-			const { Usuario } = await import("./usuario.mjs");
-			const nuevoUsuario = new Usuario(
-				nuevoId,
-				dniLimpio,
-				nombreLimpio,
-				apellidosLimpios,
-				direccionLimpia,
-				telefonoLimpio,
-				emailLimpio,
-				password,
-				rolNormalizado === "ADMIN" ? "ADMIN" : "CLIENTE"
-			);
-
-			model.usuarios.push(nuevoUsuario);
-
-			const token = this.generarToken(nuevoUsuario);
+			const token = this.generarToken(usuarioCreado);
 
 			return {
 				success: true,
-				usuario: nuevoUsuario,
+				usuario: usuarioCreado,
 				token,
 				message: "¡Registro completado! Bienvenido a la librería.",
 			};
 		} catch (error) {
 			return {
 				success: false,
-				error: error.message,
+				error: error.message || "No se pudo completar el registro",
 			};
 		}
 	}

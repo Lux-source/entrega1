@@ -124,14 +124,6 @@ class Model {
 			0
 		);
 		this._nextCompraId = Math.max(maxId + 1, this._nextCompraId);
-
-		// Log de depuración
-		console.log(`[Model] Seeder completado:`);
-		console.log(`  - Usuarios: ${this.usuarios.length}`);
-		console.log(`  - Libros: ${this.libros.length}`);
-		console.log(`  - Compras: ${this.compras.length}`);
-		console.log(`  - Próximo ID de compra: ${this._nextCompraId}`);
-		console.log(`  - Compras cargadas:`, this.compras);
 	}
 
 	// Metodos para gestionar compras

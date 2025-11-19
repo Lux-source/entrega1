@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 import { almacenAutenticacion } from "../../model/auth-store.mjs";
 import { servicioAutenticacion } from "../../model/auth-service.mjs";
 
@@ -24,7 +24,7 @@ try {
 
 export class AdminModificarPerfil extends Presenter {
 	constructor() {
-		super(model, "admin-modificar-perfil");
+		super(libreriaStore, "admin-modificar-perfil");
 	}
 
 	template() {
@@ -90,9 +90,9 @@ export class AdminModificarPerfil extends Presenter {
 			return;
 		}
 
-		this.onSubmit = (event) => {
+		this.onSubmit = async (event) => {
 			event.preventDefault();
-			this.handleSubmit(new FormData(this.form));
+			await this.handleSubmit(new FormData(this.form));
 		};
 
 		this.form.addEventListener("submit", this.onSubmit);
@@ -116,7 +116,7 @@ export class AdminModificarPerfil extends Presenter {
 		}
 	}
 
-	handleSubmit(formData) {
+	async handleSubmit(formData) {
 		const currentUser = session.getUser();
 		if (!currentUser) {
 			session.pushError(
@@ -174,63 +174,54 @@ export class AdminModificarPerfil extends Presenter {
 			return;
 		}
 
-		const emailExiste = this.model.usuarios.some(
-			(usuario) =>
-				usuario.id !== currentUser.id && usuario.email?.toLowerCase() === email
-		);
-		if (emailExiste) {
-			session.pushError("Este email ya está registrado por otro usuario");
-			return;
-		}
-
-		const dniExiste = this.model.usuarios.some(
-			(usuario) =>
-				usuario.id !== currentUser.id && usuario.dni?.toUpperCase() === dni
-		);
-		if (dniExiste) {
-			session.pushError("Este DNI ya está registrado por otro usuario");
-			return;
-		}
-
-		const usuarioModel = this.model.usuarios.find(
-			(usuario) => usuario.id === currentUser.id
-		);
-		if (!usuarioModel) {
-			session.pushError("No se encontró el usuario en el sistema");
-			return;
-		}
-
-		usuarioModel.nombre = nombre;
-		usuarioModel.apellidos = apellidos;
-		usuarioModel.dni = dni;
-		usuarioModel.email = email;
-		usuarioModel.telefono = telefono;
-		usuarioModel.direccion = direccion;
-		usuarioModel.password = password;
-
-		const updatedUser = {
-			id: usuarioModel.id,
-			dni: usuarioModel.dni,
-			nombre: usuarioModel.nombre,
-			apellidos: usuarioModel.apellidos,
-			direccion: usuarioModel.direccion,
-			telefono: usuarioModel.telefono,
-			email: usuarioModel.email,
-			password: usuarioModel.password,
-			rol: usuarioModel.rol,
-		};
-
-		session.setUser(updatedUser);
-		almacenAutenticacion.actualizarUsuario(updatedUser);
-		session.pushSuccess("Perfil actualizado correctamente");
-
-		router.navigate("/a/perfil");
-
-		setTimeout(() => {
-			window.dispatchEvent(
-				new CustomEvent("user-logged-in", { detail: updatedUser })
+		try {
+			const admins = await this.model.getAdmins({ force: true });
+			const emailExiste = admins.some(
+				(usuario) =>
+					usuario.id !== currentUser.id &&
+					usuario.email?.toLowerCase() === email
 			);
-		}, 100);
+			if (emailExiste) {
+				session.pushError("Este email ya está registrado por otro usuario");
+				return;
+			}
+
+			const dniExiste = admins.some(
+				(usuario) =>
+					usuario.id !== currentUser.id && usuario.dni?.toUpperCase() === dni
+			);
+			if (dniExiste) {
+				session.pushError("Este DNI ya está registrado por otro usuario");
+				return;
+			}
+
+			const updatedUser = await this.model.actualizarAdmin(currentUser.id, {
+				nombre,
+				apellidos,
+				dni,
+				email,
+				telefono,
+				direccion,
+				password,
+			});
+
+			session.setUser(updatedUser);
+			almacenAutenticacion.actualizarUsuario(updatedUser);
+			session.pushSuccess("Perfil actualizado correctamente");
+
+			router.navigate("/a/perfil");
+
+			setTimeout(() => {
+				window.dispatchEvent(
+					new CustomEvent("user-logged-in", { detail: updatedUser })
+				);
+			}, 100);
+		} catch (error) {
+			console.error("Error al actualizar perfil de administrador:", error);
+			session.pushError(
+				error?.message || "No se pudo actualizar el perfil. Intenta nuevamente"
+			);
+		}
 	}
 
 	desmontar() {

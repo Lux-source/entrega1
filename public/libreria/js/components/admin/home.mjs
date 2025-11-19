@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -19,19 +19,21 @@ try {
 
 export class AdminHome extends Presenter {
 	constructor() {
-		super(model, "admin-home");
+		super(libreriaStore, "admin-home");
 		this.currentPage = 1;
 		this.itemsPerPage = 12;
 		this.totalPages = 1;
 		this.onPaginationClick = this.onPaginationClick.bind(this);
+		this.libros = [];
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
+		await this.loadLibros();
 		this.renderHero();
 		this.renderCatalog();
 
@@ -40,6 +42,14 @@ export class AdminHome extends Presenter {
 		}
 	}
 
+	async loadLibros() {
+		try {
+			this.libros = await this.model.getLibros({ force: true });
+		} catch (error) {
+			console.error("Error cargando libros para AdminHome:", error);
+			this.libros = [];
+		}
+	}
 	cacheDom() {
 		this.heroEl = this.container.querySelector('[data-element="hero"]');
 		this.catalogSummaryEl = this.container.querySelector(
@@ -64,7 +74,7 @@ export class AdminHome extends Presenter {
 			return;
 		}
 
-		const libros = Array.isArray(this.model.libros) ? this.model.libros : [];
+		const libros = Array.isArray(this.libros) ? this.libros : [];
 		const totalLibros = libros.length;
 
 		if (totalLibros === 0) {

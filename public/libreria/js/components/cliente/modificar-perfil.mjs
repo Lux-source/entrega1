@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 import { almacenAutenticacion } from "../../model/auth-store.mjs";
 import { servicioAutenticacion } from "../../model/auth-service.mjs";
 
@@ -24,7 +24,7 @@ try {
 
 export class ClienteModificarPerfil extends Presenter {
 	constructor() {
-		super(model, "cliente-modificar-perfil");
+		super(libreriaStore, "cliente-modificar-perfil");
 		this.onSubmit = this.onSubmit.bind(this);
 	}
 
@@ -111,7 +111,7 @@ export class ClienteModificarPerfil extends Presenter {
 		}
 	}
 
-	onSubmit(event) {
+	async onSubmit(event) {
 		event.preventDefault();
 
 		if (!this.form) {
@@ -176,59 +176,34 @@ export class ClienteModificarPerfil extends Presenter {
 			return;
 		}
 
-		const emailExiste = this.model.usuarios.some(
-			(u) => u.id !== user.id && u.email?.toLowerCase() === email
-		);
-		if (emailExiste) {
-			session.pushError("Este email ya está registrado por otro usuario");
-			return;
-		}
+		try {
+			const updatedUser = await this.model.actualizarCliente(user.id, {
+				nombre,
+				apellidos,
+				dni,
+				email,
+				telefono,
+				direccion,
+				password,
+			});
 
-		const dniExiste = this.model.usuarios.some(
-			(u) => u.id !== user.id && u.dni?.toUpperCase() === dni
-		);
-		if (dniExiste) {
-			session.pushError("Este DNI ya está registrado por otro usuario");
-			return;
-		}
+			session.setUser(updatedUser);
+			almacenAutenticacion.actualizarUsuario(updatedUser);
+			session.pushSuccess("Perfil actualizado correctamente");
 
-		const usuarioModel = this.model.usuarios.find((u) => u.id === user.id);
-		if (!usuarioModel) {
-			session.pushError("No se encontró el usuario en el sistema");
-			return;
-		}
+			router.navigate("/c/perfil");
 
-		usuarioModel.nombre = nombre;
-		usuarioModel.apellidos = apellidos;
-		usuarioModel.dni = dni;
-		usuarioModel.email = email;
-		usuarioModel.telefono = telefono;
-		usuarioModel.direccion = direccion;
-		usuarioModel.password = password;
-
-		const updatedUser = {
-			id: usuarioModel.id,
-			dni: usuarioModel.dni,
-			nombre: usuarioModel.nombre,
-			apellidos: usuarioModel.apellidos,
-			direccion: usuarioModel.direccion,
-			telefono: usuarioModel.telefono,
-			email: usuarioModel.email,
-			password: usuarioModel.password,
-			rol: usuarioModel.rol,
-		};
-
-		session.setUser(updatedUser);
-		almacenAutenticacion.actualizarUsuario(updatedUser);
-		session.pushSuccess("Perfil actualizado correctamente");
-
-		router.navigate("/c/perfil");
-
-		setTimeout(() => {
-			window.dispatchEvent(
-				new CustomEvent("user-logged-in", { detail: updatedUser })
+			setTimeout(() => {
+				window.dispatchEvent(
+					new CustomEvent("user-logged-in", { detail: updatedUser })
+				);
+			}, 100);
+		} catch (error) {
+			console.error("Error al actualizar el perfil del cliente:", error);
+			session.pushError(
+				error?.message || "No se pudo actualizar el perfil. Intenta nuevamente"
 			);
-		}, 100);
+		}
 	}
 
 	desmontar() {

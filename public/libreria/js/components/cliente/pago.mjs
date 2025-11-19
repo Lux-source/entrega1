@@ -1,7 +1,8 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
+import { cartService } from "../../model/cart-service.mjs";
 
 const templateUrl = new URL("./pago.html", import.meta.url);
 let templateHtml = "";
@@ -19,19 +20,25 @@ try {
 
 export class ClientePago extends Presenter {
 	constructor() {
-		super(model, "cliente-pago");
+		super(libreriaStore, "cliente-pago");
 		this.onClick = this.onClick.bind(this);
 		this.onConfirm = this.onConfirm.bind(this);
+		this.isSubmitting = false;
+		this.items = [];
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
+		await this.loadCart({ force: true });
 
-		if (!this.syncCart()) {
+		if (!this.items.length) {
+			session.pushError(
+				"Tu carro está vacío. Agrega productos para continuar."
+			);
 			router.navigate("/c/carro");
 			return;
 		}
@@ -70,42 +77,20 @@ export class ClientePago extends Presenter {
 		this.confirmButton = this.container.querySelector(
 			'[data-element="confirm-button"]'
 		);
+		this.confirmButtonOriginalText =
+			this.confirmButton?.textContent?.trim() || "Confirmar y Pagar";
 	}
 
-	syncCart() {
-		const raw = session.leerArrayClienteSesion("carro");
-		const sanitized = [];
-		const items = [];
-
-		raw.forEach((entry) => {
-			const libro = this.model.libros.find((lib) => lib.id === entry.libroId);
-			if (!libro) {
-				return;
-			}
-
-			const stockDisponible = libro.stock ?? 0;
-			if (stockDisponible <= 0) {
-				return;
-			}
-
-			const cantidad = Math.min(
-				Math.max(1, Number.parseInt(entry.cantidad, 10) || 1),
-				stockDisponible
+	async loadCart({ force = false } = {}) {
+		try {
+			this.items = await cartService.obtenerCarroDetallado({ force });
+		} catch (error) {
+			console.error("Error al cargar el carro para pago:", error);
+			session.pushError(
+				error?.message || "No se pudo cargar tu carro. Inténtalo de nuevo"
 			);
-
-			sanitized.push({ libroId: libro.id, cantidad });
-			items.push({ libro, cantidad });
-		});
-
-		if (!items.length) {
-			session.escribirArrayClienteSesion("carro", []);
-			return false;
+			this.items = [];
 		}
-
-		session.escribirArrayClienteSesion("carro", sanitized);
-		this.cart = sanitized;
-		this.items = items;
-		return true;
 	}
 
 	populateForm(usuario) {
@@ -135,29 +120,23 @@ export class ClientePago extends Presenter {
 			.map((item, index) => this.createItemMarkup(item, index))
 			.join("");
 
-		const subtotal = this.items.reduce(
-			(sum, item) => sum + item.libro.precio * item.cantidad,
-			0
-		);
-		const shipping = 0;
-		const total = subtotal + shipping;
-		const totalIva = total * 1.21;
+		const totales = cartService.calcularTotales(this.items, { envio: 0 });
 
 		if (this.subtotalEl) {
-			this.subtotalEl.textContent = `${subtotal.toFixed(2)}€`;
+			this.subtotalEl.textContent = `${totales.subtotal.toFixed(2)}€`;
 		}
 
 		if (this.shippingEl) {
 			this.shippingEl.textContent =
-				shipping === 0 ? "Gratis" : `${shipping.toFixed(2)}€`;
+				totales.envio === 0 ? "Gratis" : `${totales.envio.toFixed(2)}€`;
 		}
 
 		if (this.totalEl) {
-			this.totalEl.textContent = `${total.toFixed(2)}€`;
+			this.totalEl.textContent = `${totales.total.toFixed(2)}€`;
 		}
 
 		if (this.totalIvaEl) {
-			this.totalIvaEl.textContent = `${totalIva.toFixed(2)}€`;
+			this.totalIvaEl.textContent = `${totales.totalConIva.toFixed(2)}€`;
 		}
 	}
 
@@ -198,112 +177,126 @@ export class ClientePago extends Presenter {
 		this.actualizarCantidad(index, action);
 	}
 
-	actualizarCantidad(index, action) {
-		const carro = session.leerArrayClienteSesion("carro");
-		const item = carro[index];
-
+	async actualizarCantidad(index, action) {
+		const item = this.items[index];
 		if (!item) {
 			return;
 		}
 
+		let nuevaCantidad = item.cantidad;
 		if (action === "increase") {
-			const libro = this.model.libros.find((lib) => lib.id === item.libroId);
-			if (!libro) {
-				return;
-			}
-
-			if (item.cantidad < (libro.stock ?? 0)) {
-				item.cantidad += 1;
-			} else {
+			const stockDisponible = item.libro?.stock ?? 0;
+			if (item.cantidad >= stockDisponible) {
 				session.pushError("No hay más stock disponible");
 				return;
 			}
+			nuevaCantidad += 1;
 		} else {
-			item.cantidad -= 1;
-			if (item.cantidad <= 0) {
-				carro.splice(index, 1);
+			nuevaCantidad -= 1;
+		}
+
+		try {
+			if (nuevaCantidad <= 0) {
+				await cartService.eliminarItem({ index });
+			} else {
+				await cartService.actualizarCantidad({
+					index,
+					cantidad: nuevaCantidad,
+				});
 			}
+			await this.loadCart({ force: true });
+			if (!this.items.length) {
+				session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
+				router.navigate("/c/carro");
+				return;
+			}
+			this.renderView();
+		} catch (error) {
+			console.error("Error actualizando cantidad en pago:", error);
+			session.pushError(error?.message || "No se pudo actualizar la cantidad");
+			await this.loadCart({ force: true });
+			if (!this.items.length) {
+				router.navigate("/c/carro");
+				return;
+			}
+			this.renderView();
 		}
-
-		if (!carro.length) {
-			session.escribirArrayClienteSesion("carro", []);
-			session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
-			router.navigate("/c/carro");
-			return;
-		}
-
-		session.escribirArrayClienteSesion("carro", carro);
-
-		if (!this.syncCart()) {
-			router.navigate("/c/carro");
-			return;
-		}
-
-		this.renderView();
 	}
 
-	onConfirm() {
+	async onConfirm(event) {
+		event?.preventDefault();
+
+		if (this.isSubmitting) {
+			return;
+		}
+
 		if (!this.formEnvio) {
 			return;
 		}
 
 		if (!this.formEnvio.checkValidity()) {
-			session.pushError("Por favor, completa todos los datos de envío");
+			session.pushError("Por favor, completa todos los datos de envio");
 			this.formEnvio.reportValidity();
 			return;
 		}
 
-		if (!this.syncCart()) {
+		await this.loadCart({ force: true });
+		if (!this.items.length) {
 			session.pushError("Tu carro quedó vacío. Agrega productos nuevamente.");
 			router.navigate("/c/carro");
 			return;
 		}
 
 		const datosEnvio = new FormData(this.formEnvio);
+		const totales = cartService.calcularTotales(this.items, { envio: 0 });
+		const usuario = session.getUser();
+		const clienteId = Number.parseInt(usuario?.id ?? "", 10) || null;
 
-		for (const item of this.cart) {
-			const libro = this.model.libros.find((lib) => lib.id === item.libroId);
-			if (!libro) {
-				continue;
-			}
+		const compraPayload = {
+			items: this.items.map((item) => ({
+				libroId: item.libroId,
+				cantidad: item.cantidad,
+			})),
+			total: totales.subtotal,
+			clienteId,
+			envio: {
+				nombre: (datosEnvio.get("nombre") || "").trim(),
+				direccion: (datosEnvio.get("direccion") || "").trim(),
+				ciudad: (datosEnvio.get("ciudad") || "").trim(),
+				cp: (datosEnvio.get("cp") || "").trim(),
+				telefono: (datosEnvio.get("telefono") || "").trim(),
+			},
+		};
 
-			try {
-				libro.reducirStock(item.cantidad);
-			} catch (error) {
-				console.error(error);
-				session.pushError(error.message || "No se pudo procesar el pedido");
-				return;
-			}
+		this.setSubmittingState(true);
+
+		try {
+			await this.model.crearFactura(compraPayload);
+			await cartService.vaciar({});
+			session.pushSuccess(
+				"Pago procesado con éxito. Tu pedido está en camino."
+			);
+			router.navigate("/c");
+		} catch (error) {
+			console.error("Error al registrar la compra:", error);
+			const mensajeError =
+				error?.message || "No se pudo registrar la compra. Intenta nuevamente.";
+			session.pushError(mensajeError);
+		} finally {
+			this.setSubmittingState(false);
+		}
+	}
+
+	setSubmittingState(isSubmitting) {
+		this.isSubmitting = isSubmitting;
+		if (!this.confirmButton) {
+			return;
 		}
 
-		const subtotal = this.items.reduce(
-			(sum, item) => sum + item.libro.precio * item.cantidad,
-			0
-		);
-		const usuario = session.getUser();
-
-		// Crear la compra usando el modelo persistente del servidor
-		const nuevaCompra = this.model.addCompra({
-			items: this.cart,
-			total: subtotal,
-			usuarioId: usuario?.id ?? null,
-			envio: {
-				nombre: datosEnvio.get("nombre"),
-				direccion: datosEnvio.get("direccion"),
-				ciudad: datosEnvio.get("ciudad"),
-				cp: datosEnvio.get("cp"),
-				telefono: datosEnvio.get("telefono"),
-			},
-		});
-
-		// También guardar en sesión del cliente para referencia local
-		const compras = session.leerArrayClienteSesion("compras");
-		compras.push(nuevaCompra.obtenerDetalles());
-		session.escribirArrayClienteSesion("compras", compras);
-		session.limpiarItemClienteSesion("carro");
-
-		session.pushSuccess("¡Pago procesado con éxito! Tu pedido está en camino.");
-		router.navigate("/c");
+		this.confirmButton.disabled = isSubmitting;
+		this.confirmButton.textContent = isSubmitting
+			? "Procesando..."
+			: this.confirmButtonOriginalText;
 	}
 
 	desmontar() {

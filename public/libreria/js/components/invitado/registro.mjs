@@ -179,7 +179,12 @@ export class Registro extends Presenter {
 			);
 
 			setTimeout(() => {
-				router.navigate("/c");
+				const rol = result.usuario.rol?.toLowerCase();
+				if (rol === "admin") {
+					router.navigate("/a");
+				} else {
+					router.navigate("/c");
+				}
 				window.dispatchEvent(
 					new CustomEvent("user-logged-in", { detail: result.usuario })
 				);

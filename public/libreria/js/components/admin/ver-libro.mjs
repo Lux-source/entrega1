@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -20,7 +20,7 @@ try {
 
 export class AdminVerLibro extends Presenter {
 	constructor() {
-		super(model, "admin-ver-libro");
+		super(libreriaStore, "admin-ver-libro");
 		this.libro = null;
 	}
 
@@ -28,9 +28,9 @@ export class AdminVerLibro extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
-		this.libro = this.getLibroFromRoute();
+		await this.loadLibro();
 
 		if (!this.libro) {
 			session.pushError("Libro no encontrado");
@@ -63,18 +63,28 @@ export class AdminVerLibro extends Presenter {
 		};
 	}
 
-	getLibroFromRoute() {
+	async loadLibro() {
+		const id = this.getLibroIdFromRoute();
+		if (!Number.isFinite(id)) {
+			this.libro = null;
+			return;
+		}
+
+		try {
+			this.libro = await this.model.getLibroById(id, { force: true });
+		} catch (error) {
+			console.error("Error cargando libro en AdminVerLibro:", error);
+			this.libro = null;
+		}
+	}
+
+	getLibroIdFromRoute() {
 		const match = window.location.pathname.match(/\/a\/libros\/(\d+)/);
 		if (!match) {
 			return null;
 		}
-
 		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			return null;
-		}
-
-		return this.model.libros.find((libro) => libro.id === id) ?? null;
+		return Number.isFinite(id) ? id : null;
 	}
 
 	renderLibro() {
@@ -144,22 +154,21 @@ export class AdminVerLibro extends Presenter {
 		section.style.display = visible ? "" : "none";
 	}
 
-	eliminarLibro() {
+	async eliminarLibro() {
 		if (!this.libro) {
 			return;
 		}
 
-		const index = this.model.libros.findIndex(
-			(libro) => libro.id === this.libro.id
-		);
-		if (index === -1) {
-			session.pushError("Error al eliminar el libro");
-			return;
+		try {
+			await this.model.borrarLibro(this.libro.id);
+			session.pushSuccess("Libro eliminado correctamente");
+			router.navigate("/a");
+		} catch (error) {
+			console.error("Error eliminando libro:", error);
+			session.pushError(
+				error?.message || "No se pudo eliminar el libro. Intenta nuevamente"
+			);
 		}
-
-		this.model.libros.splice(index, 1);
-		session.pushSuccess("Libro eliminado correctamente");
-		router.navigate("/a");
 	}
 
 	desmontar() {

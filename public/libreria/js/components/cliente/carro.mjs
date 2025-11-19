@@ -1,6 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
+import { cartService } from "../../model/cart-service.mjs";
 
 const templateUrl = new URL("./carro.html", import.meta.url);
 let templateHtml = "";
@@ -19,20 +20,20 @@ try {
 
 export class ClienteCarro extends Presenter {
 	constructor() {
-		super(model, "cliente-carro");
+		super(libreriaStore, "cliente-carro");
 		this.onClick = this.onClick.bind(this);
+		this.items = [];
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
-		this.renderCarro();
+		await this.refreshCarro({ force: true });
 
 		if (this.containerEl) {
-			// Prevent duplicated handlers if bind runs more than once on same instance
 			this.containerEl.removeEventListener("click", this.onClick);
 			this.containerEl.addEventListener("click", this.onClick);
 		}
@@ -51,23 +52,31 @@ export class ClienteCarro extends Presenter {
 		this.totalEl = this.container.querySelector('[data-element="total"]');
 	}
 
-	renderCarro() {
-		const carroRaw = session.leerArrayClienteSesion("carro");
-		const items = carroRaw
-			.map((entry) => {
-				const libro = this.model.libros.find((lib) => lib.id === entry.libroId);
-				return libro ? { ...entry, libro } : null;
-			})
-			.filter(Boolean);
+	async refreshCarro({ force = false } = {}) {
+		try {
+			this.items = await cartService.obtenerCarroDetallado({ force });
+		} catch (error) {
+			console.error("Error cargando el carro:", error);
+			session.pushError(
+				error?.message || "No se pudo cargar el carro de la compra"
+			);
+			this.items = [];
+		}
+		this.renderCarro();
+	}
 
-		if (items.length === 0) {
+	renderCarro() {
+		if (!this.items.length) {
 			if (this.emptySection) {
 				this.emptySection.style.display = "";
 			}
 			if (this.contentSection) {
 				this.contentSection.style.display = "none";
 			}
-			session.escribirArrayClienteSesion("carro", []);
+			if (this.itemsEl) {
+				this.itemsEl.innerHTML = "";
+			}
+			this.updateTotals({ subtotal: 0, envio: 0, total: 0 });
 			return;
 		}
 
@@ -79,40 +88,28 @@ export class ClienteCarro extends Presenter {
 		}
 
 		if (this.itemsEl) {
-			this.itemsEl.innerHTML = items
+			this.itemsEl.innerHTML = this.items
 				.map((item, index) => this.createItemMarkup(item, index))
 				.join("");
 		}
 
-		const subtotal = items.reduce(
-			(sum, item) => sum + item.libro.precio * item.cantidad,
-			0
-		);
-		const shipping = 0;
-		const total = subtotal + shipping;
+		const totales = cartService.calcularTotales(this.items, { envio: 0 });
+		this.updateTotals(totales);
+	}
 
+	updateTotals({ subtotal = 0, envio = 0, total = 0 }) {
 		if (this.subtotalEl) {
 			this.subtotalEl.textContent = `${subtotal.toFixed(2)}€`;
 		}
 
 		if (this.shippingEl) {
 			this.shippingEl.textContent =
-				shipping === 0 ? "Gratis" : `${shipping.toFixed(2)}€`;
+				envio === 0 ? "Gratis" : `${envio.toFixed(2)}€`;
 		}
 
 		if (this.totalEl) {
 			this.totalEl.textContent = `${total.toFixed(2)}€`;
 		}
-
-		this.cartItems = items;
-
-		session.escribirArrayClienteSesion(
-			"carro",
-			items.map((item) => ({
-				libroId: item.libroId,
-				cantidad: item.cantidad,
-			}))
-		);
 	}
 
 	createItemMarkup(item, index) {
@@ -156,46 +153,54 @@ export class ClienteCarro extends Presenter {
 		}
 	}
 
-	actualizarCantidad(index, action) {
-		const carro = session.leerArrayClienteSesion("carro");
-		const item = carro[index];
-
+	async actualizarCantidad(index, action) {
+		const item = this.items[index];
 		if (!item) {
 			return;
 		}
 
+		let nuevaCantidad = item.cantidad;
 		if (action === "increase") {
-			const libro = this.model.libros.find((lib) => lib.id === item.libroId);
-			if (!libro) {
-				return;
-			}
-			if (item.cantidad < (libro.stock ?? 0)) {
-				item.cantidad += 1;
-			} else {
+			const stockDisponible = item.libro?.stock ?? 0;
+			if (item.cantidad >= stockDisponible) {
 				session.pushError("No hay más stock disponible");
 				return;
 			}
+			nuevaCantidad += 1;
 		} else {
-			item.cantidad -= 1;
-			if (item.cantidad <= 0) {
-				carro.splice(index, 1);
-			}
+			nuevaCantidad -= 1;
 		}
 
-		session.escribirArrayClienteSesion("carro", carro);
-		this.renderCarro();
+		try {
+			if (nuevaCantidad <= 0) {
+				await cartService.eliminarItem({ index });
+				session.pushSuccess("Producto eliminado del carro");
+			} else {
+				await cartService.actualizarCantidad({
+					index,
+					cantidad: nuevaCantidad,
+				});
+			}
+			await this.refreshCarro({ force: true });
+		} catch (error) {
+			console.error("Error al actualizar la cantidad:", error);
+			session.pushError(error?.message || "No se pudo actualizar la cantidad");
+			await this.refreshCarro({ force: true });
+		}
 	}
 
-	eliminarItem(index) {
-		const carro = session.leerArrayClienteSesion("carro");
-		if (!carro[index]) {
-			return;
+	async eliminarItem(index) {
+		try {
+			await cartService.eliminarItem({ index });
+			session.pushSuccess("Producto eliminado del carro");
+			await this.refreshCarro({ force: true });
+		} catch (error) {
+			console.error("Error al eliminar item del carro:", error);
+			session.pushError(
+				error?.message || "No se pudo eliminar el producto del carro"
+			);
+			await this.refreshCarro({ force: true });
 		}
-
-		carro.splice(index, 1);
-		session.escribirArrayClienteSesion("carro", carro);
-		session.pushSuccess("Producto eliminado del carro");
-		this.renderCarro();
 	}
 
 	desmontar() {

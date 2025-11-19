@@ -1,6 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { libreriaStore } from "../../model/libreria-store.mjs";
 
 const templateUrl = new URL("./compras.html", import.meta.url);
 let templateHtml = "";
@@ -19,32 +19,86 @@ try {
 
 export class ClienteCompras extends Presenter {
 	constructor() {
-		super(model, "cliente-compras");
+		super(libreriaStore, "cliente-compras");
 		this.onToggleClick = this.onToggleClick.bind(this);
+		this.state = {
+			compras: [],
+			isLoading: false,
+			error: null,
+		};
+		this.libros = [];
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
-		this.renderCompras();
+		await this.loadCompras();
 
 		if (this.wrapper) {
 			this.wrapper.addEventListener("click", this.onToggleClick);
 		}
 	}
 
-	obtenerComprasDelUsuario() {
+	async loadCompras() {
 		const usuario = session.getUser();
 		if (!usuario) {
-			return [];
+			this.state.compras = [];
+			this.renderCompras();
+			return;
 		}
 
-		// Obtener compras del modelo del servidor
-		const compras = this.model.getComprasPorUsuario(usuario.id);
-		return compras;
+		const usuarioId = Number.parseInt(usuario?.id ?? "", 10);
+		if (!Number.isFinite(usuarioId)) {
+			this.state.compras = [];
+			this.renderCompras();
+			return;
+		}
+
+		this.updateLoadingState(true);
+
+		try {
+			const [compras, libros] = await Promise.all([
+				this.model.getFacturasPorCliente(usuarioId, { force: true }),
+				this.model.getLibros(),
+			]);
+			this.state.compras = compras || [];
+			this.libros = libros || [];
+			this.state.error = null;
+		} catch (error) {
+			console.error("Error al cargar compras:", error);
+			this.state.error = error?.message || "No se pudieron cargar tus compras.";
+			this.state.compras = [];
+			this.libros = [];
+		}
+
+		this.updateLoadingState(false);
+		this.renderCompras();
+	}
+
+	updateLoadingState(isLoading) {
+		this.state.isLoading = isLoading;
+		if (!this.wrapper) {
+			return;
+		}
+
+		if (isLoading) {
+			this.wrapper.setAttribute("aria-busy", "true");
+			if (this.listEl) {
+				this.listEl.innerHTML =
+					'<p class="compra-loading">Cargando tus compras...</p>';
+			}
+			if (this.emptySection) {
+				this.emptySection.style.display = "none";
+			}
+			if (this.contentSection) {
+				this.contentSection.style.display = "";
+			}
+		} else {
+			this.wrapper.removeAttribute("aria-busy");
+		}
 	}
 
 	cacheDom() {
@@ -57,8 +111,18 @@ export class ClienteCompras extends Presenter {
 	}
 
 	renderCompras() {
-		// Obtener compras del modelo del servidor y filtrar por usuario
-		const compras = [...this.obtenerComprasDelUsuario()].reverse();
+		if (this.state.error) {
+			session.pushError(this.state.error);
+		}
+
+		const compras = [...this.state.compras].sort((a, b) => {
+			const fechaA = new Date(a.fecha || 0).getTime();
+			const fechaB = new Date(b.fecha || 0).getTime();
+			if (fechaA === fechaB) {
+				return (b.id ?? 0) - (a.id ?? 0);
+			}
+			return fechaB - fechaA;
+		});
 
 		if (!compras.length) {
 			if (this.emptySection) {
@@ -91,7 +155,7 @@ export class ClienteCompras extends Presenter {
 
 		const articulos = (compra.items || [])
 			.map((item) => {
-				const libro = (this.model.libros || []).find(
+				const libro = (this.libros || []).find(
 					(lib) => lib.id === item.libroId
 				);
 				if (!libro) {
