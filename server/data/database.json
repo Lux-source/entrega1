@@ -1,0 +1,167 @@
+{
+  "libros": [
+    {
+      "id": 1,
+      "titulo": "Libro 1",
+      "autor": "Lucian",
+      "isbn": "978-84-376-0494-7",
+      "precio": 15.95,
+      "stock": 27
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1,
+      "dni": "11111111B",
+      "nombre": "Juan",
+      "apellidos": "Perez",
+      "direccion": "Calle Mayor 1",
+      "telefono": "600000001",
+      "email": "juan@mail.com",
+      "password": "Juanperez123",
+      "rol": "CLIENTE"
+    },
+    {
+      "id": 2,
+      "dni": "22222222C",
+      "nombre": "Maria",
+      "apellidos": "Garcia",
+      "direccion": "Av. Libertad 23",
+      "telefono": "600000002",
+      "email": "maria@mail.com",
+      "password": "Maria123",
+      "rol": "CLIENTE"
+    },
+    {
+      "dni": "2222222B",
+      "nombre": "carmen",
+      "apellidos": "carmen",
+      "direccion": "carmen",
+      "telefono": "697697697",
+      "email": "carmen@ejemplo.com",
+      "password": "carmen1234",
+      "rol": "CLIENTE",
+      "id": 1
+    }
+  ],
+  "admins": [
+    {
+      "id": 1,
+      "dni": "12345678N",
+      "nombre": "Luciano",
+      "apellidos": "Luciano",
+      "direccion": "Luciana",
+      "telefono": "900900900",
+      "email": "lucian@ejemplo.com",
+      "password": "Luciano",
+      "rol": "ADMIN"
+    },
+    {
+      "dni": "12345678N",
+      "nombre": "Luciano",
+      "apellidos": "Luciano",
+      "direccion": "Luciano",
+      "telefono": "900900900",
+      "email": "lucian@ejemplo.com",
+      "password": "Luciano",
+      "rol": "ADMIN",
+      "id": 1
+    },
+    {
+      "dni": "11111111A",
+      "nombre": "alex",
+      "apellidos": "alex",
+      "direccion": "alex",
+      "telefono": "901901901",
+      "email": "alex@ejemplo.com",
+      "password": "alex1234",
+      "rol": "ADMIN",
+      "id": 2
+    },
+    {
+      "dni": "99999999Z",
+      "nombre": "AdministradorPadre",
+      "apellidos": "AdministradorPadre",
+      "direccion": "AdministradorPadre",
+      "telefono": "111222333",
+      "email": "administradorpadre@ejemplo.com",
+      "password": "123456",
+      "rol": "ADMIN",
+      "id": 3
+    },
+    {
+      "dni": "22222222C",
+      "nombre": "22",
+      "apellidos": "22",
+      "direccion": "22",
+      "telefono": "222222222",
+      "email": "22@ejemplo.com",
+      "password": "222222",
+      "rol": "ADMIN",
+      "id": 4
+    }
+  ],
+  "facturas": [
+    {
+      "id": 1,
+      "numero": "FAC-0002",
+      "fecha": "2025-11-19T18:26:15.810Z",
+      "clienteId": 1,
+      "items": [
+        {
+          "libroId": 1,
+          "cantidad": 1
+        },
+        {
+          "libroId": 3,
+          "cantidad": 2
+        }
+      ],
+      "total": 40.95,
+      "envio": {
+        "nombre": "Juan Perez",
+        "direccion": "Calle Mayor 1",
+        "ciudad": "Madrid",
+        "cp": "28001",
+        "telefono": "600000001"
+      }
+    },
+    {
+      "id": 2,
+      "numero": "FAC-0003",
+      "fecha": "2025-11-19T18:26:15.810Z",
+      "clienteId": 2,
+      "items": [
+        {
+          "libroId": 2,
+          "cantidad": 1
+        },
+        {
+          "libroId": 4,
+          "cantidad": 3
+        }
+      ],
+      "total": 48.75,
+      "envio": {
+        "nombre": "Maria Garcia",
+        "direccion": "Av. Libertad 23",
+        "ciudad": "Valencia",
+        "cp": "46001",
+        "telefono": "600000002"
+      }
+    }
+  ],
+  "carros": {},
+  "_counters": {
+    "libros": 5,
+    "clientes": 3,
+    "admins": 2,
+    "facturas": 3
+  },
+  "_contadores": {
+    "libros": 1,
+    "clientes": 2,
+    "admins": 5,
+    "facturas": 1
+  }
+}
