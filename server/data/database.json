@@ -66,6 +66,28 @@
       "password": "Password123",
       "rol": "CLIENTE",
       "id": 3
+    },
+    {
+      "dni": "95958723A",
+      "nombre": "Test",
+      "apellidos": "Duplicado",
+      "direccion": "Calle",
+      "telefono": "600000000",
+      "email": "dup1763595958723@mail.com",
+      "password": "Clave123",
+      "rol": "CLIENTE",
+      "id": 4
+    },
+    {
+      "dni": "85958749B",
+      "nombre": "Laura",
+      "apellidos": "Crud",
+      "direccion": "Calle Alta",
+      "telefono": "611111111",
+      "email": "crud1763595958749@mail.com",
+      "password": "Crud123",
+      "rol": "CLIENTE",
+      "id": 5
     }
   ],
   "admins": [
@@ -79,6 +101,17 @@
       "email": "admin@libreria.com",
       "password": "Admin123",
       "rol": "ADMIN"
+    },
+    {
+      "dni": "95958672Z",
+      "nombre": "Test",
+      "apellidos": "Usuario",
+      "direccion": "Calle Test",
+      "telefono": "795958672",
+      "email": "registro1763595958672@mail.com",
+      "password": "Clave99",
+      "rol": "ADMIN",
+      "id": 2
     }
   ],
   "facturas": [
@@ -141,8 +174,8 @@
   },
   "_contadores": {
     "libros": 6,
-    "clientes": 4,
-    "admins": 2,
+    "clientes": 6,
+    "admins": 3,
     "facturas": 3
   }
 }
