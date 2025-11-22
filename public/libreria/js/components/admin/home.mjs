@@ -1,6 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { api } from "../../model/api-proxy.mjs";
+
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -19,7 +20,8 @@ try {
 
 export class AdminHome extends Presenter {
 	constructor() {
-		super(model, "admin-home");
+		super(null, "admin-home");
+		this.libros = [];
 		this.currentPage = 1;
 		this.itemsPerPage = 12;
 		this.totalPages = 1;
@@ -30,14 +32,26 @@ export class AdminHome extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
 		this.renderHero();
-		this.renderCatalog();
 
+		try{
+			const libros = await api.getLibros();
+
+			this.libros = Array.isArray(libros) ? libros :[];
+
+			this.renderCatalog();
+		}catch(error){
+			console.error("Error al cargar los libros:", error);
+			session.pushError("No se pudieron cargar los libros desde el servidor.");
+			if(this.booksGridEl){
+				this.booksGridEl.innerHTML = `<p class="error">Error al cargar el catálogo.</p>`;
+			}
+		}
 		if (this.paginationEl) {
 			this.paginationEl.addEventListener("click", this.onPaginationClick);
-		}
+		}	
 	}
 
 	cacheDom() {
@@ -64,7 +78,7 @@ export class AdminHome extends Presenter {
 			return;
 		}
 
-		const libros = Array.isArray(this.model.libros) ? this.model.libros : [];
+		const libros = this.libros;
 		const totalLibros = libros.length;
 
 		if (totalLibros === 0) {
@@ -177,11 +191,13 @@ export class AdminHome extends Presenter {
 			return;
 		}
 
-		if (button.dataset.action === "prev" && this.currentPage > 1) {
+		const action = button.dataset.action;
+
+		if (action === "prev" && this.currentPage > 1) {
 			this.currentPage -= 1;
 			this.renderCatalog();
 		} else if (
-			button.dataset.action === "next" &&
+			action === "next" &&
 			this.currentPage < this.totalPages
 		) {
 			this.currentPage += 1;

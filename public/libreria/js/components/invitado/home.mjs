@@ -1,5 +1,6 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/seeder.mjs";
+import { api } from "../../model/api-proxy.mjs"; 
+import { session } from "../../commons/libreria-session.mjs"; 
 
 const templateUrl = new URL("./home.html", import.meta.url);
 let templateHtml = "";
@@ -18,7 +19,11 @@ try {
 
 export class InvitadoHome extends Presenter {
 	constructor() {
-		super(model, "invitado-home");
+		// --- CAMBIO: Ya no pasamos el 'model' al constructor de Presenter ---
+		// super(model, "invitado-home"); // <--- LÍNEA ANTIGUA
+		super(null, "invitado-home"); // <--- LÍNEA NUEVA
+
+		this.libros = []; // <-- NUEVO: Guardaremos los libros aquí para la paginación
 		this.currentPage = 1;
 		this.itemsPerPage = 12;
 		this.totalPages = 1;
@@ -29,10 +34,29 @@ export class InvitadoHome extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	// --- CAMBIO: 'bind()' ahora es 'async' para poder usar 'await' ---
+	async bind() {
 		this.cacheDom();
 		this.renderHero();
-		this.renderCatalog();
+
+		// --- CAMBIO: Pedimos los libros a la API ---
+		try {
+			// 1. Llamamos al proxy para que pida los libros al servidor
+			const libros = await api.getLibros();
+			
+			// 2. Guardamos los libros para usarlos en la paginación
+			this.libros = Array.isArray(libros) ? libros : [];
+			
+			// 3. Renderizamos el catálogo con los libros obtenidos
+			this.renderCatalog();
+		} catch (error) {
+			console.error("Error al cargar los libros:", error);
+			session.pushError("No se pudieron cargar los libros desde el servidor.");
+			if (this.booksGridEl) {
+				this.booksGridEl.innerHTML = `<p class="error">Error al cargar el catálogo.</p>`;
+			}
+		}
+		// --- FIN DEL CAMBIO ---
 
 		if (this.paginationEl) {
 			this.paginationEl.addEventListener("click", this.onPaginationClick);
@@ -58,12 +82,18 @@ export class InvitadoHome extends Presenter {
 		}
 	}
 
+	// --- CAMBIO: renderCatalog() ya no recibe parámetros ---
+	// Usará 'this.libros' (que 'bind' rellenó) y 'this.currentPage'
 	renderCatalog() {
 		if (!this.catalogSummaryEl || !this.booksGridEl) {
 			return;
 		}
 
-		const libros = Array.isArray(this.model.libros) ? this.model.libros : [];
+		// --- CAMBIO: Lee de 'this.libros' (propiedad de la clase) ---
+		const libros = this.libros;
+		// const libros = Array.isArray(this.model.libros) ? this.model.libros : []; // <--- LÍNEA ANTIGUA
+		// --- FIN DEL CAMBIO ---
+		
 		const totalLibros = libros.length;
 
 		if (totalLibros === 0) {
@@ -171,6 +201,9 @@ export class InvitadoHome extends Presenter {
 			return;
 		}
 
+		// --- CAMBIO: Ahora esto funciona ---
+		// Porque 'this.libros' fue guardado en 'bind()'
+		// y 'renderCatalog()' sabe leerlo desde 'this.libros'.
 		const action = button.dataset.action;
 		if (action === "prev" && this.currentPage > 1) {
 			this.currentPage -= 1;
@@ -179,6 +212,7 @@ export class InvitadoHome extends Presenter {
 			this.currentPage += 1;
 			this.renderCatalog();
 		}
+		// --- FIN DEL CAMBIO ---
 
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}

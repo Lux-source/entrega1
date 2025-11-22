@@ -1,5 +1,5 @@
 import { Presenter } from "../../commons/presenter.mjs";
-import { model } from "../../model/seeder.mjs";
+import { api } from "../../model/api-proxy.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -20,23 +20,33 @@ try {
 
 export class InvitadoVerLibro extends Presenter {
 	constructor() {
-		super(model, "invitado-ver-libro");
+		super(null, "invitado-ver-libro");
 	}
 
 	template() {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
 
-		const libro = this.getLibroFromPath();
-		if (!libro) {
+		const id = this.getLibroIdFromPath();
+		if (!id) {
 			this.renderNotFound();
 			return;
 		}
 
-		this.populateLibro(libro);
+		try {
+			const libro = await api.getLibroById(id);
+			if (!libro) {
+				this.renderNotFound();
+				return;
+			}
+			this.populateLibro(libro);
+		} catch (error) {
+			console.error("Error al cargar el libro:", error);
+			this.renderNotFound();
+		}
 	}
 
 	cacheDom() {
@@ -48,7 +58,7 @@ export class InvitadoVerLibro extends Presenter {
 		this.stockEl = this.container.querySelector('[data-element="stock"]');
 	}
 
-	getLibroFromPath() {
+	getLibroIdFromPath() {
 		const path = window.location.pathname;
 		const match = path.match(/\/(?:c\/)?libros\/(\d+)/);
 		if (!match) {
@@ -56,11 +66,7 @@ export class InvitadoVerLibro extends Presenter {
 		}
 
 		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			return null;
-		}
-
-		return this.model.libros.find((libro) => libro.id === id) ?? null;
+		return Number.isNaN(id) ? null : id;
 	}
 
 	populateLibro(libro) {

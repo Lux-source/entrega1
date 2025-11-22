@@ -48,10 +48,10 @@ class Model {
 
 		// Libros
 		this.libros.push(
-			new Libro(1, "Libro server 1", "Lucian", "978-84-376-0494-7", 15.95, 25),
-			new Libro(2, "Libro 2", "Loren", "978-84-204-2548-8", 18.9, 15),
-			new Libro(3, "Libro 3", "Juanpi", "978-84-9759-252-5", 12.5, 30),
-			new Libro(4, "Libro 4", "Héctor", "978-84-9841-483-8", 9.95, 50)
+			new Libro(1, "Libro model 1", "Lucian", "978-84-376-0494-7", 15.95, 25),
+			new Libro(2, "Libro model 2", "Loren", "978-84-204-2548-8", 18.9, 15),
+			new Libro(3, "Libro model 3", "Juanpi", "978-84-9759-252-5", 12.5, 30),
+			new Libro(4, "Libro model 4", "Héctor", "978-84-9841-483-8", 9.95, 50)
 		);
 	}
 }

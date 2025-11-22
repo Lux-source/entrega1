@@ -1,7 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
+import { api } from "../../model/api-proxy.mjs";
 
 const templateUrl = new URL("./ver-libro.html", import.meta.url);
 let templateHtml = "";
@@ -20,7 +20,7 @@ try {
 
 export class AdminVerLibro extends Presenter {
 	constructor() {
-		super(model, "admin-ver-libro");
+		super(null, "admin-ver-libro");
 		this.libro = null;
 	}
 
@@ -28,18 +28,30 @@ export class AdminVerLibro extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.cacheDom();
-		this.libro = this.getLibroFromRoute();
+		const id = this.getLibroIdFromRoute();
 
-		if (!this.libro) {
+		if (!id) {
 			session.pushError("Libro no encontrado");
 			router.navigate("/a");
 			return;
 		}
 
-		this.renderLibro();
-		this.attachEvents();
+		try {
+			this.libro = await api.getLibroById(id);
+			if (!this.libro) {
+				session.pushError("Libro no encontrado");
+				router.navigate("/a");
+				return;
+			}
+			this.renderLibro();
+			this.attachEvents();
+		} catch (error) {
+			console.error("Error al cargar el libro:", error);
+			session.pushError("Error al cargar el libro");
+			router.navigate("/a");
+		}
 	}
 
 	cacheDom() {
@@ -63,18 +75,14 @@ export class AdminVerLibro extends Presenter {
 		};
 	}
 
-	getLibroFromRoute() {
+	getLibroIdFromRoute() {
 		const match = window.location.pathname.match(/\/a\/libros\/(\d+)/);
 		if (!match) {
 			return null;
 		}
 
 		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			return null;
-		}
-
-		return this.model.libros.find((libro) => libro.id === id) ?? null;
+		return Number.isNaN(id) ? null : id;
 	}
 
 	renderLibro() {
