@@ -1,8 +1,7 @@
 import { Presenter } from "../../commons/presenter.mjs";
 import { router } from "../../commons/router.mjs";
 import { session } from "../../commons/libreria-session.mjs";
-import { model } from "../../model/seeder.mjs";
-import { Libro } from "../../model/libro.mjs";
+import { api } from "../../model/api-proxy.mjs";
 
 const templateUrl = new URL("./libro-form.html", import.meta.url);
 let templateHtml = "";
@@ -21,8 +20,9 @@ try {
 
 export class AdminLibroForm extends Presenter {
 	constructor() {
-		super(model, "admin-libro-form");
+		super(null, "admin-libro-form");
 		this.isEdit = false;
+		this.libroId = null;
 		this.libro = null;
 	}
 
@@ -30,14 +30,30 @@ export class AdminLibroForm extends Presenter {
 		return templateHtml;
 	}
 
-	bind() {
+	async bind() {
 		this.determineMode();
 		this.cacheDom();
 
-		if (this.isEdit && !this.libro) {
-			session.pushError("Libro no encontrado");
-			router.navigate("/a");
-			return;
+		if (this.isEdit) {
+			if (!this.libroId) {
+				session.pushError("ID de libro inválido");
+				router.navigate("/a");
+				return;
+			}
+
+			try {
+				this.libro = await api.getLibroById(this.libroId);
+				if (!this.libro) {
+					session.pushError("Libro no encontrado");
+					router.navigate("/a");
+					return;
+				}
+			} catch (error) {
+				console.error("Error al cargar libro para editar:", error);
+				session.pushError("Error al cargar el libro");
+				router.navigate("/a");
+				return;
+			}
 		}
 
 		this.populateForm();
@@ -48,18 +64,13 @@ export class AdminLibroForm extends Presenter {
 		const match = window.location.pathname.match(/\/a\/libros\/editar\/(\d+)/);
 		if (!match) {
 			this.isEdit = false;
-			this.libro = null;
+			this.libroId = null;
 			return;
 		}
 
 		this.isEdit = true;
 		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			this.libro = null;
-			return;
-		}
-
-		this.libro = this.model.libros.find((lib) => lib.id === id) ?? null;
+		this.libroId = Number.isNaN(id) ? null : id;
 	}
 
 	cacheDom() {
@@ -130,7 +141,7 @@ export class AdminLibroForm extends Presenter {
 		this.form.addEventListener("submit", this.onSubmit);
 	}
 
-	handleSubmit(formData) {
+	async handleSubmit(formData) {
 		const rawPrecio = Number.parseFloat(formData.get("precio"));
 		const rawStock = Number.parseInt(formData.get("stock"), 10);
 		const data = {
@@ -141,26 +152,35 @@ export class AdminLibroForm extends Presenter {
 			stock: Number.isInteger(rawStock) && rawStock >= 0 ? rawStock : 0,
 		};
 
-		if (this.isEdit && this.libro) {
-			Object.assign(this.libro, data);
-			session.pushSuccess("Libro actualizado correctamente");
-			router.navigate(`/a/libros/${this.libro.id}`);
-			return;
+		try {
+			let result;
+			if (this.isEdit && this.libroId) {
+				result = await api.updateLibro(this.libroId, data);
+				if (result.success) {
+					session.pushSuccess("Libro actualizado correctamente");
+					router.navigate(`/a/libros/${this.libroId}`);
+				} else {
+					session.pushError(result.error || "Error al actualizar el libro");
+				}
+			} else {
+				result = await api.addLibro(data);
+				if (result.success) {
+					session.pushSuccess("Libro creado correctamente");
+					// Asumimos que el servidor devuelve el objeto creado o al menos su ID
+					const nuevoId = result.id || result.libro?.id;
+					if (nuevoId) {
+						router.navigate(`/a/libros/${nuevoId}`);
+					} else {
+						router.navigate("/a");
+					}
+				} else {
+					session.pushError(result.error || "Error al crear el libro");
+				}
+			}
+		} catch (error) {
+			console.error("Error al guardar libro:", error);
+			session.pushError("Error de conexión al guardar el libro");
 		}
-
-		const nuevoId = Math.max(0, ...this.model.libros.map((lib) => lib.id)) + 1;
-		const nuevoLibro = new Libro(
-			nuevoId,
-			data.titulo,
-			data.autor,
-			data.isbn,
-			Number.isFinite(data.precio) ? data.precio : 0,
-			Number.isFinite(data.stock) ? data.stock : 0
-		);
-
-		this.model.libros.push(nuevoLibro);
-		session.pushSuccess("Libro creado correctamente");
-		router.navigate(`/a/libros/${nuevoLibro.id}`);
 	}
 
 	desmontar() {
