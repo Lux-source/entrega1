@@ -7,7 +7,7 @@ const parsearIdNumerico = (valor) => {
 
 export class LibroController {
 	async obtenerLibros(req, res) {
-		const { isbn, titulo, min, max } = req.query ?? {};
+		const { isbn, titulo } = req.query ?? {};
 
 		if (isbn) {
 			const libro = await libroService.obtenerPorIsbn(isbn);
@@ -23,17 +23,7 @@ export class LibroController {
 				: res.status(404).json({ error: "Libro no encontrado" });
 		}
 
-		let libros = await libroService.obtenerTodos();
-
-		if (min !== undefined || max !== undefined) {
-			const minPrice = min ? Number.parseFloat(min) : 0;
-			const maxPrice = max ? Number.parseFloat(max) : Number.MAX_VALUE;
-			libros = libros.filter(
-				(l) => l.precio >= minPrice && l.precio <= maxPrice
-			);
-		}
-
-		return res.json(libros);
+		return res.json(await libroService.obtenerTodos());
 	}
 
 	async obtenerLibro(req, res) {
