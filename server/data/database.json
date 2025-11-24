@@ -6,7 +6,7 @@
       "autor": "Lucian",
       "isbn": "978-84-376-0494-7",
       "precio": 15.95,
-      "stock": 24
+      "stock": 26
     },
     {
       "id": 2,
@@ -14,7 +14,7 @@
       "autor": "Loren",
       "isbn": "978-84-204-2548-8",
       "precio": 18.9,
-      "stock": 14
+      "stock": 12
     },
     {
       "id": 3,
@@ -22,7 +22,7 @@
       "autor": "Juanpi",
       "isbn": "978-84-9759-252-5",
       "precio": 12.5,
-      "stock": 28
+      "stock": 24
     },
     {
       "id": 4,
@@ -31,6 +31,22 @@
       "isbn": "978-84-9841-483-8",
       "precio": 9.95,
       "stock": 47
+    },
+    {
+      "titulo": "Libro Proxy",
+      "autor": "Autor Proxy",
+      "isbn": "proxy-isbn-1764000085864",
+      "precio": 20,
+      "stock": 10,
+      "id": 5
+    },
+    {
+      "titulo": "Libro Proxy",
+      "autor": "Autor Proxy",
+      "isbn": "proxy-isbn-1764000335411",
+      "precio": 20,
+      "stock": 10,
+      "id": 7
     }
   ],
   "clientes": [
@@ -57,125 +73,169 @@
       "rol": "CLIENTE"
     },
     {
-      "dni": "15856053X",
-      "nombre": "ClienteREST",
-      "apellidos": "Test",
-      "direccion": "Calle Test",
-      "telefono": "600000000",
-      "email": "rest1763595856053@mail.com",
-      "password": "Password123",
-      "rol": "CLIENTE",
-      "id": 3
-    },
-    {
-      "dni": "95958723A",
+      "dni": "90085809A",
       "nombre": "Test",
       "apellidos": "Duplicado",
       "direccion": "Calle",
       "telefono": "600000000",
-      "email": "dup1763595958723@mail.com",
+      "email": "dup1764000085809@mail.com",
       "password": "Clave123",
       "rol": "CLIENTE",
-      "id": 4
+      "id": 3
     },
     {
-      "dni": "85958749B",
+      "dni": "80085842B",
       "nombre": "Laura",
       "apellidos": "Crud",
       "direccion": "Calle Alta",
       "telefono": "611111111",
-      "email": "crud1763595958749@mail.com",
+      "email": "crud1764000085842@mail.com",
       "password": "Crud123",
       "rol": "CLIENTE",
+      "id": 4
+    },
+    {
+      "dni": "90335362A",
+      "nombre": "Test",
+      "apellidos": "Duplicado",
+      "direccion": "Calle",
+      "telefono": "600000000",
+      "email": "dup1764000335362@mail.com",
+      "password": "Clave123",
+      "rol": "CLIENTE",
       "id": 5
+    },
+    {
+      "dni": "80335384B",
+      "nombre": "Laura",
+      "apellidos": "Crud",
+      "direccion": "Calle Alta",
+      "telefono": "611111111",
+      "email": "crud1764000335384@mail.com",
+      "password": "Crud123",
+      "rol": "CLIENTE",
+      "id": 6
     }
   ],
   "admins": [
     {
-      "id": 1,
-      "dni": "00000000A",
-      "nombre": "Admin",
-      "apellidos": "Principal",
-      "direccion": "Calle Libreria 1",
-      "telefono": "600000000",
-      "email": "admin@libreria.com",
-      "password": "Admin123",
-      "rol": "ADMIN"
-    },
-    {
-      "dni": "95958672Z",
+      "dni": "00085663Z",
       "nombre": "Test",
       "apellidos": "Usuario",
       "direccion": "Calle Test",
-      "telefono": "795958672",
-      "email": "registro1763595958672@mail.com",
+      "telefono": "700085663",
+      "email": "registro1764000085663@mail.com",
       "password": "Clave99",
       "rol": "ADMIN",
-      "id": 2
+      "id": 5
+    },
+    {
+      "dni": "00335330Z",
+      "nombre": "Test",
+      "apellidos": "Usuario",
+      "direccion": "Calle Test",
+      "telefono": "700335330",
+      "email": "registro1764000335330@mail.com",
+      "password": "Clave99",
+      "rol": "ADMIN",
+      "id": 6
     }
   ],
   "facturas": [
     {
-      "id": 1,
-      "numero": "FAC-0002",
-      "fecha": "2025-11-19T23:44:15.997Z",
-      "clienteId": 1,
+      "numero": "FAC-0001",
+      "fecha": "2025-11-24T16:01:25.958Z",
+      "clienteId": 2,
       "items": [
         {
           "libroId": 1,
-          "cantidad": 1
+          "cantidad": 3
         },
+        {
+          "libroId": 2,
+          "cantidad": 1
+        }
+      ],
+      "total": 66.75,
+      "envio": {
+        "nombre": "Test",
+        "direccion": "Test Dir",
+        "ciudad": "Test City",
+        "cp": "00000",
+        "telefono": "600000000"
+      },
+      "id": 6
+    },
+    {
+      "numero": "FAC-0002",
+      "fecha": "2025-11-24T16:01:26.010Z",
+      "clienteId": 2,
+      "items": [
         {
           "libroId": 3,
           "cantidad": 2
         }
       ],
-      "total": 40.95,
+      "total": 25,
       "envio": {
-        "nombre": "Juan Perez",
-        "direccion": "Calle Mayor 1",
-        "ciudad": "Madrid",
-        "cp": "28001",
-        "telefono": "600000001"
-      }
+        "nombre": "Test",
+        "direccion": "Test Dir",
+        "ciudad": "Test City",
+        "cp": "00000",
+        "telefono": "600000000"
+      },
+      "id": 7
     },
     {
-      "id": 2,
       "numero": "FAC-0003",
-      "fecha": "2025-11-19T23:44:15.997Z",
+      "fecha": "2025-11-24T16:05:35.506Z",
       "clienteId": 2,
       "items": [
         {
-          "libroId": 2,
-          "cantidad": 1
+          "libroId": 1,
+          "cantidad": 3
         },
         {
-          "libroId": 4,
-          "cantidad": 3
+          "libroId": 2,
+          "cantidad": 1
         }
       ],
-      "total": 48.75,
+      "total": 66.75,
       "envio": {
-        "nombre": "Maria Garcia",
-        "direccion": "Av. Libertad 23",
-        "ciudad": "Valencia",
-        "cp": "46001",
-        "telefono": "600000002"
-      }
+        "nombre": "Test",
+        "direccion": "Test Dir",
+        "ciudad": "Test City",
+        "cp": "00000",
+        "telefono": "600000000"
+      },
+      "id": 8
+    },
+    {
+      "numero": "FAC-0004",
+      "fecha": "2025-11-24T16:05:35.553Z",
+      "clienteId": 2,
+      "items": [
+        {
+          "libroId": 3,
+          "cantidad": 2
+        }
+      ],
+      "total": 25,
+      "envio": {
+        "nombre": "Test",
+        "direccion": "Test Dir",
+        "ciudad": "Test City",
+        "cp": "00000",
+        "telefono": "600000000"
+      },
+      "id": 9
     }
   ],
-  "carros": {
-    "1": [
-      {
-        "libroId": 1,
-        "cantidad": 1
-      }
-    ]
-  },
+  "carros": {},
   "_contadores": {
-    "libros": 6,
-    "clientes": 6,
-    "admins": 3,
-    "facturas": 3
+    "libros": 9,
+    "clientes": 7,
+    "admins": 7,
+    "facturas": 10
   }
 }

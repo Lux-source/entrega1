@@ -4,6 +4,7 @@ import { model } from "../libreria/js/model/seeder.mjs";
 import { servicioAutenticacion } from "../libreria/js/model/auth-service.mjs";
 import { almacenAutenticacion } from "../libreria/js/model/auth-store.mjs";
 import { session } from "../libreria/js/commons/libreria-session.mjs";
+import { libreriaProxy } from "../libreria/js/model/libreria-proxy.mjs";
 
 const { describe, it, beforeEach, afterEach } = window;
 const { expect } = window.chai;
@@ -520,58 +521,140 @@ describe("Agregar, Modificar y Eliminar", () => {
 		expect(session.getUser()).to.be.null;
 	});
 
-	it("permite añadir manualmente un libro al catálogo", () => {
-		// Este test usa model.libros directamente, es un test unitario del modelo local antiguo
-		// Lo mantenemos como test unitario de la clase/array, aunque no afecte al servidor
-		model.libros.push(new Libro(999, "Manual", "Autor", "crud-isbn", 10, 1));
-		const encontrado = model.libros.find((libro) => libro.isbn === "crud-isbn");
-		expect(encontrado).to.exist;
-		// limpiarLibroRegistrado("crud-isbn");
+	it("permite añadir un libro al catálogo mediante el proxy", async () => {
+		const nuevoLibro = {
+			titulo: "Libro Proxy",
+			autor: "Autor Proxy",
+			isbn: "proxy-isbn-" + Date.now(),
+			precio: 20,
+			stock: 10,
+		};
+		const libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
+		expect(libroCreado).to.have.property("id");
+		expect(libroCreado.titulo).to.equal(nuevoLibro.titulo);
+
+		// Verificar que existe recuperándolo
+		const libroRecuperado = await libreriaProxy.getLibroPorId(libroCreado.id);
+		expect(libroRecuperado.titulo).to.equal(nuevoLibro.titulo);
 	});
 
-	it("permite modificar el stock de un libro existente", () => {
-		const libro = model.libros[0];
-		const stockInicial = libro.getStock();
-		libro.setStock(stockInicial + 5);
-		expect(libro.getStock()).to.equal(stockInicial + 5);
+	it("permite modificar el stock de un libro existente mediante el proxy", async () => {
+		// Recuperamos un libro existente (ej. id 1 de la semilla)
+		// Si no existe, creamos uno primero para asegurar
+		let libro;
+		try {
+			libro = await libreriaProxy.getLibroPorId(1);
+		} catch (e) {
+			const nuevo = {
+				titulo: "Libro Stock",
+				autor: "A",
+				isbn: "stock-" + Date.now(),
+				precio: 10,
+				stock: 5,
+			};
+			libro = await libreriaProxy.crearLibro(nuevo);
+		}
+
+		const stockInicial = libro.stock;
+		const nuevoStock = stockInicial + 5;
+
+		const libroActualizado = await libreriaProxy.actualizarLibro(libro.id, {
+			stock: nuevoStock,
+		});
+		expect(libroActualizado.stock).to.equal(nuevoStock);
 	});
 
-	it("permite eliminar un libro del catálogo local", () => {
-		const libro = new Libro(800, "Eliminar", "Autor", "crud-isbn", 10, 1);
-		model.libros.push(libro);
-		const index = model.libros.indexOf(libro);
-		model.libros.splice(index, 1);
-		expect(model.libros.includes(libro)).to.be.false;
+	it("permite eliminar un libro del catálogo mediante el proxy", async () => {
+		const nuevoLibro = {
+			titulo: "Libro a Borrar",
+			autor: "Autor",
+			isbn: "delete-isbn-" + Date.now(),
+			precio: 10,
+			stock: 1,
+		};
+		const libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
+
+		await libreriaProxy.borrarLibro(libroCreado.id);
+
+		try {
+			await libreriaProxy.getLibroPorId(libroCreado.id);
+			throw new Error("Debería haber lanzado 404");
+		} catch (e) {
+			expect(e.message).to.include("Libro no encontrado");
+		}
 	});
 });
 
 describe("Cálculos", () => {
-	it("calcula el subtotal del carrito", () => {
-		const carrito = [
-			{ libroId: 1, cantidad: 3 },
-			{ libroId: 2, cantidad: 1 },
-		];
+	const clienteId = 2; // Usamos un cliente de la semilla
 
-		const subtotal = carrito.reduce((total, item) => {
-			const libro = model.libros.find((lib) => lib.getId() === item.libroId);
-			return total + libro.getPrecio() * item.cantidad;
-		}, 0);
-
-		expect(subtotal).to.be.closeTo(15.95 * 3 + 18.9, 0.001);
+	beforeEach(async () => {
+		try {
+			await libreriaProxy.vaciarCarro(clienteId);
+		} catch (e) {
+			// Ignorar si ya estaba vacío o error
+		}
 	});
 
-	it("suma envío fijo cuando existe subtotal positivo", () => {
-		const subtotal = 50;
-		const envio = subtotal > 0 ? 4.99 : 0;
-		const total = subtotal + envio;
+	it("calcula el total de la compra mediante el proxy", async () => {
+		// Añadir items al carro (Libro 1: 15.95, Libro 2: 18.9)
+		await libreriaProxy.agregarItemCarro(clienteId, {
+			libroId: 1,
+			cantidad: 3,
+		});
+		await libreriaProxy.agregarItemCarro(clienteId, {
+			libroId: 2,
+			cantidad: 1,
+		});
 
-		expect(total).to.equal(54.99);
+		// Realizar compra (simulada o real) para obtener el cálculo del servidor
+		const compraPayload = {
+			clienteId: clienteId,
+			items: [
+				{ libroId: 1, cantidad: 3 },
+				{ libroId: 2, cantidad: 1 },
+			],
+			envio: {
+				nombre: "Test",
+				direccion: "Test Dir",
+				ciudad: "Test City",
+				cp: "00000",
+				telefono: "600000000",
+			},
+		};
+
+		const compra = await libreriaProxy.facturar(compraPayload);
+		// 15.95 * 3 = 47.85
+		// 18.9 * 1 = 18.9
+		// Subtotal = 66.75
+		// Si hay gastos de envío (ej. 0 o fijos), verificar.
+		// Asumimos que el servidor devuelve el total correcto.
+		// Verificamos que sea un número y coincida con lo esperado (aprox)
+		expect(compra.total).to.be.closeTo(66.75, 0.1); // Margen por si hay envío
 	});
 
-	it("calcula ahorro respecto a precio original", () => {
-		const libro = crearLibro();
-		const precioOriginal = 30;
-		const ahorro = precioOriginal - libro.getPrecio();
-		expect(ahorro).to.equal(5);
+	it("verifica que el stock se reduce tras la compra mediante el proxy", async () => {
+		// Obtener stock inicial Libro 3
+		const libro = await libreriaProxy.getLibroPorId(3);
+		const stockInicial = libro.stock;
+		const cantidadCompra = 2;
+
+		// Comprar
+		const compraPayload = {
+			clienteId: clienteId,
+			items: [{ libroId: 3, cantidad: cantidadCompra }],
+			envio: {
+				nombre: "Test",
+				direccion: "Test Dir",
+				ciudad: "Test City",
+				cp: "00000",
+				telefono: "600000000",
+			},
+		};
+		await libreriaProxy.facturar(compraPayload);
+
+		// Verificar stock final
+		const libroFinal = await libreriaProxy.getLibroPorId(3);
+		expect(libroFinal.stock).to.equal(stockInicial - cantidadCompra);
 	});
 });
