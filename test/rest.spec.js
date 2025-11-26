@@ -8,7 +8,7 @@ const expect = chai.expect;
 
 describe("REST API Tests", () => {
 	before(async () => {
-		// Reiniciar la DB a un estado conocido (semilla) antes de los tests
+		// Reiniciar la DB a semilla antes de los tests
 		await db.reiniciar();
 		console.log("DB Reiniciada para tests.");
 	});
@@ -34,8 +34,6 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
-					// Libros semilla en rango 10-20:
-					// Libro 1 (15.95), Libro 2 (18.9), Libro 3 (12.5). Libro 4 (9.95) fuera.
 					const preciosEnRango = res.body.every(
 						(l) => l.precio >= 10 && l.precio <= 20
 					);
@@ -118,7 +116,6 @@ describe("REST API Tests", () => {
 				.get("/api/libros?titulo=Libro 1")
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					// El controlador devuelve un objeto único si encuentra coincidencia por título
 					expect(res.body).to.be.an("object");
 					expect(res.body.titulo).to.equal("Libro 1");
 					done();
@@ -131,7 +128,6 @@ describe("REST API Tests", () => {
 				.get("/api/libros?isbn=978-84-376-0494-7")
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					// El controlador devuelve un objeto único si encuentra coincidencia por ISBN
 					expect(res.body).to.be.an("object");
 					expect(res.body.isbn).to.equal("978-84-376-0494-7");
 					done();
@@ -160,7 +156,7 @@ describe("REST API Tests", () => {
 				.put("/api/libros")
 				.send(nuevosLibros)
 				.end((err, res) => {
-					expect(res).to.have.status(200); // O 201 según implementación
+					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
 					expect(res.body.length).to.equal(2);
 					expect(res.body[0]).to.have.property("id"); // IDs asignados
@@ -174,7 +170,6 @@ describe("REST API Tests", () => {
 				.delete("/api/libros")
 				.end(async (err, res) => {
 					expect(res).to.have.status(204);
-					// Verificar que está vacío
 					const res2 = await chai.request(app).get("/api/libros");
 					expect(res2.body.length).to.equal(0);
 
@@ -437,9 +432,6 @@ describe("REST API Tests", () => {
 
 	// BLOQUE D: FACTURACIÓN Y CÁLCULOS
 	describe("Bloque D: Facturación y Cálculos", () => {
-		// Libro 1 precio: 15.95. Stock inicial: 25.
-		// Compraremos 2 unidades. Total esperado: 31.9. Stock final: 23.
-
 		it("POST /api/compras - Realizar compra y verificar cálculos", (done) => {
 			const compra = {
 				clienteId: 1,
@@ -462,7 +454,6 @@ describe("REST API Tests", () => {
 					expect(res.body).to.have.property("id");
 					expect(res.body).to.have.property("total");
 
-					// Verificación de Cálculo (15.95 * 2 = 31.9)
 					expect(res.body.total).to.equal(31.9);
 					done();
 				});
@@ -474,9 +465,6 @@ describe("REST API Tests", () => {
 				.get("/api/libros/1")
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					// Stock inicial 25.
-					// Semilla: Compra Cliente 1 (1 ud) -> 24.
-					// Test Compra: 2 uds -> 22.
 					expect(res.body.stock).to.equal(22);
 					done();
 				});
@@ -514,7 +502,6 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
-					// Depende de si existe la factura (semilla)
 					if (res.body.length > 0) {
 						expect(res.body[0].numero).to.equal("FAC-0002");
 					}
@@ -534,8 +521,6 @@ describe("REST API Tests", () => {
 		});
 
 		it("PUT /api/facturas - Reemplazo masivo de facturas", (done) => {
-			// Nota: Las facturas suelen ser complejas de crear masivamente sin contexto,
-			// pero probamos que el endpoint responda.
 			const nuevasFacturas = [
 				{ clienteId: 1, total: 100, items: [] },
 				{ clienteId: 1, total: 200, items: [] },
@@ -596,7 +581,7 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
-					expect(res.body.length).to.be.at.least(2); // Semilla + Creado
+					expect(res.body.length).to.be.at.least(2);
 					done();
 				});
 		});
@@ -682,8 +667,10 @@ describe("REST API Tests", () => {
 			chai
 				.request(app)
 				.delete("/api/admins")
-				.end((err, res) => {
+				.end(async (err, res) => {
 					expect(res).to.have.status(204);
+					// Restaurar DB para siguientes tests
+					await db.reiniciar();
 					done();
 				});
 		});
