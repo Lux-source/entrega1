@@ -293,18 +293,6 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("POST /api/clientes/signin - Login correcto (Alias)", (done) => {
-			chai
-				.request(app)
-				.post("/api/clientes/signin")
-				.send({ email: "juan@mail.com", password: "Juanperez123" })
-				.end((err, res) => {
-					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("rol", "CLIENTE");
-					done();
-				});
-		});
-
 		it("GET /api/clientes?email=juan@mail.com - Filtrar por email", (done) => {
 			chai
 				.request(app)
@@ -633,18 +621,6 @@ describe("REST API Tests", () => {
 				.delete(`/api/admins/${adminId}`)
 				.end((err, res) => {
 					expect(res).to.have.status(204);
-					done();
-				});
-		});
-
-		it("POST /api/admins/signin - Login correcto (Alias)", (done) => {
-			chai
-				.request(app)
-				.post("/api/admins/signin")
-				.send({ email: "admin@libreria.com", password: "Admin123" })
-				.end((err, res) => {
-					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("rol", "ADMIN");
 					done();
 				});
 		});

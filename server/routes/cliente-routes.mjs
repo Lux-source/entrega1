@@ -13,7 +13,6 @@ router.delete("/:id", (req, res) =>
 router.post("/autenticar", (req, res) =>
 	clienteController.autenticar(req, res)
 );
-router.post("/signin", (req, res) => clienteController.autenticar(req, res));
 
 // Carro
 router.get("/:id/carro", (req, res) =>
