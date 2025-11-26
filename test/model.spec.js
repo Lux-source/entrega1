@@ -1,6 +1,5 @@
 import { Libro } from "../libreria/js/model/libro.mjs";
 import { Usuario } from "../libreria/js/model/usuario.mjs";
-import { model } from "../libreria/js/model/seeder.mjs";
 import { servicioAutenticacion } from "../libreria/js/model/auth-service.mjs";
 import { almacenAutenticacion } from "../libreria/js/model/auth-store.mjs";
 import { session } from "../libreria/js/commons/libreria-session.mjs";
@@ -193,6 +192,16 @@ describe("Autenticación - iniciar sesión", () => {
 		);
 		expect(resultado.success).to.be.false;
 		expect(resultado.error).to.equal("Credenciales de cliente invalidas");
+	});
+
+	it("rechaza contraseñas incorrectas para admin", async () => {
+		const resultado = await servicioAutenticacion.iniciarSesion(
+			"admin@libreria.com",
+			"ClaveErronea",
+			"ADMIN"
+		);
+		expect(resultado.success).to.be.false;
+		expect(resultado.error).to.equal("Credenciales de administrador invalidas");
 	});
 
 	it("rechaza roles que no coinciden con el usuario", async () => {

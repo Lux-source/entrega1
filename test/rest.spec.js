@@ -217,6 +217,17 @@ describe("REST API Tests", () => {
 				});
 		});
 
+		it("POST /api/admins/autenticar - Login incorrecto", (done) => {
+			chai
+				.request(app)
+				.post("/api/admins/autenticar")
+				.send({ email: "admin@libreria.com", password: "WRONG" })
+				.end((err, res) => {
+					expect(res).to.have.status(401);
+					done();
+				});
+		});
+
 		let nuevoClienteId;
 		it("POST /api/clientes - Registro de nuevo cliente", (done) => {
 			const nuevoCliente = {
