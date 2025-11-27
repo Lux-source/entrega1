@@ -1,18 +1,20 @@
-import { Libro } from "../libreria/js/model/libro.mjs";
-import { Usuario } from "../libreria/js/model/usuario.mjs";
-import { servicioAutenticacion } from "../libreria/js/model/auth-service.mjs";
-import { almacenAutenticacion } from "../libreria/js/model/auth-store.mjs";
-import { session } from "../libreria/js/commons/libreria-session.mjs";
-import { libreriaProxy } from "../libreria/js/model/libreria-proxy.mjs";
+import { Libro } from "../public/libreria/js/model/libro.mjs";
+import { Usuario } from "../public/libreria/js/model/usuario.mjs";
+import { servicioAutenticacion } from "../public/libreria/js/model/auth-service.mjs";
+import { almacenAutenticacion } from "../public/libreria/js/model/auth-store.mjs";
+import { session } from "../public/libreria/js/commons/libreria-session.mjs";
+import { libreriaProxy } from "../public/libreria/js/model/libreria-proxy.mjs";
 
 const { describe, it, beforeEach, afterEach } = window;
 const { expect } = window.chai;
 
-const crearLibro = () => new Libro(200, "Pruebas", "QA", "qa-isbn", 25, 10);
+// Con MongoDB, usamos ObjectIds (24 caracteres hex) en lugar de IDs numéricos
+const crearLibro = () =>
+	new Libro("507f1f77bcf86cd799439200", "Pruebas", "QA", "qa-isbn", 25, 10);
 
 const crearUsuario = () =>
 	new Usuario(
-		200,
+		"507f1f77bcf86cd799439200",
 		"33333333Z",
 		"Pilar",
 		"Test",
@@ -67,7 +69,9 @@ describe("Getters y Setters", () => {
 	describe("Libro", () => {
 		it("getters libros", () => {
 			const libro = crearLibro();
-			expect(libro.getId()).to.equal(200);
+			// Con MongoDB, el ID es un ObjectId string (24 caracteres hex)
+			expect(libro.getId()).to.be.a("string");
+			expect(libro.getId()).to.have.lengthOf(24);
 			expect(libro.getTitulo()).to.equal("Pruebas");
 			expect(libro.getPrecio()).to.equal(25);
 			expect(libro.getStock()).to.equal(10);
@@ -98,7 +102,9 @@ describe("Getters y Setters", () => {
 	describe("Usuario", () => {
 		it("getters de datos personales y rol", () => {
 			const usuario = crearUsuario();
-			expect(usuario.getId()).to.equal(200);
+			// Con MongoDB, el ID es un ObjectId string (24 caracteres hex)
+			expect(usuario.getId()).to.be.a("string");
+			expect(usuario.getId()).to.have.lengthOf(24);
 			expect(usuario.getNombre()).to.equal("Pilar");
 			expect(usuario.getApellidos()).to.equal("Test");
 			expect(usuario.getEmail()).to.equal("qa@mail.com");
@@ -160,6 +166,9 @@ describe("Autenticación - iniciar sesión", () => {
 		expect(resultado.success).to.be.true;
 		// expect(resultado.usuario).to.be.instanceOf(Usuario); // Eliminado por ser JSON
 		expect(resultado.usuario).to.have.property("email", "juan@mail.com");
+		// Con MongoDB, el usuario tiene un id ObjectId string (24 caracteres hex)
+		expect(resultado.usuario.id).to.be.a("string");
+		expect(resultado.usuario.id).to.have.lengthOf(24);
 		expect(resultado.token).to.be.a("string");
 		expect(resultado.token.startsWith("token_")).to.be.true;
 	});
@@ -309,6 +318,9 @@ describe("Autenticación - registrar (validaciones)", () => {
 		const resultado = await registrarUsuario(datos);
 		expect(resultado.success).to.be.true;
 		expect(resultado.usuario.rol).to.equal("ADMIN");
+		// Con MongoDB, el usuario registrado tiene ObjectId (24 caracteres hex)
+		expect(resultado.usuario.id).to.be.a("string");
+		expect(resultado.usuario.id).to.have.lengthOf(24);
 		// limpiarUsuarioRegistrado(datos.email); // Eliminado
 	});
 });
@@ -372,9 +384,11 @@ describe("Persistencia de sesión", () => {
 		const claveInvitado = session.getKeySesionCliente("carrito");
 		expect(claveInvitado).to.equal("carrito_invitado");
 
-		session.setUser({ id: 42, rol: "CLIENTE" });
+		// Con MongoDB, usar ObjectId string (24 caracteres hex)
+		const testId = "507f1f77bcf86cd799439042";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		const claveId = session.getKeySesionCliente("carrito");
-		expect(claveId).to.equal("carrito_42");
+		expect(claveId).to.equal(`carrito_${testId}`);
 
 		session.setUser({ email: "Usuario@Mail.com" });
 		const claveEmail = session.getKeySesionCliente("lista");
@@ -388,31 +402,34 @@ describe("Persistencia de sesión", () => {
 	});
 
 	it("lee y escribe arrays bajo claves escopadas", () => {
-		session.setUser({ id: 90, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439090";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		const datos = [{ libroId: 1, cantidad: 2 }];
 		session.escribirArrayClienteSesion("carrito", datos);
-		const almacenado = JSON.parse(localStorage.getItem("carrito_90"));
+		const almacenado = JSON.parse(localStorage.getItem(`carrito_${testId}`));
 		expect(almacenado).to.deep.equal(datos);
 		const recuperado = session.leerArrayClienteSesion("carrito");
 		expect(recuperado).to.deep.equal(datos);
 	});
 
 	it("limpia los datos asociados al usuario", () => {
-		session.setUser({ id: 77, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439077";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		session.escribirArrayClienteSesion("favoritos", [1, 2]);
 		session.limpiarItemClienteSesion("favoritos");
-		expect(localStorage.getItem("favoritos_77")).to.be.null;
+		expect(localStorage.getItem(`favoritos_${testId}`)).to.be.null;
 	});
 
 	it("migra datos legados a la nueva clave por usuario", () => {
-		session.setUser({ id: 51, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439051";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		localStorage.setItem("historial", JSON.stringify(["legacy"]));
 		const resultado = session.leerArrayClienteSesion("historial");
 		expect(resultado).to.deep.equal(["legacy"]);
 		expect(localStorage.getItem("historial")).to.be.null;
-		expect(JSON.parse(localStorage.getItem("historial_51"))).to.deep.equal([
-			"legacy",
-		]);
+		expect(
+			JSON.parse(localStorage.getItem(`historial_${testId}`))
+		).to.deep.equal(["legacy"]);
 	});
 });
 
@@ -442,6 +459,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 		);
 
 		expect(resultado.success).to.be.true;
+		// Con MongoDB, verificar que tiene ObjectId (24 caracteres hex)
+		expect(resultado.usuario.id).to.be.a("string");
+		expect(resultado.usuario.id).to.have.lengthOf(24);
 		// Verificamos contra el store o proxy, no contra model.usuarios
 		const login = await servicioAutenticacion.iniciarSesion(
 			emailUnico,
@@ -469,13 +489,14 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("actualiza datos del usuario en el almacén y sincroniza en nuestro almacenamiento", () => {
+		const testId = "507f1f77bcf86cd799439010";
 		almacenAutenticacion.establecerInicioSesion(
-			{ id: 10, nombre: "Inicial", rol: "CLIENTE" },
+			{ id: testId, nombre: "Inicial", rol: "CLIENTE" },
 			"token_test"
 		);
 
 		almacenAutenticacion.actualizarUsuario({
-			id: 10,
+			id: testId,
 			nombre: "Actualizado",
 			rol: "CLIENTE",
 		});
@@ -488,8 +509,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("cierra sesión limpiando el almacenamiento", () => {
+		const testId = "507f1f77bcf86cd799439020";
 		almacenAutenticacion.establecerInicioSesion(
-			{ id: 20, nombre: "Tester" },
+			{ id: testId, nombre: "Tester" },
 			"token_t"
 		);
 
@@ -500,13 +522,15 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("restaura sesión previamente guardada en localStorage", () => {
-		const usuario = { id: 30, nombre: "Persistente" };
+		// Con MongoDB, usamos un ObjectId simulado (24 caracteres hex)
+		const testId = "507f1f77bcf86cd799439030";
+		const usuario = { id: testId, nombre: "Persistente" };
 		localStorage.setItem("auth_user", JSON.stringify(usuario));
 		localStorage.setItem("auth_token", "token_persistente");
 
 		const restaurada = almacenAutenticacion.restaurarSesion();
 		expect(restaurada).to.be.true;
-		expect(almacenAutenticacion.obtenerEstado().usuario.id).to.equal(30);
+		expect(almacenAutenticacion.obtenerEstado().usuario.id).to.equal(testId);
 	});
 
 	it("almacena y limpia mensajes en session", () => {
@@ -523,8 +547,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 		expect(session.consume()).to.have.lengthOf(0);
 	});
 
-	it("gestiona usuario en session storage", () => {
-		session.setUser({ id: 1, nombre: "Demo", rol: "CLIENTE" });
+	it("gestiona usuario in session storage", () => {
+		const testId = "507f1f77bcf86cd799439001";
+		session.setUser({ id: testId, nombre: "Demo", rol: "CLIENTE" });
 		expect(session.getRole()).to.equal("cliente");
 		session.clearUser();
 		expect(session.getUser()).to.be.null;
@@ -540,6 +565,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 		};
 		const libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
 		expect(libroCreado).to.have.property("id");
+		// Con MongoDB, el ID es un ObjectId string (24 caracteres hex)
+		expect(libroCreado.id).to.be.a("string");
+		expect(libroCreado.id).to.have.lengthOf(24);
 		expect(libroCreado.titulo).to.equal(nuevoLibro.titulo);
 
 		// Verificar que existe recuperándolo
@@ -548,21 +576,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("permite modificar el stock de un libro existente mediante el proxy", async () => {
-		// Recuperamos un libro existente (ej. id 1 de la semilla)
-		// Si no existe, creamos uno primero para asegurar
-		let libro;
-		try {
-			libro = await libreriaProxy.getLibroPorId(1);
-		} catch (e) {
-			const nuevo = {
-				titulo: "Libro Stock",
-				autor: "A",
-				isbn: "stock-" + Date.now(),
-				precio: 10,
-				stock: 5,
-			};
-			libro = await libreriaProxy.crearLibro(nuevo);
-		}
+		// Recuperamos un libro existente de la semilla (usamos findOne para obtener el primero)
+		const libros = await libreriaProxy.getLibros();
+		const libro = libros[0];
 
 		const stockInicial = libro.stock;
 		const nuevoStock = stockInicial + 5;
@@ -595,9 +611,17 @@ describe("Agregar, Modificar y Eliminar", () => {
 });
 
 describe("Cálculos", () => {
-	const clienteId = 2; // Usamos un cliente de la semilla
+	let clienteId;
 
 	beforeEach(async () => {
+		// Obtener un cliente de la semilla mediante login
+		const login = await servicioAutenticacion.iniciarSesion(
+			"juan@mail.com",
+			"Juanperez123",
+			"cliente"
+		);
+		clienteId = login.usuario.id;
+
 		try {
 			await libreriaProxy.vaciarCarro(clienteId);
 		} catch (e) {
@@ -606,13 +630,18 @@ describe("Cálculos", () => {
 	});
 
 	it("calcula el total de la compra mediante el proxy", async () => {
+		// Obtener libros de la semilla
+		const libros = await libreriaProxy.getLibros();
+		const libro1 = libros[0]; // Libro 1: 15.95
+		const libro2 = libros[1]; // Libro 2: 18.9
+
 		// Añadir items al carro (Libro 1: 15.95, Libro 2: 18.9)
 		await libreriaProxy.agregarItemCarro(clienteId, {
-			libroId: 1,
+			libroId: libro1.id,
 			cantidad: 3,
 		});
 		await libreriaProxy.agregarItemCarro(clienteId, {
-			libroId: 2,
+			libroId: libro2.id,
 			cantidad: 1,
 		});
 
@@ -620,8 +649,8 @@ describe("Cálculos", () => {
 		const compraPayload = {
 			clienteId: clienteId,
 			items: [
-				{ libroId: 1, cantidad: 3 },
-				{ libroId: 2, cantidad: 1 },
+				{ libroId: libro1.id, cantidad: 3 },
+				{ libroId: libro2.id, cantidad: 1 },
 			],
 			envio: {
 				nombre: "Test",
@@ -643,15 +672,17 @@ describe("Cálculos", () => {
 	});
 
 	it("verifica que el stock se reduce tras la compra mediante el proxy", async () => {
-		// Obtener stock inicial Libro 3
-		const libro = await libreriaProxy.getLibroPorId(3);
+		// Obtener libros de la semilla
+		const libros = await libreriaProxy.getLibros();
+		const libro = libros[2]; // Libro 3
+
 		const stockInicial = libro.stock;
 		const cantidadCompra = 2;
 
 		// Comprar
 		const compraPayload = {
 			clienteId: clienteId,
-			items: [{ libroId: 3, cantidad: cantidadCompra }],
+			items: [{ libroId: libro.id, cantidad: cantidadCompra }],
 			envio: {
 				nombre: "Test",
 				direccion: "Test Dir",
@@ -663,7 +694,7 @@ describe("Cálculos", () => {
 		await libreriaProxy.facturar(compraPayload);
 
 		// Verificar stock final
-		const libroFinal = await libreriaProxy.getLibroPorId(3);
+		const libroFinal = await libreriaProxy.getLibroPorId(libro.id);
 		expect(libroFinal.stock).to.equal(stockInicial - cantidadCompra);
 	});
 });
