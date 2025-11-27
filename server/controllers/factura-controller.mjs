@@ -1,8 +1,8 @@
 import { facturaService } from "../services/factura-service.mjs";
+import mongoose from "mongoose";
 
-const parsearIdNumerico = (valor) => {
-	const id = Number.parseInt(valor ?? "", 10);
-	return Number.isFinite(id) && id > 0 ? id : null;
+const validarObjectId = (valor) => {
+	return mongoose.Types.ObjectId.isValid(valor) ? valor : null;
 };
 
 const serializarFactura = (factura) => ({
@@ -20,7 +20,7 @@ export class FacturaController {
 		}
 
 		if (cliente) {
-			const clienteId = parsearIdNumerico(cliente);
+			const clienteId = validarObjectId(cliente);
 			if (clienteId) {
 				const facturas = await facturaService.obtenerPorClienteId(clienteId);
 				return res.json(facturas.map(serializarFactura));
@@ -32,7 +32,7 @@ export class FacturaController {
 	}
 
 	async obtenerFactura(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		const factura = await facturaService.obtenerPorId(id);
