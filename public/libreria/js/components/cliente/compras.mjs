@@ -50,8 +50,8 @@ export class ClienteCompras extends Presenter {
 			return;
 		}
 
-		const usuarioId = Number.parseInt(usuario?.id ?? "", 10);
-		if (!Number.isFinite(usuarioId)) {
+		const usuarioId = usuario?.id ? String(usuario.id).trim() : null;
+		if (!usuarioId) {
 			this.state.compras = [];
 			this.renderCompras();
 			return;

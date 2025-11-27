@@ -8,15 +8,17 @@ chai.use(chaiHttp);
 const expect = chai.expect;
 
 describe("REST API Tests", () => {
-	before(async () => {
+	before(async () => {
 		await conectarDB();
 		await db.reiniciar();
 		console.log("DB Reiniciada para tests.");
 	});
 
-	after(async () => {
+	after(async () => {
+		await db.reiniciar();
 		await desconectarDB();
-	});
+	});
+
 	describe("Bloque A: Libros y Catálogo", () => {
 		it("GET /api/libros - Debería devolver todos los libros", (done) => {
 			chai
@@ -45,7 +47,7 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("GET /api/libros/:id - Debería devolver un libro específico", (done) => {
+		it("GET /api/libros/:id - Debería devolver un libro específico", (done) => {
 			chai
 				.request(app)
 				.get("/api/libros")
@@ -57,7 +59,8 @@ describe("REST API Tests", () => {
 						.end((err, res) => {
 							expect(res).to.have.status(200);
 							expect(res.body).to.have.property("id", primerLibro.id);
-							expect(res.body).to.have.property("titulo");
+							expect(res.body).to.have.property("titulo");
+
 							expect(res.body.id).to.be.a("string");
 							expect(res.body.id).to.have.lengthOf(24);
 							done();
@@ -65,7 +68,7 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("GET /api/libros/507f1f77bcf86cd799999999 - Debería devolver 404 para libro inexistente", (done) => {
+		it("GET /api/libros/507f1f77bcf86cd799999999 - Debería devolver 404 para libro inexistente", (done) => {
 			chai
 				.request(app)
 				.get("/api/libros/507f1f77bcf86cd799999999")
@@ -73,7 +76,8 @@ describe("REST API Tests", () => {
 					expect(res).to.have.status(404);
 					done();
 				});
-		});
+		});
+
 		let libroCreadoId;
 		it("POST /api/libros - Admin debería crear un libro", (done) => {
 			const nuevoLibro = {
@@ -89,7 +93,8 @@ describe("REST API Tests", () => {
 				.send(nuevoLibro)
 				.end((err, res) => {
 					expect(res).to.have.status(201);
-					expect(res.body).to.have.property("id");
+					expect(res.body).to.have.property("id");
+
 					expect(res.body.id).to.be.a("string");
 					expect(res.body.id).to.have.lengthOf(24);
 					libroCreadoId = res.body.id;
@@ -182,12 +187,14 @@ describe("REST API Tests", () => {
 				.end(async (err, res) => {
 					expect(res).to.have.status(204);
 					const res2 = await chai.request(app).get("/api/libros");
-					expect(res2.body.length).to.equal(0);
+					expect(res2.body.length).to.equal(0);
+
 					await db.reiniciar();
 					done();
 				});
 		});
-	});
+	});
+
 	describe("Bloque B: Usuarios", () => {
 		it("POST /api/clientes/autenticar - Login correcto Cliente", (done) => {
 			chai
@@ -196,7 +203,8 @@ describe("REST API Tests", () => {
 				.send({ email: "juan@mail.com", password: "Juanperez123" })
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("rol", "CLIENTE");
+					expect(res.body).to.have.property("rol", "CLIENTE");
+
 					expect(res.body.id).to.be.a("string");
 					expect(res.body.id).to.have.lengthOf(24);
 					done();
@@ -221,7 +229,8 @@ describe("REST API Tests", () => {
 				.send({ email: "admin@libreria.com", password: "Admin123" })
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("rol", "ADMIN");
+					expect(res.body).to.have.property("rol", "ADMIN");
+
 					expect(res.body.id).to.be.a("string");
 					expect(res.body.id).to.have.lengthOf(24);
 					done();
@@ -258,7 +267,8 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(201);
 					expect(res.body).to.have.property("email", nuevoCliente.email);
-					expect(res.body).to.have.property("id");
+					expect(res.body).to.have.property("id");
+
 					expect(res.body.id).to.be.a("string");
 					expect(res.body.id).to.have.lengthOf(24);
 					nuevoClienteId = res.body.id;
@@ -266,7 +276,7 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("GET /api/clientes/:id - Ver perfil de cliente", (done) => {
+		it("GET /api/clientes/:id - Ver perfil de cliente", (done) => {
 			if (!nuevoClienteId) return done(new Error("No se creó el cliente"));
 			chai
 				.request(app)
@@ -378,19 +388,22 @@ describe("REST API Tests", () => {
 				.request(app)
 				.delete("/api/clientes")
 				.end(async (err, res) => {
-					expect(res).to.have.status(204);
+					expect(res).to.have.status(204);
+
 					await db.reiniciar();
 					done();
 				});
 		});
-	});
+	});
+
 	describe("Bloque C: Carrito", () => {
 		let testClienteId;
 		let testLibroId;
 
-		before(async function () {
+		before(async function () {
 			const librosRes = await chai.request(app).get("/api/libros");
-			testLibroId = librosRes.body[0].id;
+			testLibroId = librosRes.body[0].id;
+
 			const loginRes = await chai
 				.request(app)
 				.post("/api/clientes/autenticar")
@@ -405,7 +418,8 @@ describe("REST API Tests", () => {
 				.send({ libroId: testLibroId, cantidad: 2 })
 				.end((err, res) => {
 					expect(res).to.have.status(201);
-					expect(res.body).to.be.an("array");
+					expect(res.body).to.be.an("array");
+
 					const item = res.body.find((i) => i.libroId === testLibroId);
 					expect(item).to.exist;
 					expect(item.cantidad).to.equal(2);
@@ -425,13 +439,14 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("PUT /api/clientes/:id/carro/items/:index - Actualizar cantidad item", (done) => {
+		it("PUT /api/clientes/:id/carro/items/:index - Actualizar cantidad item", (done) => {
 			chai
 				.request(app)
 				.put(`/api/clientes/${testClienteId}/carro/items/0`)
 				.send({ cantidad: 5 })
 				.end((err, res) => {
-					expect(res).to.have.status(200);
+					expect(res).to.have.status(200);
+
 					const item = res.body.find(
 						(i) =>
 							i.libroId === testLibroId ||
@@ -457,7 +472,7 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("DELETE /api/clientes/:id/carro - Vaciar carro", (done) => {
+		it("DELETE /api/clientes/:id/carro - Vaciar carro", (done) => {
 			const libros = chai.request(app).get("/api/libros");
 			libros.then((librosRes) => {
 				const libroId = librosRes.body[1].id;
@@ -476,13 +491,14 @@ describe("REST API Tests", () => {
 					});
 			});
 		});
-	});
+	});
+
 	describe("Bloque D: Facturación y Cálculos", () => {
 		let testClienteId;
 		let testLibroId;
 		let facturaCreada;
 
-		before(async function () {
+		before(async function () {
 			await db.reiniciar();
 			const librosRes = await chai.request(app).get("/api/libros");
 			testLibroId = librosRes.body[0].id;
@@ -513,7 +529,8 @@ describe("REST API Tests", () => {
 				.send(compra)
 				.end((err, res) => {
 					expect(res).to.have.status(201);
-					expect(res.body).to.have.property("id");
+					expect(res.body).to.have.property("id");
+
 					expect(res.body.id).to.be.a("string");
 					expect(res.body.id).to.have.lengthOf(24);
 					expect(res.body).to.have.property("total");
@@ -528,7 +545,8 @@ describe("REST API Tests", () => {
 				.request(app)
 				.get(`/api/libros/${testLibroId}`)
 				.end((err, res) => {
-					expect(res).to.have.status(200);
+					expect(res).to.have.status(200);
+
 					expect(res.body.stock).to.equal(22);
 					done();
 				});
@@ -546,7 +564,7 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("GET /api/facturas/:id - Obtener detalle de factura", (done) => {
+		it("GET /api/facturas/:id - Obtener detalle de factura", (done) => {
 			if (!facturaCreada) return done(new Error("No se creó la factura"));
 			chai
 				.request(app)
@@ -567,7 +585,8 @@ describe("REST API Tests", () => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
 					if (res.body.length > 0) {
-						expect(res.body[0].numero).to.equal("FAC-0002");
+						expect(res.body[0].numero).to.equal("FAC-0002");
+
 						expect(res.body[0].id).to.be.a("string");
 						expect(res.body[0].id).to.have.lengthOf(24);
 					}
@@ -575,7 +594,7 @@ describe("REST API Tests", () => {
 				});
 		});
 
-		it("GET /api/facturas?cliente=<clienteId> - Filtrar por cliente", (done) => {
+		it("GET /api/facturas?cliente=<clienteId> - Filtrar por cliente", (done) => {
 			chai
 				.request(app)
 				.get(`/api/facturas?cliente=${testClienteId}`)
@@ -624,7 +643,8 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
-					expect(res.body.length).to.equal(2);
+					expect(res.body.length).to.equal(2);
+
 					expect(res.body[0].id).to.be.a("string");
 					expect(res.body[0].id).to.have.lengthOf(24);
 					done();
@@ -640,7 +660,8 @@ describe("REST API Tests", () => {
 					done();
 				});
 		});
-	});
+	});
+
 	describe("Bloque E: Gestión de Admins", () => {
 		let adminId;
 		it("POST /api/admins - Crear nuevo admin", (done) => {
@@ -660,7 +681,8 @@ describe("REST API Tests", () => {
 				.send(nuevoAdmin)
 				.end((err, res) => {
 					expect(res).to.have.status(201);
-					expect(res.body).to.have.property("id");
+					expect(res.body).to.have.property("id");
+
 					expect(res.body.id).to.be.a("string");
 					expect(res.body.id).to.have.lengthOf(24);
 					adminId = res.body.id;
@@ -770,7 +792,8 @@ describe("REST API Tests", () => {
 				.request(app)
 				.delete("/api/admins")
 				.end(async (err, res) => {
-					expect(res).to.have.status(204);
+					expect(res).to.have.status(204);
+
 					await db.reiniciar();
 					done();
 				});
