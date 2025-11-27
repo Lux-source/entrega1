@@ -1,4 +1,6 @@
 import { db } from "../data/db-context.mjs";
+import { Libro } from "../models/index.mjs";
+import mongoose from "mongoose";
 
 export class LibroService {
 	async obtenerTodos() {
@@ -10,34 +12,34 @@ export class LibroService {
 	}
 
 	async obtenerPorIsbn(isbn) {
-		const libros = await db.obtenerTodos("libros");
-		const normalizado = isbn.toString().trim().toLowerCase();
-		return (
-			libros.find(
-				(l) => l.isbn?.toString().trim().toLowerCase() === normalizado
-			) || null
-		);
+		if (!isbn) return null;
+		const libro = await Libro.buscarPorIsbn(isbn.toString().trim());
+		return libro ? libro.toJSON() : null;
 	}
 
 	async obtenerPorTitulo(titulo) {
-		const libros = await db.obtenerTodos("libros");
-		const normalizado = titulo.toString().trim().toLowerCase();
-		return (
-			libros.find(
-				(l) => l.titulo?.toString().trim().toLowerCase() === normalizado
-			) || null
-		);
+		if (!titulo) return null;
+		const libros = await Libro.buscarPorTitulo(titulo.toString().trim());
+		return libros.length > 0 ? libros[0].toJSON() : null;
 	}
 
 	async crear(datos) {
-		const libro = {
-			titulo: datos.titulo,
-			autor: datos.autor,
-			isbn: datos.isbn,
-			precio: Number.parseFloat(datos.precio ?? 0),
-			stock: Number.parseInt(datos.stock ?? 0, 10),
-		};
-		return await db.agregar("libros", libro);
+		try {
+			const libro = {
+				titulo: datos.titulo,
+				autor: datos.autor,
+				isbn: datos.isbn,
+				precio: Number.parseFloat(datos.precio ?? 0),
+				stock: Number.parseInt(datos.stock ?? 0, 10),
+			};
+			return await db.agregar("libros", libro);
+		} catch (error) {
+			// Manejar error de ISBN duplicado
+			if (error.code === 11000 && error.keyPattern?.isbn) {
+				throw new Error("El ISBN ya existe");
+			}
+			throw error;
+		}
 	}
 
 	async actualizar(id, datos) {
@@ -53,7 +55,15 @@ export class LibroService {
 		if (datos.stock !== undefined)
 			actualizaciones.stock = Number.parseInt(datos.stock, 10);
 
-		return await db.actualizar("libros", id, actualizaciones);
+		try {
+			return await db.actualizar("libros", id, actualizaciones);
+		} catch (error) {
+			// Manejar error de ISBN duplicado
+			if (error.code === 11000 && error.keyPattern?.isbn) {
+				throw new Error("El ISBN ya existe");
+			}
+			throw error;
+		}
 	}
 
 	async eliminar(id) {
@@ -64,7 +74,7 @@ export class LibroService {
 		// Reiniciar la colección primero
 		await db.guardarTodos("libros", []);
 
-		// Asumimos que limpiamos y añadimos nuevos.
+		// Añadir nuevos libros
 		for (const datos of datosLibros) {
 			await this.crear(datos);
 		}

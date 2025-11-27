@@ -1,5 +1,7 @@
 import { db } from "../data/db-context.mjs";
 import { libroService } from "./libro-service.mjs";
+import { Usuario } from "../models/index.mjs";
+import mongoose from "mongoose";
 
 const ROL = {
 	ADMIN: "ADMIN",
@@ -17,44 +19,50 @@ export class UsuarioService {
 	}
 
 	async obtenerClientePorEmail(email) {
-		const clientes = await db.obtenerTodos("clientes");
-		const normalizado = email.toString().trim().toLowerCase();
-		return (
-			clientes.find(
-				(c) => c.email?.toString().trim().toLowerCase() === normalizado
-			) || null
-		);
+		if (!email) return null;
+		const usuario = await Usuario.buscarPorEmail(email, "CLIENTE");
+		return usuario ? usuario.toJSON() : null;
 	}
 
 	async obtenerClientePorDni(dni) {
-		const clientes = await db.obtenerTodos("clientes");
-		const normalizado = dni.toString().trim().toUpperCase();
-		return (
-			clientes.find(
-				(c) => c.dni?.toString().trim().toUpperCase() === normalizado
-			) || null
-		);
+		if (!dni) return null;
+		const usuario = await Usuario.buscarPorDni(dni, "CLIENTE");
+		return usuario ? usuario.toJSON() : null;
 	}
 
 	async crearCliente(datos) {
-		await this._validarUnicidadCliente(datos);
-		const cliente = {
-			dni: datos.dni,
-			nombre: datos.nombre,
-			apellidos: datos.apellidos,
-			direccion: datos.direccion,
-			telefono: datos.telefono,
-			email: datos.email,
-			password: datos.password,
-			rol: ROL.CLIENTE,
-		};
-		return await db.agregar("clientes", cliente);
+		try {
+			await this._validarUnicidadCliente(datos);
+			const cliente = {
+				dni: datos.dni,
+				nombre: datos.nombre,
+				apellidos: datos.apellidos,
+				direccion: datos.direccion,
+				telefono: datos.telefono,
+				email: datos.email,
+				password: datos.password, // Se hasheará automáticamente en el modelo
+				rol: ROL.CLIENTE,
+			};
+			return await db.agregar("clientes", cliente);
+		} catch (error) {
+			// Manejar errores de duplicados
+			if (error.code === 11000) {
+				if (error.keyPattern?.email) {
+					throw new Error("Email de cliente ya registrado");
+				}
+				if (error.keyPattern?.dni) {
+					throw new Error("DNI de cliente ya registrado");
+				}
+			}
+			throw error;
+		}
 	}
 
 	async actualizarCliente(id, datos) {
 		const cliente = await this.obtenerClientePorId(id);
 		if (!cliente) return null;
 
+		// Validar unicidad si se actualizan email o DNI
 		if (datos.email && datos.email !== cliente.email) {
 			const emailExistente = await this.obtenerClientePorEmail(datos.email);
 			if (emailExistente && emailExistente.id !== cliente.id) {
@@ -69,7 +77,19 @@ export class UsuarioService {
 			}
 		}
 
-		return await db.actualizar("clientes", id, datos);
+		try {
+			return await db.actualizar("clientes", id, datos);
+		} catch (error) {
+			if (error.code === 11000) {
+				if (error.keyPattern?.email) {
+					throw new Error("Email de cliente ya registrado");
+				}
+				if (error.keyPattern?.dni) {
+					throw new Error("DNI de cliente ya registrado");
+				}
+			}
+			throw error;
+		}
 	}
 
 	async eliminarCliente(id) {
@@ -81,11 +101,11 @@ export class UsuarioService {
 	}
 
 	async autenticarCliente(email, password) {
-		const cliente = await this.obtenerClientePorEmail(email);
-		if (!cliente || cliente.password !== password) {
+		const usuario = await Usuario.autenticar(email, password, "CLIENTE");
+		if (!usuario) {
 			throw new Error("Credenciales de cliente invalidas");
 		}
-		return cliente;
+		return usuario.toJSON();
 	}
 
 	async _validarUnicidadCliente(datos) {
@@ -134,7 +154,9 @@ export class UsuarioService {
 			throw new Error("Cantidad invalida");
 
 		const carroActual = [...(await db.obtenerCarro(clienteId))];
-		const existente = carroActual.find((entry) => entry.libroId === libro.id);
+		const existente = carroActual.find(
+			(entry) => entry.libroId.toString() === libro.id.toString()
+		);
 		const cantidadActual = existente?.cantidad ?? 0;
 		const nuevaCantidad = cantidadActual + cantidad;
 
@@ -213,41 +235,57 @@ export class UsuarioService {
 	}
 
 	async obtenerAdminPorEmail(email) {
-		const admins = await db.obtenerTodos("admins");
-		const normalizado = email.toString().trim().toLowerCase();
-		return (
-			admins.find(
-				(a) => a.email?.toString().trim().toLowerCase() === normalizado
-			) || null
-		);
+		if (!email) return null;
+		const usuario = await Usuario.buscarPorEmail(email, "ADMIN");
+		return usuario ? usuario.toJSON() : null;
 	}
 
 	async obtenerAdminPorDni(dni) {
-		const admins = await db.obtenerTodos("admins");
-		const normalizado = dni.toString().trim().toUpperCase();
-		return (
-			admins.find(
-				(a) => a.dni?.toString().trim().toUpperCase() === normalizado
-			) || null
-		);
+		if (!dni) return null;
+		const usuario = await Usuario.buscarPorDni(dni, "ADMIN");
+		return usuario ? usuario.toJSON() : null;
 	}
 
 	async crearAdmin(datos) {
-		const admin = {
-			dni: datos.dni,
-			nombre: datos.nombre,
-			apellidos: datos.apellidos,
-			direccion: datos.direccion,
-			telefono: datos.telefono,
-			email: datos.email,
-			password: datos.password,
-			rol: ROL.ADMIN,
-		};
-		return await db.agregar("admins", admin);
+		try {
+			const admin = {
+				dni: datos.dni,
+				nombre: datos.nombre,
+				apellidos: datos.apellidos,
+				direccion: datos.direccion,
+				telefono: datos.telefono,
+				email: datos.email,
+				password: datos.password, // Se hasheará automáticamente
+				rol: ROL.ADMIN,
+			};
+			return await db.agregar("admins", admin);
+		} catch (error) {
+			if (error.code === 11000) {
+				if (error.keyPattern?.email) {
+					throw new Error("Email de administrador ya registrado");
+				}
+				if (error.keyPattern?.dni) {
+					throw new Error("DNI de administrador ya registrado");
+				}
+			}
+			throw error;
+		}
 	}
 
 	async actualizarAdmin(id, datos) {
-		return await db.actualizar("admins", id, datos);
+		try {
+			return await db.actualizar("admins", id, datos);
+		} catch (error) {
+			if (error.code === 11000) {
+				if (error.keyPattern?.email) {
+					throw new Error("Email de administrador ya registrado");
+				}
+				if (error.keyPattern?.dni) {
+					throw new Error("DNI de administrador ya registrado");
+				}
+			}
+			throw error;
+		}
 	}
 
 	async eliminarAdmin(id) {
@@ -255,11 +293,11 @@ export class UsuarioService {
 	}
 
 	async autenticarAdmin(email, password) {
-		const admin = await this.obtenerAdminPorEmail(email);
-		if (!admin || admin.password !== password) {
+		const usuario = await Usuario.autenticar(email, password, "ADMIN");
+		if (!usuario) {
 			throw new Error("Credenciales de administrador invalidas");
 		}
-		return admin;
+		return usuario.toJSON();
 	}
 
 	async reemplazarTodosAdmins(datosAdmins) {
