@@ -5,8 +5,21 @@ import { almacenAutenticacion } from "/libreria/js/model/auth-store.mjs";
 import { session } from "/libreria/js/commons/libreria-session.mjs";
 import { libreriaProxy } from "/libreria/js/model/libreria-proxy.mjs";
 
-const { describe, it, beforeEach, afterEach } = window;
-const { expect } = window.chai;
+const { describe, it, before, beforeEach, afterEach } = window;
+const { expect } = window.chai;
+
+before(async function () {
+	this.timeout(10000);
+	try {
+		const response = await fetch("/api/test/reiniciar", { method: "POST" });
+		if (!response.ok) {
+			console.warn("No se pudo reiniciar la BD:", response.status);
+		}
+	} catch (error) {
+		console.warn("Error reiniciando BD:", error);
+	}
+});
+
 const crearLibro = () =>
 	new Libro("507f1f77bcf86cd799439200", "Pruebas", "QA", "qa-isbn", 25, 10);
 
@@ -66,7 +79,8 @@ beforeEach(() => {
 describe("Getters y Setters", () => {
 	describe("Libro", () => {
 		it("getters libros", () => {
-			const libro = crearLibro();
+			const libro = crearLibro();
+
 			expect(libro.getId()).to.be.a("string");
 			expect(libro.getId()).to.have.lengthOf(24);
 			expect(libro.getTitulo()).to.equal("Pruebas");
@@ -98,7 +112,8 @@ describe("Getters y Setters", () => {
 
 	describe("Usuario", () => {
 		it("getters de datos personales y rol", () => {
-			const usuario = crearUsuario();
+			const usuario = crearUsuario();
+
 			expect(usuario.getId()).to.be.a("string");
 			expect(usuario.getId()).to.have.lengthOf(24);
 			expect(usuario.getNombre()).to.equal("Pilar");
@@ -159,8 +174,10 @@ describe("Autenticación - iniciar sesión", () => {
 			"cliente"
 		);
 
-		expect(resultado.success).to.be.true;
-		expect(resultado.usuario).to.have.property("email", "juan@mail.com");
+		expect(resultado.success).to.be.true;
+
+		expect(resultado.usuario).to.have.property("email", "juan@mail.com");
+
 		expect(resultado.usuario.id).to.be.a("string");
 		expect(resultado.usuario.id).to.have.lengthOf(24);
 		expect(resultado.token).to.be.a("string");
@@ -280,7 +297,7 @@ describe("Autenticación - registrar (validaciones)", () => {
 		expect(resultado.error).to.equal("Rol inválido. Usa ADMIN o CLIENTE");
 	});
 
-	it("impide registrar DNIs ya existentes", async () => {
+	it("impide registrar DNIs ya existentes", async () => {
 		const dniDuplicado = `9${Date.now().toString().slice(-7)}A`;
 		const emailUnico = `dup${Date.now()}@mail.com`;
 
@@ -293,7 +310,8 @@ describe("Autenticación - registrar (validaciones)", () => {
 			emailUnico,
 			"Clave123",
 			"Clave123"
-		);
+		);
+
 		const datos = generarDatosRegistro({
 			dni: dniDuplicado,
 			email: `otro${Date.now()}@mail.com`,
@@ -308,9 +326,10 @@ describe("Autenticación - registrar (validaciones)", () => {
 		const datos = generarDatosRegistro({ rol: "ADMIN" });
 		const resultado = await registrarUsuario(datos);
 		expect(resultado.success).to.be.true;
-		expect(resultado.usuario.rol).to.equal("ADMIN");
+		expect(resultado.usuario.rol).to.equal("ADMIN");
+
 		expect(resultado.usuario.id).to.be.a("string");
-		expect(resultado.usuario.id).to.have.lengthOf(24);
+		expect(resultado.usuario.id).to.have.lengthOf(24);
 	});
 });
 
@@ -371,7 +390,8 @@ describe("Persistencia de sesión", () => {
 	it("obtiene claves distintas para usuarios con y sin sesión", () => {
 		session.clearUser();
 		const claveInvitado = session.getKeySesionCliente("carrito");
-		expect(claveInvitado).to.equal("carrito_invitado");
+		expect(claveInvitado).to.equal("carrito_invitado");
+
 		const testId = "507f1f77bcf86cd799439042";
 		session.setUser({ id: testId, rol: "CLIENTE" });
 		const claveId = session.getKeySesionCliente("carrito");
@@ -425,8 +445,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		localStorage.clear();
 	});
 
-	afterEach(() => {
-	});
+	afterEach(() => {});
 
 	it("agrega un usuario cliente mediante registro", async () => {
 		const emailUnico = `crud${Date.now()}@mail.com`;
@@ -443,9 +462,11 @@ describe("Agregar, Modificar y Eliminar", () => {
 			"Crud123"
 		);
 
-		expect(resultado.success).to.be.true;
+		expect(resultado.success).to.be.true;
+
 		expect(resultado.usuario.id).to.be.a("string");
-		expect(resultado.usuario.id).to.have.lengthOf(24);
+		expect(resultado.usuario.id).to.have.lengthOf(24);
+
 		const login = await servicioAutenticacion.iniciarSesion(
 			emailUnico,
 			"Crud123",
@@ -454,7 +475,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		expect(login.success).to.be.true;
 	});
 
-	it("no deja registrar emails ya existentes", async () => {
+	it("no deja registrar emails ya existentes", async () => {
 		const resultado = await servicioAutenticacion.registrar(
 			"99999999Z",
 			"Test",
@@ -503,7 +524,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		expect(localStorage.getItem("auth_token")).to.be.null;
 	});
 
-	it("restaura sesión previamente guardada en localStorage", () => {
+	it("restaura sesión previamente guardada en localStorage", () => {
 		const testId = "507f1f77bcf86cd799439030";
 		const usuario = { id: testId, nombre: "Persistente" };
 		localStorage.setItem("auth_user", JSON.stringify(usuario));
@@ -545,15 +566,17 @@ describe("Agregar, Modificar y Eliminar", () => {
 			stock: 10,
 		};
 		const libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
-		expect(libroCreado).to.have.property("id");
+		expect(libroCreado).to.have.property("id");
+
 		expect(libroCreado.id).to.be.a("string");
 		expect(libroCreado.id).to.have.lengthOf(24);
-		expect(libroCreado.titulo).to.equal(nuevoLibro.titulo);
+		expect(libroCreado.titulo).to.equal(nuevoLibro.titulo);
+
 		const libroRecuperado = await libreriaProxy.getLibroPorId(libroCreado.id);
 		expect(libroRecuperado.titulo).to.equal(nuevoLibro.titulo);
 	});
 
-	it("permite modificar el stock de un libro existente mediante el proxy", async () => {
+	it("permite modificar el stock de un libro existente mediante el proxy", async () => {
 		const libros = await libreriaProxy.getLibros();
 		const libro = libros[0];
 
@@ -590,7 +613,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 describe("Cálculos", () => {
 	let clienteId;
 
-	beforeEach(async () => {
+	beforeEach(async () => {
 		const login = await servicioAutenticacion.iniciarSesion(
 			"juan@mail.com",
 			"Juanperez123",
@@ -600,14 +623,14 @@ describe("Cálculos", () => {
 
 		try {
 			await libreriaProxy.vaciarCarro(clienteId);
-		} catch (e) {
-		}
+		} catch (e) {}
 	});
 
-	it("calcula el total de la compra mediante el proxy", async () => {
+	it("calcula el total de la compra mediante el proxy", async () => {
 		const libros = await libreriaProxy.getLibros();
 		const libro1 = libros[0]; // Libro 1: 15.95
-		const libro2 = libros[1]; // Libro 2: 18.9
+		const libro2 = libros[1]; // Libro 2: 18.9
+
 		await libreriaProxy.agregarItemCarro(clienteId, {
 			libroId: libro1.id,
 			cantidad: 3,
@@ -615,7 +638,8 @@ describe("Cálculos", () => {
 		await libreriaProxy.agregarItemCarro(clienteId, {
 			libroId: libro2.id,
 			cantidad: 1,
-		});
+		});
+
 		const compraPayload = {
 			clienteId: clienteId,
 			items: [
@@ -631,16 +655,18 @@ describe("Cálculos", () => {
 			},
 		};
 
-		const compra = await libreriaProxy.facturar(compraPayload);
+		const compra = await libreriaProxy.facturar(compraPayload);
+
 		expect(compra.total).to.be.closeTo(66.75, 0.1); // Margen por si hay envío
 	});
 
-	it("verifica que el stock se reduce tras la compra mediante el proxy", async () => {
+	it("verifica que el stock se reduce tras la compra mediante el proxy", async () => {
 		const libros = await libreriaProxy.getLibros();
 		const libro = libros[2]; // Libro 3
 
 		const stockInicial = libro.stock;
-		const cantidadCompra = 2;
+		const cantidadCompra = 2;
+
 		const compraPayload = {
 			clienteId: clienteId,
 			items: [{ libroId: libro.id, cantidad: cantidadCompra }],
@@ -652,7 +678,8 @@ describe("Cálculos", () => {
 				telefono: "600000000",
 			},
 		};
-		await libreriaProxy.facturar(compraPayload);
+		await libreriaProxy.facturar(compraPayload);
+
 		const libroFinal = await libreriaProxy.getLibroPorId(libro.id);
 		expect(libroFinal.stock).to.equal(stockInicial - cantidadCompra);
 	});
