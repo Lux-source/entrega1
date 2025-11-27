@@ -186,14 +186,17 @@ class DbContexto {
 		}
 
 		// Filtrar por rol si es usuarios
+		let docs;
 		if (coleccion === "clientes") {
-			return await Usuario.find({ rol: "CLIENTE" }).lean();
-		}
-		if (coleccion === "admins") {
-			return await Usuario.find({ rol: "ADMIN" }).lean();
+			docs = await Usuario.find({ rol: "CLIENTE" });
+		} else if (coleccion === "admins") {
+			docs = await Usuario.find({ rol: "ADMIN" });
+		} else {
+			docs = await Modelo.find();
 		}
 
-		return await Modelo.find().lean();
+		// Aplicar toJSON() a cada documento para transformar _id a id
+		return docs.map((doc) => doc.toJSON());
 	}
 
 	async guardarTodos(coleccion, datos) {
@@ -247,7 +250,9 @@ class DbContexto {
 			filtro.rol = "ADMIN";
 		}
 
-		return await Modelo.findOne(filtro).lean();
+		const doc = await Modelo.findOne(filtro);
+		// Aplicar toJSON() para transformar _id a id
+		return doc ? doc.toJSON() : null;
 	}
 
 	async agregar(coleccion, item) {
@@ -303,9 +308,10 @@ class DbContexto {
 		const documento = await Modelo.findOneAndUpdate(filtro, actualizaciones, {
 			new: true,
 			runValidators: true,
-		}).lean();
+		});
 
-		return documento;
+		// Aplicar toJSON() para transformar _id a id
+		return documento ? documento.toJSON() : null;
 	}
 
 	async eliminar(coleccion, id) {

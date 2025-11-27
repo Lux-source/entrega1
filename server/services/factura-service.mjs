@@ -28,9 +28,31 @@ export class FacturaService {
 	}
 
 	async crear(datos, { generarNumero = true } = {}) {
-		// Usamos una transacción para asegurar consistencia
-		const session = await mongoose.startSession();
-		session.startTransaction();
+		// Intentar usar transacciones si están disponibles (replica set)
+		let session = null;
+		let useTransaction = false;
+
+		// Desactivar transacciones para evitar errores en MongoDB Standalone
+		const canUseTransactions = false;
+
+		if (canUseTransactions) {
+			try {
+				session = await mongoose.startSession();
+				await session.startTransaction();
+				// Verificar si las transacciones son soportadas realmente (standalone vs replica set)
+				await mongoose.connection.db.command({ ping: 1 }, { session });
+				useTransaction = true;
+			} catch (error) {
+				// Transacciones no disponibles (standalone MongoDB), continuar sin ellas
+				console.warn(
+					"Transacciones no disponibles, ejecutando sin transacción"
+				);
+				if (session) {
+					await session.endSession();
+				}
+				session = null;
+			}
+		}
 
 		try {
 			const itemsNormalizados = [];
@@ -49,7 +71,9 @@ export class FacturaService {
 					throw new Error("Cantidad inválida");
 				}
 
-				const libro = await Libro.findById(libroId).session(session);
+				const libro = session
+					? await Libro.findById(libroId).session(session)
+					: await Libro.findById(libroId);
 				if (!libro) {
 					throw new Error("Libro no encontrado para la compra");
 				}
@@ -85,14 +109,19 @@ export class FacturaService {
 				envio: datos.envio ?? {},
 			});
 
-			await factura.save({ session });
+			if (session) {
+				await factura.save({ session });
+			} else {
+				await factura.save();
+			}
 
 			// Actualizar stock de los libros
 			for (const item of itemsNormalizados) {
+				const updateOptions = session ? { session } : {};
 				await Libro.updateOne(
 					{ _id: item.libroId },
 					{ $inc: { stock: -item.cantidad } },
-					{ session }
+					updateOptions
 				);
 			}
 
@@ -101,16 +130,22 @@ export class FacturaService {
 				await db.eliminarCarro(factura.clienteId.toString());
 			}
 
-			// Confirmar transacción
-			await session.commitTransaction();
+			// Confirmar transacción si está activa
+			if (useTransaction && session) {
+				await session.commitTransaction();
+			}
 
 			return factura.toJSON();
 		} catch (error) {
 			// Revertir transacción en caso de error
-			await session.abortTransaction();
+			if (useTransaction && session) {
+				await session.abortTransaction();
+			}
 			throw error;
 		} finally {
-			session.endSession();
+			if (session) {
+				session.endSession();
+			}
 		}
 	}
 

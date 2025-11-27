@@ -2,15 +2,22 @@ import chai from "chai";
 import chaiHttp from "chai-http";
 import app from "../app.mjs";
 import { db } from "../server/data/db-context.mjs";
+import { conectarDB, desconectarDB } from "../server/config/database.mjs";
 
 chai.use(chaiHttp);
 const expect = chai.expect;
 
 describe("REST API Tests", () => {
 	before(async () => {
-		// Reiniciar la DB a semilla antes de los tests
+		// Conectar a MongoDB y reiniciar la DB a semilla antes de los tests
+		await conectarDB();
 		await db.reiniciar();
 		console.log("DB Reiniciada para tests.");
+	});
+
+	after(async () => {
+		// Desconectar de MongoDB después de todos los tests
+		await desconectarDB();
 	});
 
 	// BLOQUE A: LIBROS Y CATÁLOGO
@@ -43,21 +50,32 @@ describe("REST API Tests", () => {
 		});
 
 		it("GET /api/libros/:id - Debería devolver un libro específico", (done) => {
+			// Primero obtenemos un libro para tener un ID válido
 			chai
 				.request(app)
-				.get("/api/libros/1")
+				.get("/api/libros")
 				.end((err, res) => {
-					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("id", 1);
-					expect(res.body).to.have.property("titulo");
-					done();
+					const primerLibro = res.body[0];
+					chai
+						.request(app)
+						.get(`/api/libros/${primerLibro.id}`)
+						.end((err, res) => {
+							expect(res).to.have.status(200);
+							expect(res.body).to.have.property("id", primerLibro.id);
+							expect(res.body).to.have.property("titulo");
+							// Con MongoDB, verificar que el ID es un ObjectId string
+							expect(res.body.id).to.be.a("string");
+							expect(res.body.id).to.have.lengthOf(24);
+							done();
+						});
 				});
 		});
 
-		it("GET /api/libros/999 - Debería devolver 404 para libro inexistente", (done) => {
+		it("GET /api/libros/507f1f77bcf86cd799999999 - Debería devolver 404 para libro inexistente", (done) => {
+			// Usar un ObjectId válido pero inexistente
 			chai
 				.request(app)
-				.get("/api/libros/999")
+				.get("/api/libros/507f1f77bcf86cd799999999")
 				.end((err, res) => {
 					expect(res).to.have.status(404);
 					done();
@@ -70,7 +88,7 @@ describe("REST API Tests", () => {
 			const nuevoLibro = {
 				titulo: "Libro Test Admin",
 				autor: "Admin Author",
-				isbn: "123-456-789",
+				isbn: "123-456-789-" + Date.now(),
 				precio: 25.5,
 				stock: 10,
 			};
@@ -81,6 +99,9 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(201);
 					expect(res.body).to.have.property("id");
+					// Con MongoDB, verificar que el ID es un ObjectId string
+					expect(res.body.id).to.be.a("string");
+					expect(res.body.id).to.have.lengthOf(24);
 					libroCreadoId = res.body.id;
 					done();
 				});
@@ -190,6 +211,9 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.have.property("rol", "CLIENTE");
+					// Con MongoDB, verificar que el usuario tiene ObjectId
+					expect(res.body.id).to.be.a("string");
+					expect(res.body.id).to.have.lengthOf(24);
 					done();
 				});
 		});
@@ -213,6 +237,9 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.have.property("rol", "ADMIN");
+					// Con MongoDB, verificar que el admin tiene ObjectId
+					expect(res.body.id).to.be.a("string");
+					expect(res.body.id).to.have.lengthOf(24);
 					done();
 				});
 		});
@@ -231,7 +258,7 @@ describe("REST API Tests", () => {
 		let nuevoClienteId;
 		it("POST /api/clientes - Registro de nuevo cliente", (done) => {
 			const nuevoCliente = {
-				dni: `99999999Z`,
+				dni: `${Date.now().toString().slice(-8)}Z`,
 				nombre: "Nuevo",
 				apellidos: "Cliente",
 				direccion: "Calle Nueva",
@@ -248,26 +275,32 @@ describe("REST API Tests", () => {
 					expect(res).to.have.status(201);
 					expect(res.body).to.have.property("email", nuevoCliente.email);
 					expect(res.body).to.have.property("id");
+					// Con MongoDB, verificar que el ID es un ObjectId string
+					expect(res.body.id).to.be.a("string");
+					expect(res.body.id).to.have.lengthOf(24);
 					nuevoClienteId = res.body.id;
 					done();
 				});
 		});
 
 		it("GET /api/clientes/:id - Ver perfil de cliente", (done) => {
+			// Usar el ID del cliente recién creado
+			if (!nuevoClienteId) return done(new Error("No se creó el cliente"));
 			chai
 				.request(app)
-				.get("/api/clientes/1")
+				.get(`/api/clientes/${nuevoClienteId}`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("id", 1);
+					expect(res.body).to.have.property("id", nuevoClienteId);
 					done();
 				});
 		});
 
 		it("PUT /api/clientes/:id - Actualizar perfil de cliente", (done) => {
+			if (!nuevoClienteId) return done(new Error("No se creó el cliente"));
 			chai
 				.request(app)
-				.put("/api/clientes/1")
+				.put(`/api/clientes/${nuevoClienteId}`)
 				.send({ nombre: "Juan Actualizado" })
 				.end((err, res) => {
 					expect(res).to.have.status(200);
@@ -332,14 +365,18 @@ describe("REST API Tests", () => {
 					nombre: "Bulk1",
 					apellidos: "Client",
 					email: "bulk1@mail.com",
-					password: "Pass",
+					direccion: "Calle Test",
+					telefono: "600111222",
+					password: "Password123",
 				},
 				{
 					dni: "22222222B",
 					nombre: "Bulk2",
 					apellidos: "Client",
 					email: "bulk2@mail.com",
-					password: "Pass",
+					direccion: "Calle Test",
+					telefono: "600111222",
+					password: "Password123",
 				},
 			];
 			chai
@@ -369,16 +406,32 @@ describe("REST API Tests", () => {
 
 	// BLOQUE C: CARRITO
 	describe("Bloque C: Carrito", () => {
+		let testClienteId;
+		let testLibroId;
+
+		before(async function () {
+			// Obtener un cliente y un libro de la semilla para usar en los tests
+			const librosRes = await chai.request(app).get("/api/libros");
+			testLibroId = librosRes.body[0].id;
+
+			// Login para obtener cliente ID
+			const loginRes = await chai
+				.request(app)
+				.post("/api/clientes/autenticar")
+				.send({ email: "juan@mail.com", password: "Juanperez123" });
+			testClienteId = loginRes.body.id;
+		});
+
 		it("POST /api/clientes/:id/carro/items - Añadir item al carro", (done) => {
 			chai
 				.request(app)
-				.post("/api/clientes/1/carro/items")
-				.send({ libroId: 1, cantidad: 2 })
+				.post(`/api/clientes/${testClienteId}/carro/items`)
+				.send({ libroId: testLibroId, cantidad: 2 })
 				.end((err, res) => {
 					expect(res).to.have.status(201);
 					expect(res.body).to.be.an("array");
 					// Verificar que el item está en el carro
-					const item = res.body.find((i) => i.libroId === 1);
+					const item = res.body.find((i) => i.libroId === testLibroId);
 					expect(item).to.exist;
 					expect(item.cantidad).to.equal(2);
 					done();
@@ -388,7 +441,7 @@ describe("REST API Tests", () => {
 		it("GET /api/clientes/:id/carro - Obtener carro", (done) => {
 			chai
 				.request(app)
-				.get("/api/clientes/1/carro")
+				.get(`/api/clientes/${testClienteId}/carro`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
@@ -398,14 +451,22 @@ describe("REST API Tests", () => {
 		});
 
 		it("PUT /api/clientes/:id/carro/items/:index - Actualizar cantidad item", (done) => {
-			// Index 0 es el primer item (Libro 1, añadido en test anterior)
+			// Index 0 es el primer item (añadido en test anterior)
 			chai
 				.request(app)
-				.put("/api/clientes/1/carro/items/0")
+				.put(`/api/clientes/${testClienteId}/carro/items/0`)
 				.send({ cantidad: 5 })
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					const item = res.body.find((i) => i.libroId === 1);
+					// libroId puede ser un string o un objeto poblado con propiedad id
+					const item = res.body.find(
+						(i) =>
+							i.libroId === testLibroId ||
+							i.libroId?.toString() === testLibroId ||
+							i.libroId?.id === testLibroId ||
+							i.libroId?._id?.toString() === testLibroId
+					);
+					expect(item).to.not.be.undefined;
 					expect(item.cantidad).to.equal(5);
 					done();
 				});
@@ -414,10 +475,10 @@ describe("REST API Tests", () => {
 		it("DELETE /api/clientes/:id/carro/items/:index - Eliminar item del carro", (done) => {
 			chai
 				.request(app)
-				.delete("/api/clientes/1/carro/items/0")
+				.delete(`/api/clientes/${testClienteId}/carro/items/0`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					const item = res.body.find((i) => i.libroId === 1);
+					const item = res.body.find((i) => i.libroId === testLibroId);
 					expect(item).to.not.exist;
 					done();
 				});
@@ -425,34 +486,55 @@ describe("REST API Tests", () => {
 
 		it("DELETE /api/clientes/:id/carro - Vaciar carro", (done) => {
 			// Añadimos algo primero para asegurar que hay algo que borrar
-			chai
-				.request(app)
-				.post("/api/clientes/1/carro/items")
-				.send({ libroId: 2, cantidad: 1 })
-				.end(() => {
-					chai
-						.request(app)
-						.delete("/api/clientes/1/carro")
-						.end((err, res) => {
-							expect(res).to.have.status(204);
-							done();
-						});
-				});
+			const libros = chai.request(app).get("/api/libros");
+			libros.then((librosRes) => {
+				const libroId = librosRes.body[1].id;
+				chai
+					.request(app)
+					.post(`/api/clientes/${testClienteId}/carro/items`)
+					.send({ libroId: libroId, cantidad: 1 })
+					.end(() => {
+						chai
+							.request(app)
+							.delete(`/api/clientes/${testClienteId}/carro`)
+							.end((err, res) => {
+								expect(res).to.have.status(204);
+								done();
+							});
+					});
+			});
 		});
 	});
 
 	// BLOQUE D: FACTURACIÓN Y CÁLCULOS
 	describe("Bloque D: Facturación y Cálculos", () => {
+		let testClienteId;
+		let testLibroId;
+		let facturaCreada;
+
+		before(async function () {
+			// Obtener un cliente y un libro para usar en los tests
+			await db.reiniciar();
+			const librosRes = await chai.request(app).get("/api/libros");
+			testLibroId = librosRes.body[0].id;
+
+			const loginRes = await chai
+				.request(app)
+				.post("/api/clientes/autenticar")
+				.send({ email: "maria@mail.com", password: "Maria123" });
+			testClienteId = loginRes.body.id;
+		});
+
 		it("POST /api/compras - Realizar compra y verificar cálculos", (done) => {
 			const compra = {
-				clienteId: 1,
-				items: [{ libroId: 1, cantidad: 2 }],
+				clienteId: testClienteId,
+				items: [{ libroId: testLibroId, cantidad: 2 }],
 				envio: {
-					nombre: "Juan Perez",
+					nombre: "Maria Lopez",
 					direccion: "Calle Mayor 1",
 					ciudad: "Madrid",
 					cp: "28001",
-					telefono: "600000001",
+					telefono: "600000002",
 				},
 			};
 
@@ -463,9 +545,12 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(201);
 					expect(res.body).to.have.property("id");
+					// Con MongoDB, verificar que la factura tiene ObjectId
+					expect(res.body.id).to.be.a("string");
+					expect(res.body.id).to.have.lengthOf(24);
 					expect(res.body).to.have.property("total");
-
 					expect(res.body.total).to.equal(31.9);
+					facturaCreada = res.body;
 					done();
 				});
 		});
@@ -473,9 +558,10 @@ describe("REST API Tests", () => {
 		it("Verificar reducción de stock tras compra", (done) => {
 			chai
 				.request(app)
-				.get("/api/libros/1")
+				.get(`/api/libros/${testLibroId}`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
+					// El stock debería haberse reducido en 2
 					expect(res.body.stock).to.equal(22);
 					done();
 				});
@@ -494,13 +580,14 @@ describe("REST API Tests", () => {
 		});
 
 		it("GET /api/facturas/:id - Obtener detalle de factura", (done) => {
-			// Usamos la factura 1 de la semilla
+			// Usar la factura que acabamos de crear
+			if (!facturaCreada) return done(new Error("No se creó la factura"));
 			chai
 				.request(app)
-				.get("/api/facturas/1")
+				.get(`/api/facturas/${facturaCreada.id}`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
-					expect(res.body).to.have.property("id", 1);
+					expect(res.body).to.have.property("id", facturaCreada.id);
 					expect(res.body).to.have.property("items");
 					done();
 				});
@@ -515,15 +602,19 @@ describe("REST API Tests", () => {
 					expect(res.body).to.be.an("array");
 					if (res.body.length > 0) {
 						expect(res.body[0].numero).to.equal("FAC-0002");
+						// Verificar ObjectId
+						expect(res.body[0].id).to.be.a("string");
+						expect(res.body[0].id).to.have.lengthOf(24);
 					}
 					done();
 				});
 		});
 
-		it("GET /api/facturas?cliente=1 - Filtrar por cliente", (done) => {
+		it("GET /api/facturas?cliente=<clienteId> - Filtrar por cliente", (done) => {
+			// Usar el cliente de test
 			chai
 				.request(app)
-				.get("/api/facturas?cliente=1")
+				.get(`/api/facturas?cliente=${testClienteId}`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
@@ -533,8 +624,34 @@ describe("REST API Tests", () => {
 
 		it("PUT /api/facturas - Reemplazo masivo de facturas", (done) => {
 			const nuevasFacturas = [
-				{ clienteId: 1, total: 100, items: [] },
-				{ clienteId: 1, total: 200, items: [] },
+				{
+					clienteId: testClienteId,
+					total: 100,
+					items: [],
+					numero: "FAC-001-BULK",
+					fecha: new Date().toISOString(),
+					envio: {
+						nombre: "Test User 1",
+						direccion: "Calle Test 1",
+						ciudad: "Madrid",
+						cp: "28001",
+						telefono: "600111222",
+					},
+				},
+				{
+					clienteId: testClienteId,
+					total: 200,
+					items: [],
+					numero: "FAC-002-BULK",
+					fecha: new Date().toISOString(),
+					envio: {
+						nombre: "Test User 2",
+						direccion: "Calle Test 2",
+						ciudad: "Barcelona",
+						cp: "08001",
+						telefono: "600333444",
+					},
+				},
 			];
 			chai
 				.request(app)
@@ -544,6 +661,9 @@ describe("REST API Tests", () => {
 					expect(res).to.have.status(200);
 					expect(res.body).to.be.an("array");
 					expect(res.body.length).to.equal(2);
+					// Verificar que tienen ObjectIds
+					expect(res.body[0].id).to.be.a("string");
+					expect(res.body[0].id).to.have.lengthOf(24);
 					done();
 				});
 		});
@@ -564,7 +684,7 @@ describe("REST API Tests", () => {
 		let adminId;
 		it("POST /api/admins - Crear nuevo admin", (done) => {
 			const nuevoAdmin = {
-				dni: "88888888A",
+				dni: `${Date.now().toString().slice(-8)}A`,
 				nombre: "AdminTest",
 				apellidos: "Test",
 				direccion: "Admin St",
@@ -580,6 +700,9 @@ describe("REST API Tests", () => {
 				.end((err, res) => {
 					expect(res).to.have.status(201);
 					expect(res.body).to.have.property("id");
+					// Con MongoDB, verificar que el ID es un ObjectId string
+					expect(res.body.id).to.be.a("string");
+					expect(res.body.id).to.have.lengthOf(24);
 					adminId = res.body.id;
 					done();
 				});
@@ -651,14 +774,22 @@ describe("REST API Tests", () => {
 			const nuevosAdmins = [
 				{
 					nombre: "BulkAdmin1",
+					apellidos: "Apellidos Admin 1",
 					email: "ba1@test.com",
-					password: "123",
+					dni: "11111111A",
+					direccion: "Calle Admin 1",
+					telefono: "111222333",
+					password: "Password123",
 					rol: "ADMIN",
 				},
 				{
 					nombre: "BulkAdmin2",
+					apellidos: "Apellidos Admin 2",
 					email: "ba2@test.com",
-					password: "123",
+					dni: "22222222B",
+					direccion: "Calle Admin 2",
+					telefono: "444555666",
+					password: "Password456",
 					rol: "ADMIN",
 				},
 			];

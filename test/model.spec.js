@@ -1,9 +1,9 @@
-import { Libro } from "../public/libreria/js/model/libro.mjs";
-import { Usuario } from "../public/libreria/js/model/usuario.mjs";
-import { servicioAutenticacion } from "../public/libreria/js/model/auth-service.mjs";
-import { almacenAutenticacion } from "../public/libreria/js/model/auth-store.mjs";
-import { session } from "../public/libreria/js/commons/libreria-session.mjs";
-import { libreriaProxy } from "../public/libreria/js/model/libreria-proxy.mjs";
+import { Libro } from "/libreria/js/model/libro.mjs";
+import { Usuario } from "/libreria/js/model/usuario.mjs";
+import { servicioAutenticacion } from "/libreria/js/model/auth-service.mjs";
+import { almacenAutenticacion } from "/libreria/js/model/auth-store.mjs";
+import { session } from "/libreria/js/commons/libreria-session.mjs";
+import { libreriaProxy } from "/libreria/js/model/libreria-proxy.mjs";
 
 const { describe, it, beforeEach, afterEach } = window;
 const { expect } = window.chai;
@@ -559,7 +559,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		const nuevoLibro = {
 			titulo: "Libro Proxy",
 			autor: "Autor Proxy",
-			isbn: "proxy-isbn-" + Date.now(),
+			isbn: "978-" + Date.now().toString().slice(-10),
 			precio: 20,
 			stock: 10,
 		};
@@ -593,7 +593,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		const nuevoLibro = {
 			titulo: "Libro a Borrar",
 			autor: "Autor",
-			isbn: "delete-isbn-" + Date.now(),
+			isbn: "999-" + Date.now().toString().slice(-10),
 			precio: 10,
 			stock: 1,
 		};
