@@ -6,22 +6,16 @@ import path from "path";
 import { fileURLToPath } from "url";
 import passport from "./server/config/passport.mjs";
 import routes from "./server/routes/index.mjs";
-import { db } from "./server/data/db-context.mjs";
-
-// Cargar variables de entorno
+import { db } from "./server/data/db-context.mjs";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware para parsear JSON y formularios
+const PORT = process.env.PORT || 3000;
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Configurar sesiones con MongoDB store
+app.use(express.urlencoded({ extended: true }));
 app.use(
 	session({
 		secret: process.env.SESSION_SECRET || "libreria-secret-key-dev-2024",
@@ -39,25 +33,15 @@ app.use(
 			secure: process.env.NODE_ENV === "production", // HTTPS en producción
 		},
 	})
-);
-
-// Inicializar Passport
+);
 app.use(passport.initialize());
-app.use(passport.session());
-
-// Archivos estáticos
+app.use(passport.session());
 app.use(express.static("public"));
-app.use("/test", express.static("test"));
-
-// API Routes
-app.use("/api", routes);
-
-// SPA fallback
+app.use("/test", express.static("test"));
+app.use("/api", routes);
 app.get("*", (req, res) => {
 	res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Initialize DB and start server
+});
 if (process.env.NODE_ENV !== "test") {
 	db.iniciar()
 		.then(() => {

@@ -15,9 +15,7 @@ class DbContexto {
 	async iniciar() {
 		try {
 			await conectarDB();
-			this.cargado = true;
-
-			// Verificar si la base de datos está vacía y poblar con datos seed
+			this.cargado = true;
 			const cantidadLibros = await Libro.countDocuments();
 			if (cantidadLibros === 0) {
 				console.log("Base de datos vacía, poblando con datos iniciales...");
@@ -29,22 +27,16 @@ class DbContexto {
 		}
 	}
 
-	async guardar() {
-		// No es necesario con Mongoose, los cambios se guardan automáticamente
-		// Mantenemos el método por compatibilidad con la API existente
+	async guardar() {
 		return Promise.resolve();
 	}
 
 	async semilla() {
-		console.log("Creando datos de semilla...");
-
-		// Limpiar colecciones existentes
+		console.log("Creando datos de semilla...");
 		await Usuario.deleteMany({});
 		await Libro.deleteMany({});
 		await Carro.deleteMany({});
-		await Factura.deleteMany({});
-
-		// Crear Admin
+		await Factura.deleteMany({});
 		const admin = await Usuario.create({
 			dni: "00000000A",
 			nombre: "Admin",
@@ -54,9 +46,7 @@ class DbContexto {
 			email: "admin@libreria.com",
 			password: "Admin123",
 			rol: ROL.ADMIN,
-		});
-
-		// Crear Clientes
+		});
 		const cliente1 = await Usuario.create({
 			dni: "11111111B",
 			nombre: "Juan",
@@ -77,9 +67,7 @@ class DbContexto {
 			email: "maria@mail.com",
 			password: "Maria123",
 			rol: ROL.CLIENTE,
-		});
-
-		// Crear Libros
+		});
 		const libro1 = await Libro.create({
 			titulo: "Libro 1",
 			autor: "Lucian",
@@ -110,9 +98,7 @@ class DbContexto {
 			isbn: "978-84-9841-483-8",
 			precio: 9.95,
 			stock: 50,
-		});
-
-		// Crear Facturas de ejemplo
+		});
 		const factura1 = await Factura.create({
 			numero: "FAC-0001",
 			fecha: new Date(),
@@ -147,9 +133,7 @@ class DbContexto {
 				cp: "46001",
 				telefono: "600000002",
 			},
-		});
-
-		// Reducir stock según las facturas
+		});
 		libro1.stock -= 1;
 		await libro1.save();
 
@@ -164,9 +148,7 @@ class DbContexto {
 
 		console.log("✓ Datos de semilla creados exitosamente");
 		this.cargado = true;
-	}
-
-	// Mapeo de nombres de colección a modelos Mongoose
+	}
 	_obtenerModelo(coleccion) {
 		const modelos = {
 			libros: Libro,
@@ -183,9 +165,7 @@ class DbContexto {
 		const Modelo = this._obtenerModelo(coleccion);
 		if (!Modelo) {
 			throw new Error(`Colección desconocida: ${coleccion}`);
-		}
-
-		// Filtrar por rol si es usuarios
+		}
 		let docs;
 		if (coleccion === "clientes") {
 			docs = await Usuario.find({ rol: "CLIENTE" });
@@ -193,9 +173,7 @@ class DbContexto {
 			docs = await Usuario.find({ rol: "ADMIN" });
 		} else {
 			docs = await Modelo.find();
-		}
-
-		// Aplicar toJSON() a cada documento para transformar _id a id
+		}
 		return docs.map((doc) => doc.toJSON());
 	}
 
@@ -205,20 +183,15 @@ class DbContexto {
 		const Modelo = this._obtenerModelo(coleccion);
 		if (!Modelo) {
 			throw new Error(`Colección desconocida: ${coleccion}`);
-		}
-
-		// Borrar todos los documentos existentes
+		}
 		if (coleccion === "clientes") {
 			await Usuario.deleteMany({ rol: "CLIENTE" });
 		} else if (coleccion === "admins") {
 			await Usuario.deleteMany({ rol: "ADMIN" });
 		} else {
 			await Modelo.deleteMany({});
-		}
-
-		// Insertar nuevos datos
-		if (datos && datos.length > 0) {
-			// Transformar IDs si vienen como strings
+		}
+		if (datos && datos.length > 0) {
 			const datosTransformados = datos.map((item) => {
 				const nuevoItem = { ...item };
 				delete nuevoItem.id; // Mongoose creará _id automáticamente
@@ -234,24 +207,19 @@ class DbContexto {
 		const Modelo = this._obtenerModelo(coleccion);
 		if (!Modelo) {
 			throw new Error(`Colección desconocida: ${coleccion}`);
-		}
-
-		// Validar ObjectId
+		}
 		if (!mongoose.Types.ObjectId.isValid(id)) {
 			return null;
 		}
 
-		const filtro = { _id: id };
-
-		// Filtrar por rol si es usuarios
+		const filtro = { _id: id };
 		if (coleccion === "clientes") {
 			filtro.rol = "CLIENTE";
 		} else if (coleccion === "admins") {
 			filtro.rol = "ADMIN";
 		}
 
-		const doc = await Modelo.findOne(filtro);
-		// Aplicar toJSON() para transformar _id a id
+		const doc = await Modelo.findOne(filtro);
 		return doc ? doc.toJSON() : null;
 	}
 
@@ -261,16 +229,12 @@ class DbContexto {
 		const Modelo = this._obtenerModelo(coleccion);
 		if (!Modelo) {
 			throw new Error(`Colección desconocida: ${coleccion}`);
-		}
-
-		// Asegurar que tiene el rol correcto
+		}
 		if (coleccion === "clientes") {
 			item.rol = "CLIENTE";
 		} else if (coleccion === "admins") {
 			item.rol = "ADMIN";
-		}
-
-		// Eliminar id si existe (Mongoose crea _id automáticamente)
+		}
 		const { id, ...itemSinId } = item;
 
 		const documento = new Modelo(itemSinId);
@@ -284,23 +248,17 @@ class DbContexto {
 		const Modelo = this._obtenerModelo(coleccion);
 		if (!Modelo) {
 			throw new Error(`Colección desconocida: ${coleccion}`);
-		}
-
-		// Validar ObjectId
+		}
 		if (!mongoose.Types.ObjectId.isValid(id)) {
 			return null;
 		}
 
-		const filtro = { _id: id };
-
-		// Filtrar por rol si es usuarios
+		const filtro = { _id: id };
 		if (coleccion === "clientes") {
 			filtro.rol = "CLIENTE";
 		} else if (coleccion === "admins") {
 			filtro.rol = "ADMIN";
-		}
-
-		// No permitir cambiar rol
+		}
 		delete actualizaciones.rol;
 		delete actualizaciones.id;
 		delete actualizaciones._id;
@@ -308,9 +266,7 @@ class DbContexto {
 		const documento = await Modelo.findOneAndUpdate(filtro, actualizaciones, {
 			new: true,
 			runValidators: true,
-		});
-
-		// Aplicar toJSON() para transformar _id a id
+		});
 		return documento ? documento.toJSON() : null;
 	}
 
@@ -320,19 +276,14 @@ class DbContexto {
 		const Modelo = this._obtenerModelo(coleccion);
 		if (!Modelo) {
 			throw new Error(`Colección desconocida: ${coleccion}`);
-		}
-
-		// Validar ObjectId
+		}
 		if (!mongoose.Types.ObjectId.isValid(id)) {
 			return false;
 		}
 
-		const filtro = { _id: id };
-
-		// Filtrar por rol si es usuarios
+		const filtro = { _id: id };
 		if (coleccion === "clientes") {
-			filtro.rol = "CLIENTE";
-			// Eliminar también el carro del cliente
+			filtro.rol = "CLIENTE";
 			await Carro.deleteOne({ clienteId: id });
 		} else if (coleccion === "admins") {
 			filtro.rol = "ADMIN";
@@ -340,13 +291,9 @@ class DbContexto {
 
 		const resultado = await Modelo.deleteOne(filtro);
 		return resultado.deletedCount > 0;
-	}
-
-	// Específico para carros
+	}
 	async obtenerCarro(clienteId) {
-		if (!this.cargado) await this.iniciar();
-
-		// Validar ObjectId
+		if (!this.cargado) await this.iniciar();
 		if (!mongoose.Types.ObjectId.isValid(clienteId)) {
 			return [];
 		}
@@ -356,9 +303,7 @@ class DbContexto {
 	}
 
 	async guardarCarro(clienteId, items) {
-		if (!this.cargado) await this.iniciar();
-
-		// Validar ObjectId
+		if (!this.cargado) await this.iniciar();
 		if (!mongoose.Types.ObjectId.isValid(clienteId)) {
 			throw new Error("ID de cliente inválido");
 		}
@@ -376,9 +321,7 @@ class DbContexto {
 	}
 
 	async eliminarCarro(clienteId) {
-		if (!this.cargado) await this.iniciar();
-
-		// Validar ObjectId
+		if (!this.cargado) await this.iniciar();
 		if (!mongoose.Types.ObjectId.isValid(clienteId)) {
 			return;
 		}

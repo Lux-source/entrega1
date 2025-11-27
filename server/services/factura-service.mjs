@@ -27,23 +27,18 @@ export class FacturaService {
 		return facturas.map((f) => f.toJSON());
 	}
 
-	async crear(datos, { generarNumero = true } = {}) {
-		// Intentar usar transacciones si están disponibles (replica set)
+	async crear(datos, { generarNumero = true } = {}) {
 		let session = null;
-		let useTransaction = false;
-
-		// Desactivar transacciones para evitar errores en MongoDB Standalone
+		let useTransaction = false;
 		const canUseTransactions = false;
 
 		if (canUseTransactions) {
 			try {
 				session = await mongoose.startSession();
-				await session.startTransaction();
-				// Verificar si las transacciones son soportadas realmente (standalone vs replica set)
+				await session.startTransaction();
 				await mongoose.connection.db.command({ ping: 1 }, { session });
 				useTransaction = true;
-			} catch (error) {
-				// Transacciones no disponibles (standalone MongoDB), continuar sin ellas
+			} catch (error) {
 				console.warn(
 					"Transacciones no disponibles, ejecutando sin transacción"
 				);
@@ -56,9 +51,7 @@ export class FacturaService {
 
 		try {
 			const itemsNormalizados = [];
-			let total = 0;
-
-			// Validar items y stock
+			let total = 0;
 			for (const item of datos.items || []) {
 				const libroId = item.libroId?.toString() || item.id?.toString();
 				const cantidad = Number.parseInt(item.cantidad ?? 0, 10);
@@ -91,15 +84,11 @@ export class FacturaService {
 
 			if (datos.total !== undefined) {
 				total = Number.parseFloat(datos.total);
-			}
-
-			// Generar número de factura si es necesario
+			}
 			let numeroFactura = datos.numero;
 			if (generarNumero) {
 				numeroFactura = await Factura.generarNumeroFactura();
-			}
-
-			// Crear factura
+			}
 			const factura = new Factura({
 				numero: numeroFactura,
 				fecha: datos.fecha ?? new Date(),
@@ -113,9 +102,7 @@ export class FacturaService {
 				await factura.save({ session });
 			} else {
 				await factura.save();
-			}
-
-			// Actualizar stock de los libros
+			}
 			for (const item of itemsNormalizados) {
 				const updateOptions = session ? { session } : {};
 				await Libro.updateOne(
@@ -123,21 +110,16 @@ export class FacturaService {
 					{ $inc: { stock: -item.cantidad } },
 					updateOptions
 				);
-			}
-
-			// Vaciar carro del cliente si existe
+			}
 			if (factura.clienteId) {
 				await db.eliminarCarro(factura.clienteId.toString());
-			}
-
-			// Confirmar transacción si está activa
+			}
 			if (useTransaction && session) {
 				await session.commitTransaction();
 			}
 
 			return factura.toJSON();
-		} catch (error) {
-			// Revertir transacción en caso de error
+		} catch (error) {
 			if (useTransaction && session) {
 				await session.abortTransaction();
 			}

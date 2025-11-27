@@ -78,7 +78,6 @@ export class Compra {
 		this.envio = esObjetoPlano(datos.envio) ? { ...datos.envio } : {};
 	}
 
-	// Getters
 	getId() {
 		return this.id;
 	}
@@ -103,7 +102,6 @@ export class Compra {
 		return this.envio;
 	}
 
-	// Metodo para obtener una copia segura de la compra
 	obtenerDetalles() {
 		return {
 			id: this.id,

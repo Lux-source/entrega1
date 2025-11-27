@@ -71,10 +71,8 @@ const carroSchema = new mongoose.Schema(
 	}
 );
 
-// Índices
 carroSchema.index({ clienteId: 1 }, { unique: true }); // Un carro por cliente
 
-// Métodos de instancia
 carroSchema.methods.agregarItem = function (libroId, cantidad = 1) {
 	const itemExistente = this.items.find(
 		(item) => item.libroId.toString() === libroId.toString()
@@ -117,12 +115,11 @@ carroSchema.methods.vaciar = function () {
 	return this.save();
 };
 
-// Métodos estáticos
 carroSchema.statics.obtenerPorCliente = async function (clienteId) {
 	let carro = await this.findOne({ clienteId }).populate("items.libroId");
 
 	if (!carro) {
-		// Crear carro vacío si no existe
+
 		carro = new this({ clienteId, items: [] });
 		await carro.save();
 	}

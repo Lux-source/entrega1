@@ -1,9 +1,7 @@
 class LibreriaSession {
 	constructor() {
 		this.messages = [];
-	}
-
-	// Gestión de usuario
+	}
 	setUser(usuario) {
 		localStorage.setItem("usuario", JSON.stringify(usuario));
 	}
@@ -23,9 +21,7 @@ class LibreriaSession {
 			return "invitado";
 		}
 		return user.rol.toLowerCase();
-	}
-
-	// Sistema de mensajes
+	}
 	pushInfo(msg) {
 		this.messages.push({ type: "info", text: msg, id: Date.now() });
 		this.notifyMessages();
@@ -49,9 +45,7 @@ class LibreriaSession {
 
 	notifyMessages() {
 		window.dispatchEvent(new CustomEvent("messages-updated"));
-	}
-
-	// Persistencia por usuario
+	}
 	getKeySesionCliente(baseKey) {
 		const sanitizedKey = (baseKey || "").trim();
 		if (!sanitizedKey) {

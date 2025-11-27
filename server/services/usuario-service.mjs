@@ -8,8 +8,7 @@ const ROL = {
 	CLIENTE: "CLIENTE",
 };
 
-export class UsuarioService {
-	// --- CLIENTES ---
+export class UsuarioService {
 	async obtenerTodosClientes() {
 		return await db.obtenerTodos("clientes");
 	}
@@ -44,8 +43,7 @@ export class UsuarioService {
 				rol: ROL.CLIENTE,
 			};
 			return await db.agregar("clientes", cliente);
-		} catch (error) {
-			// Manejar errores de duplicados
+		} catch (error) {
 			if (error.code === 11000) {
 				if (error.keyPattern?.email) {
 					throw new Error("Email de cliente ya registrado");
@@ -60,9 +58,7 @@ export class UsuarioService {
 
 	async actualizarCliente(id, datos) {
 		const cliente = await this.obtenerClientePorId(id);
-		if (!cliente) return null;
-
-		// Validar unicidad si se actualizan email o DNI
+		if (!cliente) return null;
 		if (datos.email && datos.email !== cliente.email) {
 			const emailExistente = await this.obtenerClientePorEmail(datos.email);
 			if (emailExistente && emailExistente.id !== cliente.id) {
@@ -135,9 +131,7 @@ export class UsuarioService {
 		}
 		await db.guardarTodos("clientes", []);
 		return [];
-	}
-
-	// --- CARRO ---
+	}
 	async obtenerCarro(clienteId) {
 		return await db.obtenerCarro(clienteId);
 	}
@@ -223,9 +217,7 @@ export class UsuarioService {
 	async vaciarCarro(clienteId) {
 		await db.eliminarCarro(clienteId);
 		return [];
-	}
-
-	// --- ADMINS ---
+	}
 	async obtenerTodosAdmins() {
 		return await db.obtenerTodos("admins");
 	}

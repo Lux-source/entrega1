@@ -33,8 +33,7 @@ export class LibroService {
 				stock: Number.parseInt(datos.stock ?? 0, 10),
 			};
 			return await db.agregar("libros", libro);
-		} catch (error) {
-			// Manejar error de ISBN duplicado
+		} catch (error) {
 			if (error.code === 11000 && error.keyPattern?.isbn) {
 				throw new Error("El ISBN ya existe");
 			}
@@ -57,8 +56,7 @@ export class LibroService {
 
 		try {
 			return await db.actualizar("libros", id, actualizaciones);
-		} catch (error) {
-			// Manejar error de ISBN duplicado
+		} catch (error) {
 			if (error.code === 11000 && error.keyPattern?.isbn) {
 				throw new Error("El ISBN ya existe");
 			}
@@ -70,11 +68,8 @@ export class LibroService {
 		return await db.eliminar("libros", id);
 	}
 
-	async reemplazarTodos(datosLibros) {
-		// Reiniciar la colección primero
-		await db.guardarTodos("libros", []);
-
-		// Añadir nuevos libros
+	async reemplazarTodos(datosLibros) {
+		await db.guardarTodos("libros", []);
 		for (const datos of datosLibros) {
 			await this.crear(datos);
 		}

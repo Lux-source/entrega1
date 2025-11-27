@@ -19,8 +19,7 @@ export class Presenter {
 		return "<div>Override template method</div>";
 	}
 
-	bind() {
-		// Override para eventos
+	bind() {
 	}
 
 	desmontar() {

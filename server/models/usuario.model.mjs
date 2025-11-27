@@ -11,7 +11,7 @@ const usuarioSchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (v) {
-					// Formato: 7-8 dígitos seguidos de una letra mayúscula
+
 					return /^[0-9]{7,8}[A-Z]$/.test(v);
 				},
 				message:
@@ -45,7 +45,7 @@ const usuarioSchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (v) {
-					// 7-15 dígitos
+
 					return /^[0-9]{7,15}$/.test(v);
 				},
 				message: "El teléfono debe tener entre 7 y 15 dígitos",
@@ -107,13 +107,11 @@ const usuarioSchema = new mongoose.Schema(
 	}
 );
 
-// Índices compuestos: email y dni deben ser únicos por rol
 usuarioSchema.index({ email: 1, rol: 1 }, { unique: true });
 usuarioSchema.index({ dni: 1, rol: 1 }, { unique: true });
 
-// Middleware pre-save: hashear contraseña si fue modificada
 usuarioSchema.pre("save", async function (next) {
-	// Solo hashear si la contraseña fue modificada (o es nueva)
+
 	if (!this.isModified("password")) {
 		return next();
 	}
@@ -127,7 +125,6 @@ usuarioSchema.pre("save", async function (next) {
 	}
 });
 
-// Método de instancia: comparar contraseña
 usuarioSchema.methods.compararPassword = async function (passwordCandidata) {
 	try {
 		return await bcrypt.compare(passwordCandidata, this.password);
@@ -136,7 +133,6 @@ usuarioSchema.methods.compararPassword = async function (passwordCandidata) {
 	}
 };
 
-// Métodos estáticos
 usuarioSchema.statics.buscarPorEmail = function (email, rol) {
 	const query = { email: email.toLowerCase() };
 	if (rol) query.rol = rol.toUpperCase();

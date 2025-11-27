@@ -2,12 +2,6 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import Usuario from "../models/usuario.model.mjs";
 
-/**
- * Configuración de Passport para autenticación local
- * Usa dos estrategias separadas: una para admins y otra para clientes
- */
-
-// Estrategia para ADMINS
 passport.use(
 	"local-admin",
 	new LocalStrategy(
@@ -34,7 +28,6 @@ passport.use(
 	)
 );
 
-// Estrategia para CLIENTES
 passport.use(
 	"local-cliente",
 	new LocalStrategy(
@@ -61,12 +54,10 @@ passport.use(
 	)
 );
 
-// Serialización: guardar solo el ID y rol en la sesión
 passport.serializeUser((user, done) => {
 	done(null, { id: user._id.toString(), rol: user.rol });
 });
 
-// Deserialización: recuperar usuario completo desde la BD
 passport.deserializeUser(async (sessionData, done) => {
 	try {
 		const usuario = await Usuario.findById(sessionData.id);

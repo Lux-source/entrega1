@@ -1,8 +1,7 @@
 import { libreriaProxy } from "./libreria-proxy.mjs";
 import { libreriaStore } from "./libreria-store.mjs";
 
-class ServicioAutenticacion {
-	// Inicio de sesión de usuario
+class ServicioAutenticacion {
 
 	async iniciarSesion(usuario, password, rol) {
 		const email = (usuario || "").trim().toLowerCase();
@@ -200,11 +199,8 @@ class ServicioAutenticacion {
 		return `token_${usuario.id}_${Date.now()}_${Math.random()
 			.toString(36)
 			.slice(2, 9)}`;
-	}
-
-	// token valido?
-	verificarToken(token) {
-		//existe token?
+	}
+	verificarToken(token) {
 		return !!token && token.startsWith("token_");
 	}
 

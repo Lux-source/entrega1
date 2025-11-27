@@ -12,9 +12,7 @@ router.delete("/:id", (req, res) =>
 );
 router.post("/autenticar", (req, res) =>
 	clienteController.autenticar(req, res)
-);
-
-// Carro
+);
 router.get("/:id/carro", (req, res) =>
 	clienteController.obtenerCarro(req, res)
 );
@@ -29,9 +27,7 @@ router.delete("/:id/carro/items/:index", (req, res) =>
 );
 router.delete("/:id/carro", (req, res) =>
 	clienteController.vaciarCarro(req, res)
-);
-
-// Bulk operations
+);
 router.put("/", (req, res) => clienteController.reemplazarClientes(req, res));
 router.delete("/", (req, res) => clienteController.eliminarClientes(req, res));
 

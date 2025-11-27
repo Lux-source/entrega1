@@ -23,7 +23,7 @@ const libroSchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (v) {
-					// Formato ISBN básico (puede ser más restrictivo)
+
 					return /^[\d-]+$/.test(v);
 				},
 				message: "El ISBN debe contener solo números y guiones",
@@ -76,12 +76,10 @@ const libroSchema = new mongoose.Schema(
 	}
 );
 
-// Índices
 libroSchema.index({ titulo: 1 });
 libroSchema.index({ autor: 1 });
 libroSchema.index({ precio: 1 });
 
-// Métodos de instancia
 libroSchema.methods.reducirStock = function (cantidad) {
 	const nuevaCantidad = Number.parseInt(cantidad ?? 0, 10);
 	if (!Number.isFinite(nuevaCantidad) || nuevaCantidad <= 0) {
@@ -110,7 +108,6 @@ libroSchema.methods.actualizarStock = function (stock) {
 	return this.save();
 };
 
-// Métodos estáticos
 libroSchema.statics.buscarPorIsbn = function (isbn) {
 	return this.findOne({ isbn });
 };

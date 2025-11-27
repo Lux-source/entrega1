@@ -32,9 +32,7 @@ class LibreriaStore {
 			adminsLoaded: false,
 			facturasLoaded: false,
 		};
-	}
-
-	// Libros
+	}
 	async getLibros({ force = false } = {}) {
 		if (!this.flags.librosLoaded || force) {
 			this.cache.libros = await this.proxy.getLibros();
@@ -94,9 +92,7 @@ class LibreriaStore {
 		} else {
 			this.cache.libros.push(libro);
 		}
-	}
-
-	// Clientes
+	}
 	async getClientes({ force = false } = {}) {
 		if (!this.flags.clientesLoaded || force) {
 			this.cache.clientes = await this.proxy.getClientes();
@@ -161,9 +157,7 @@ class LibreriaStore {
 		} else {
 			this.cache.clientes.push(cliente);
 		}
-	}
-
-	// Carros
+	}
 	async getCarroCliente(clienteId, { force = false } = {}) {
 		const id = Number.parseInt(clienteId ?? "", 10);
 		if (!Number.isFinite(id)) {
@@ -226,9 +220,7 @@ class LibreriaStore {
 		await this.proxy.vaciarCarro(id);
 		this.cache.carros.set(id, []);
 		return [];
-	}
-
-	// Admins
+	}
 	async getAdmins({ force = false } = {}) {
 		if (!this.flags.adminsLoaded || force) {
 			this.cache.admins = await this.proxy.getAdmins();
@@ -288,9 +280,7 @@ class LibreriaStore {
 		} else {
 			this.cache.admins.push(admin);
 		}
-	}
-
-	// Facturas / Compras
+	}
 	async getFacturas({ force = false } = {}) {
 		if (!this.flags.facturasLoaded || force) {
 			this.cache.facturas = await this.proxy.getFacturas();
@@ -309,8 +299,7 @@ class LibreriaStore {
 			: (await this.getFacturas({ force })).filter(
 					(factura) => factura.clienteId === id
 			  );
-		if (force) {
-			// fusionar cache con las actualizadas para el cliente concreto
+		if (force) {
 			const restantes = this.cache.facturas.filter(
 				(factura) => factura.clienteId !== id
 			);
@@ -367,9 +356,7 @@ class LibreriaStore {
 		} else {
 			this.cache.facturas.push(factura);
 		}
-	}
-
-	// Utilidades
+	}
 	reset() {
 		this.cache.libros = [];
 		this.cache.clientes = [];

@@ -86,7 +86,7 @@ const facturaSchema = new mongoose.Schema(
 						cantidad: item.cantidad,
 					}));
 				}
-				// Convertir fecha a ISO string para compatibilidad
+
 				if (ret.fecha instanceof Date) {
 					ret.fecha = ret.fecha.toISOString();
 				}
@@ -120,12 +120,10 @@ const facturaSchema = new mongoose.Schema(
 	}
 );
 
-// Índices
 facturaSchema.index({ numero: 1 }, { unique: true }); // Número de factura único
 facturaSchema.index({ clienteId: 1 });
 facturaSchema.index({ fecha: -1 }); // Ordenar por fecha descendente
 
-// Métodos estáticos
 facturaSchema.statics.generarNumeroFactura = async function () {
 	const ultimaFactura = await this.findOne().sort({ numero: -1 }).limit(1);
 
@@ -133,7 +131,6 @@ facturaSchema.statics.generarNumeroFactura = async function () {
 		return "FAC-0001";
 	}
 
-	// Extraer número de "FAC-0001" -> 1
 	const match = ultimaFactura.numero.match(/FAC-(\d+)/);
 	if (!match) {
 		return "FAC-0001";

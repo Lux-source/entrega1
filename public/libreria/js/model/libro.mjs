@@ -6,9 +6,7 @@ export class Libro {
 		this.isbn = isbn;
 		this.precio = precio;
 		this.stock = stock;
-	}
-
-	// Getters
+	}
 	getId() {
 		return this.id;
 	}
@@ -20,9 +18,7 @@ export class Libro {
 	}
 	getStock() {
 		return this.stock;
-	}
-
-	// Setters con validación
+	}
 	setStock(stock) {
 		if (stock < 0) throw new Error("El stock no puede ser negativo");
 		this.stock = stock;

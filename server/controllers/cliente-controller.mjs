@@ -93,9 +93,7 @@ export class ClienteController {
 	async eliminarClientes(req, res) {
 		await usuarioService.eliminarTodosClientes();
 		return res.status(204).end();
-	}
-
-	// Carro
+	}
 	async obtenerCarro(req, res) {
 		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });

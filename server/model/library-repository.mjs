@@ -214,9 +214,7 @@ class LibraryRepository {
 			}
 			return sum + libro.precio * item.cantidad;
 		}, 0);
-	}
-
-	// Libros
+	}
 	getLibros() {
 		return this.libros;
 	}
@@ -314,9 +312,7 @@ class LibraryRepository {
 		}
 
 		return libro;
-	}
-
-	// Clientes
+	}
 	getClientes() {
 		return this.clientes;
 	}
@@ -549,9 +545,7 @@ class LibraryRepository {
 		}
 		this.carros.delete(clienteId);
 		return [];
-	}
-
-	// Admins
+	}
 	getAdmins() {
 		return this.admins;
 	}
@@ -645,9 +639,7 @@ class LibraryRepository {
 			throw new Error("Credenciales de administrador invalidas");
 		}
 		return admin;
-	}
-
-	// Facturas
+	}
 	getFacturas() {
 		return this.facturas;
 	}
