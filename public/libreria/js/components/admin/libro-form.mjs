@@ -44,7 +44,9 @@ export class AdminLibroForm extends Presenter {
 	}
 
 	async determineMode() {
-		const match = window.location.pathname.match(/\/a\/libros\/editar\/(\d+)/);
+		const match = window.location.pathname.match(
+			/\/a\/libros\/editar\/([a-fA-F0-9]{24})/
+		);
 		if (!match) {
 			this.isEdit = false;
 			this.libro = null;
@@ -52,11 +54,7 @@ export class AdminLibroForm extends Presenter {
 		}
 
 		this.isEdit = true;
-		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			this.libro = null;
-			return;
-		}
+		const id = match[1];
 
 		try {
 			this.libro = await this.model.getLibroById(id, { force: true });

@@ -71,8 +71,7 @@ class LibreriaProxy {
 				try {
 					const body = await response.json();
 					errorMessage = body?.error || errorMessage;
-				} catch {
-					// Ignorar errores de parseo
+				} catch {
 				}
 			} else {
 				const text = await response.text();
@@ -117,9 +116,7 @@ class LibreriaProxy {
 
 	delete(path) {
 		return this.request(path, { method: "DELETE" });
-	}
-
-	// Libros
+	}
 	getLibros(params) {
 		return this.get("/libros", params);
 	}
@@ -138,9 +135,7 @@ class LibreriaProxy {
 
 	borrarLibro(id) {
 		return this.delete(`/libros/${id}`);
-	}
-
-	// Clientes
+	}
 	getClientes() {
 		return this.get("/clientes");
 	}
@@ -183,9 +178,7 @@ class LibreriaProxy {
 
 	vaciarCarro(id) {
 		return this.delete(`/clientes/${id}/carro`);
-	}
-
-	// Admins
+	}
 	getAdmins() {
 		return this.get("/admins");
 	}
@@ -208,9 +201,7 @@ class LibreriaProxy {
 
 	autenticarAdmin(payload) {
 		return this.post("/admins/autenticar", payload);
-	}
-
-	// Facturas
+	}
 	getFacturas(params) {
 		return this.get("/facturas", params);
 	}
@@ -221,9 +212,7 @@ class LibreriaProxy {
 
 	facturar(payload) {
 		return this.post("/facturas", payload);
-	}
-
-	// Alias compras (compatibilidad)
+	}
 	getCompras() {
 		return this.get("/compras");
 	}

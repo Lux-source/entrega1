@@ -1,8 +1,8 @@
 import { usuarioService } from "../services/usuario-service.mjs";
+import mongoose from "mongoose";
 
-const parsearIdNumerico = (valor) => {
-	const id = Number.parseInt(valor ?? "", 10);
-	return Number.isFinite(id) && id > 0 ? id : null;
+const validarObjectId = (valor) => {
+	return mongoose.Types.ObjectId.isValid(valor) ? valor : null;
 };
 
 export class ClienteController {
@@ -23,7 +23,7 @@ export class ClienteController {
 	}
 
 	async obtenerCliente(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		const cliente = await usuarioService.obtenerClientePorId(id);
@@ -42,7 +42,7 @@ export class ClienteController {
 	}
 
 	async actualizarCliente(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		try {
@@ -59,7 +59,7 @@ export class ClienteController {
 	}
 
 	async eliminarCliente(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		const eliminado = await usuarioService.eliminarCliente(id);
@@ -93,11 +93,9 @@ export class ClienteController {
 	async eliminarClientes(req, res) {
 		await usuarioService.eliminarTodosClientes();
 		return res.status(204).end();
-	}
-
-	// Carro
+	}
 	async obtenerCarro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		try {
@@ -109,7 +107,7 @@ export class ClienteController {
 	}
 
 	async agregarItemCarro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		try {
@@ -122,7 +120,7 @@ export class ClienteController {
 	}
 
 	async actualizarItemCarro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		const idx = parseInt(req.params.index, 10);
 
 		if (!id) return res.status(400).json({ error: "Id no valido" });
@@ -139,7 +137,7 @@ export class ClienteController {
 	}
 
 	async eliminarItemCarro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		const idx = parseInt(req.params.index, 10);
 
 		if (!id) return res.status(400).json({ error: "Id no valido" });
@@ -155,7 +153,7 @@ export class ClienteController {
 	}
 
 	async vaciarCarro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		try {

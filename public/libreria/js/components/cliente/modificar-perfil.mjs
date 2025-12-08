@@ -105,10 +105,6 @@ export class ClienteModificarPerfil extends Presenter {
 		if (this.fields.direccion) {
 			this.fields.direccion.value = user.direccion ?? "";
 		}
-
-		if (this.fields.password) {
-			this.fields.password.value = user.password ?? "";
-		}
 	}
 
 	async onSubmit(event) {
@@ -139,15 +135,7 @@ export class ClienteModificarPerfil extends Presenter {
 		const direccion = (formData.get("direccion") ?? "").toString().trim();
 		const password = (formData.get("password") ?? "").toString();
 
-		if (
-			!nombre ||
-			!apellidos ||
-			!dni ||
-			!email ||
-			!telefono ||
-			!direccion ||
-			!password
-		) {
+		if (!nombre || !apellidos || !dni || !email || !telefono || !direccion) {
 			session.pushError("Todos los campos marcados con * son obligatorios.");
 			return;
 		}
@@ -171,7 +159,7 @@ export class ClienteModificarPerfil extends Presenter {
 			return;
 		}
 
-		if (password.length < 6) {
+		if (password && password.length < 6) {
 			session.pushError("La contraseña debe tener al menos 6 caracteres");
 			return;
 		}
@@ -184,7 +172,7 @@ export class ClienteModificarPerfil extends Presenter {
 				email,
 				telefono,
 				direccion,
-				password,
+				...(password && { password }),
 			});
 
 			session.setUser(updatedUser);

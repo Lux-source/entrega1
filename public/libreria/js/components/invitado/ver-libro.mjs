@@ -51,17 +51,13 @@ export class InvitadoVerLibro extends Presenter {
 
 	async loadLibro() {
 		const path = window.location.pathname;
-		const match = path.match(/\/(?:c\/)?libros\/(\d+)/);
+		const match = path.match(/\/(?:c\/)?libros\/([a-fA-F0-9]{24})/);
 		if (!match) {
 			this.libro = null;
 			return;
 		}
 
-		const id = Number.parseInt(match[1], 10);
-		if (Number.isNaN(id)) {
-			this.libro = null;
-			return;
-		}
+		const id = match[1];
 
 		try {
 			this.libro = await this.model.getLibroById(id, { force: true });

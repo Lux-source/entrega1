@@ -82,7 +82,6 @@ export class AdminModificarPerfil extends Presenter {
 		this.inputs.email.value = user.email ?? "";
 		this.inputs.telefono.value = user.telefono ?? "";
 		this.inputs.direccion.value = user.direccion ?? "";
-		this.inputs.password.value = user.password ?? "";
 	}
 
 	attachEvents() {
@@ -137,15 +136,7 @@ export class AdminModificarPerfil extends Presenter {
 		const direccion = (formData.get("direccion") ?? "").toString().trim();
 		const password = (formData.get("password") ?? "").toString();
 
-		if (
-			!nombre ||
-			!apellidos ||
-			!dni ||
-			!email ||
-			!telefono ||
-			!direccion ||
-			!password
-		) {
+		if (!nombre || !apellidos || !dni || !email || !telefono || !direccion) {
 			session.pushError("Todos los campos marcados con * son obligatorios.");
 			return;
 		}
@@ -169,7 +160,7 @@ export class AdminModificarPerfil extends Presenter {
 			return;
 		}
 
-		if (password.length < 6) {
+		if (password && password.length < 6) {
 			session.pushError("La contraseña debe tener al menos 6 caracteres");
 			return;
 		}
@@ -202,7 +193,7 @@ export class AdminModificarPerfil extends Presenter {
 				email,
 				telefono,
 				direccion,
-				password,
+				...(password && { password }),
 			});
 
 			session.setUser(updatedUser);

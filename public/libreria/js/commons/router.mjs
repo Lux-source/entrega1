@@ -25,9 +25,7 @@ class Router {
 
 	async handleRoute() {
 		const path = window.location.pathname;
-		let route = this.routes[path];
-
-		// Rutas como /libros/:id
+		let route = this.routes[path];
 		if (!route) {
 			const dynamicRoute = Object.keys(this.routes).find((routePath) => {
 				const pattern = routePath.replace(/:\w+/g, "([^/]+)");
@@ -39,9 +37,7 @@ class Router {
 		if (!route) {
 			this.navigate("/404");
 			return;
-		}
-
-		// Guard de rol
+		}
 		if (route.guard) {
 			const role = session.getRole();
 			if (!route.guard.includes(role)) {
@@ -49,9 +45,7 @@ class Router {
 				this.navigate("/403");
 				return;
 			}
-		}
-
-		// Desmontar componente anterior y montar el nuevo
+		}
 		if (this.currentComponent) {
 			this.currentComponent.desmontar();
 		}

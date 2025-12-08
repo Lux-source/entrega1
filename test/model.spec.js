@@ -1,18 +1,31 @@
-import { Libro } from "../libreria/js/model/libro.mjs";
-import { Usuario } from "../libreria/js/model/usuario.mjs";
-import { servicioAutenticacion } from "../libreria/js/model/auth-service.mjs";
-import { almacenAutenticacion } from "../libreria/js/model/auth-store.mjs";
-import { session } from "../libreria/js/commons/libreria-session.mjs";
-import { libreriaProxy } from "../libreria/js/model/libreria-proxy.mjs";
+import { Libro } from "/libreria/js/model/libro.mjs";
+import { Usuario } from "/libreria/js/model/usuario.mjs";
+import { servicioAutenticacion } from "/libreria/js/model/auth-service.mjs";
+import { almacenAutenticacion } from "/libreria/js/model/auth-store.mjs";
+import { session } from "/libreria/js/commons/libreria-session.mjs";
+import { libreriaProxy } from "/libreria/js/model/libreria-proxy.mjs";
 
-const { describe, it, beforeEach, afterEach } = window;
+const { describe, it, before, beforeEach, afterEach } = window;
 const { expect } = window.chai;
 
-const crearLibro = () => new Libro(200, "Pruebas", "QA", "qa-isbn", 25, 10);
+before(async function () {
+	this.timeout(10000);
+	try {
+		const response = await fetch("/api/test/reiniciar", { method: "POST" });
+		if (!response.ok) {
+			console.warn("No se pudo reiniciar la BD:", response.status);
+		}
+	} catch (error) {
+		console.warn("Error reiniciando BD:", error);
+	}
+});
+
+const crearLibro = () =>
+	new Libro("507f1f77bcf86cd799439200", "Pruebas", "QA", "qa-isbn", 25, 10);
 
 const crearUsuario = () =>
 	new Usuario(
-		200,
+		"507f1f77bcf86cd799439200",
 		"33333333Z",
 		"Pilar",
 		"Test",
@@ -67,7 +80,9 @@ describe("Getters y Setters", () => {
 	describe("Libro", () => {
 		it("getters libros", () => {
 			const libro = crearLibro();
-			expect(libro.getId()).to.equal(200);
+
+			expect(libro.getId()).to.be.a("string");
+			expect(libro.getId()).to.have.lengthOf(24);
 			expect(libro.getTitulo()).to.equal("Pruebas");
 			expect(libro.getPrecio()).to.equal(25);
 			expect(libro.getStock()).to.equal(10);
@@ -98,7 +113,9 @@ describe("Getters y Setters", () => {
 	describe("Usuario", () => {
 		it("getters de datos personales y rol", () => {
 			const usuario = crearUsuario();
-			expect(usuario.getId()).to.equal(200);
+
+			expect(usuario.getId()).to.be.a("string");
+			expect(usuario.getId()).to.have.lengthOf(24);
 			expect(usuario.getNombre()).to.equal("Pilar");
 			expect(usuario.getApellidos()).to.equal("Test");
 			expect(usuario.getEmail()).to.equal("qa@mail.com");
@@ -158,8 +175,11 @@ describe("Autenticación - iniciar sesión", () => {
 		);
 
 		expect(resultado.success).to.be.true;
-		// expect(resultado.usuario).to.be.instanceOf(Usuario); // Eliminado por ser JSON
+
 		expect(resultado.usuario).to.have.property("email", "juan@mail.com");
+
+		expect(resultado.usuario.id).to.be.a("string");
+		expect(resultado.usuario.id).to.have.lengthOf(24);
 		expect(resultado.token).to.be.a("string");
 		expect(resultado.token.startsWith("token_")).to.be.true;
 	});
@@ -278,7 +298,6 @@ describe("Autenticación - registrar (validaciones)", () => {
 	});
 
 	it("impide registrar DNIs ya existentes", async () => {
-		// Primero registramos un usuario para asegurar que el DNI existe
 		const dniDuplicado = `9${Date.now().toString().slice(-7)}A`;
 		const emailUnico = `dup${Date.now()}@mail.com`;
 
@@ -293,7 +312,6 @@ describe("Autenticación - registrar (validaciones)", () => {
 			"Clave123"
 		);
 
-		// Intentamos registrar otro usuario con el MISMO DNI pero distinto email
 		const datos = generarDatosRegistro({
 			dni: dniDuplicado,
 			email: `otro${Date.now()}@mail.com`,
@@ -309,7 +327,9 @@ describe("Autenticación - registrar (validaciones)", () => {
 		const resultado = await registrarUsuario(datos);
 		expect(resultado.success).to.be.true;
 		expect(resultado.usuario.rol).to.equal("ADMIN");
-		// limpiarUsuarioRegistrado(datos.email); // Eliminado
+
+		expect(resultado.usuario.id).to.be.a("string");
+		expect(resultado.usuario.id).to.have.lengthOf(24);
 	});
 });
 
@@ -372,9 +392,10 @@ describe("Persistencia de sesión", () => {
 		const claveInvitado = session.getKeySesionCliente("carrito");
 		expect(claveInvitado).to.equal("carrito_invitado");
 
-		session.setUser({ id: 42, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439042";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		const claveId = session.getKeySesionCliente("carrito");
-		expect(claveId).to.equal("carrito_42");
+		expect(claveId).to.equal(`carrito_${testId}`);
 
 		session.setUser({ email: "Usuario@Mail.com" });
 		const claveEmail = session.getKeySesionCliente("lista");
@@ -388,31 +409,34 @@ describe("Persistencia de sesión", () => {
 	});
 
 	it("lee y escribe arrays bajo claves escopadas", () => {
-		session.setUser({ id: 90, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439090";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		const datos = [{ libroId: 1, cantidad: 2 }];
 		session.escribirArrayClienteSesion("carrito", datos);
-		const almacenado = JSON.parse(localStorage.getItem("carrito_90"));
+		const almacenado = JSON.parse(localStorage.getItem(`carrito_${testId}`));
 		expect(almacenado).to.deep.equal(datos);
 		const recuperado = session.leerArrayClienteSesion("carrito");
 		expect(recuperado).to.deep.equal(datos);
 	});
 
 	it("limpia los datos asociados al usuario", () => {
-		session.setUser({ id: 77, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439077";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		session.escribirArrayClienteSesion("favoritos", [1, 2]);
 		session.limpiarItemClienteSesion("favoritos");
-		expect(localStorage.getItem("favoritos_77")).to.be.null;
+		expect(localStorage.getItem(`favoritos_${testId}`)).to.be.null;
 	});
 
 	it("migra datos legados a la nueva clave por usuario", () => {
-		session.setUser({ id: 51, rol: "CLIENTE" });
+		const testId = "507f1f77bcf86cd799439051";
+		session.setUser({ id: testId, rol: "CLIENTE" });
 		localStorage.setItem("historial", JSON.stringify(["legacy"]));
 		const resultado = session.leerArrayClienteSesion("historial");
 		expect(resultado).to.deep.equal(["legacy"]);
 		expect(localStorage.getItem("historial")).to.be.null;
-		expect(JSON.parse(localStorage.getItem("historial_51"))).to.deep.equal([
-			"legacy",
-		]);
+		expect(
+			JSON.parse(localStorage.getItem(`historial_${testId}`))
+		).to.deep.equal(["legacy"]);
 	});
 });
 
@@ -421,10 +445,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		localStorage.clear();
 	});
 
-	afterEach(() => {
-		// limpiarUsuarioRegistrado("crud@mail.com");
-		// limpiarLibroRegistrado("crud-isbn");
-	});
+	afterEach(() => {});
 
 	it("agrega un usuario cliente mediante registro", async () => {
 		const emailUnico = `crud${Date.now()}@mail.com`;
@@ -442,7 +463,10 @@ describe("Agregar, Modificar y Eliminar", () => {
 		);
 
 		expect(resultado.success).to.be.true;
-		// Verificamos contra el store o proxy, no contra model.usuarios
+
+		expect(resultado.usuario.id).to.be.a("string");
+		expect(resultado.usuario.id).to.have.lengthOf(24);
+
 		const login = await servicioAutenticacion.iniciarSesion(
 			emailUnico,
 			"Crud123",
@@ -452,7 +476,6 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("no deja registrar emails ya existentes", async () => {
-		// Usamos un email que sabemos que existe
 		const resultado = await servicioAutenticacion.registrar(
 			"99999999Z",
 			"Test",
@@ -469,13 +492,14 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("actualiza datos del usuario en el almacén y sincroniza en nuestro almacenamiento", () => {
+		const testId = "507f1f77bcf86cd799439010";
 		almacenAutenticacion.establecerInicioSesion(
-			{ id: 10, nombre: "Inicial", rol: "CLIENTE" },
+			{ id: testId, nombre: "Inicial", rol: "CLIENTE" },
 			"token_test"
 		);
 
 		almacenAutenticacion.actualizarUsuario({
-			id: 10,
+			id: testId,
 			nombre: "Actualizado",
 			rol: "CLIENTE",
 		});
@@ -488,8 +512,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("cierra sesión limpiando el almacenamiento", () => {
+		const testId = "507f1f77bcf86cd799439020";
 		almacenAutenticacion.establecerInicioSesion(
-			{ id: 20, nombre: "Tester" },
+			{ id: testId, nombre: "Tester" },
 			"token_t"
 		);
 
@@ -500,13 +525,14 @@ describe("Agregar, Modificar y Eliminar", () => {
 	});
 
 	it("restaura sesión previamente guardada en localStorage", () => {
-		const usuario = { id: 30, nombre: "Persistente" };
+		const testId = "507f1f77bcf86cd799439030";
+		const usuario = { id: testId, nombre: "Persistente" };
 		localStorage.setItem("auth_user", JSON.stringify(usuario));
 		localStorage.setItem("auth_token", "token_persistente");
 
 		const restaurada = almacenAutenticacion.restaurarSesion();
 		expect(restaurada).to.be.true;
-		expect(almacenAutenticacion.obtenerEstado().usuario.id).to.equal(30);
+		expect(almacenAutenticacion.obtenerEstado().usuario.id).to.equal(testId);
 	});
 
 	it("almacena y limpia mensajes en session", () => {
@@ -523,8 +549,9 @@ describe("Agregar, Modificar y Eliminar", () => {
 		expect(session.consume()).to.have.lengthOf(0);
 	});
 
-	it("gestiona usuario en session storage", () => {
-		session.setUser({ id: 1, nombre: "Demo", rol: "CLIENTE" });
+	it("gestiona usuario in session storage", () => {
+		const testId = "507f1f77bcf86cd799439001";
+		session.setUser({ id: testId, nombre: "Demo", rol: "CLIENTE" });
 		expect(session.getRole()).to.equal("cliente");
 		session.clearUser();
 		expect(session.getUser()).to.be.null;
@@ -534,35 +561,24 @@ describe("Agregar, Modificar y Eliminar", () => {
 		const nuevoLibro = {
 			titulo: "Libro Proxy",
 			autor: "Autor Proxy",
-			isbn: "proxy-isbn-" + Date.now(),
+			isbn: "978-" + Date.now().toString().slice(-10),
 			precio: 20,
 			stock: 10,
 		};
 		const libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
 		expect(libroCreado).to.have.property("id");
+
+		expect(libroCreado.id).to.be.a("string");
+		expect(libroCreado.id).to.have.lengthOf(24);
 		expect(libroCreado.titulo).to.equal(nuevoLibro.titulo);
 
-		// Verificar que existe recuperándolo
 		const libroRecuperado = await libreriaProxy.getLibroPorId(libroCreado.id);
 		expect(libroRecuperado.titulo).to.equal(nuevoLibro.titulo);
 	});
 
 	it("permite modificar el stock de un libro existente mediante el proxy", async () => {
-		// Recuperamos un libro existente (ej. id 1 de la semilla)
-		// Si no existe, creamos uno primero para asegurar
-		let libro;
-		try {
-			libro = await libreriaProxy.getLibroPorId(1);
-		} catch (e) {
-			const nuevo = {
-				titulo: "Libro Stock",
-				autor: "A",
-				isbn: "stock-" + Date.now(),
-				precio: 10,
-				stock: 5,
-			};
-			libro = await libreriaProxy.crearLibro(nuevo);
-		}
+		const libros = await libreriaProxy.getLibros();
+		const libro = libros[0];
 
 		const stockInicial = libro.stock;
 		const nuevoStock = stockInicial + 5;
@@ -577,7 +593,7 @@ describe("Agregar, Modificar y Eliminar", () => {
 		const nuevoLibro = {
 			titulo: "Libro a Borrar",
 			autor: "Autor",
-			isbn: "delete-isbn-" + Date.now(),
+			isbn: "999-" + Date.now().toString().slice(-10),
 			precio: 10,
 			stock: 1,
 		};
@@ -595,33 +611,40 @@ describe("Agregar, Modificar y Eliminar", () => {
 });
 
 describe("Cálculos", () => {
-	const clienteId = 2; // Usamos un cliente de la semilla
+	let clienteId;
 
 	beforeEach(async () => {
+		const login = await servicioAutenticacion.iniciarSesion(
+			"juan@mail.com",
+			"Juanperez123",
+			"cliente"
+		);
+		clienteId = login.usuario.id;
+
 		try {
 			await libreriaProxy.vaciarCarro(clienteId);
-		} catch (e) {
-			// Ignorar si ya estaba vacío o error
-		}
+		} catch (e) {}
 	});
 
 	it("calcula el total de la compra mediante el proxy", async () => {
-		// Añadir items al carro (Libro 1: 15.95, Libro 2: 18.9)
+		const libros = await libreriaProxy.getLibros();
+		const libro1 = libros[0]; // Libro 1: 15.95
+		const libro2 = libros[1]; // Libro 2: 18.9
+
 		await libreriaProxy.agregarItemCarro(clienteId, {
-			libroId: 1,
+			libroId: libro1.id,
 			cantidad: 3,
 		});
 		await libreriaProxy.agregarItemCarro(clienteId, {
-			libroId: 2,
+			libroId: libro2.id,
 			cantidad: 1,
 		});
 
-		// Realizar compra (simulada o real) para obtener el cálculo del servidor
 		const compraPayload = {
 			clienteId: clienteId,
 			items: [
-				{ libroId: 1, cantidad: 3 },
-				{ libroId: 2, cantidad: 1 },
+				{ libroId: libro1.id, cantidad: 3 },
+				{ libroId: libro2.id, cantidad: 1 },
 			],
 			envio: {
 				nombre: "Test",
@@ -633,25 +656,20 @@ describe("Cálculos", () => {
 		};
 
 		const compra = await libreriaProxy.facturar(compraPayload);
-		// 15.95 * 3 = 47.85
-		// 18.9 * 1 = 18.9
-		// Subtotal = 66.75
-		// Si hay gastos de envío (ej. 0 o fijos), verificar.
-		// Asumimos que el servidor devuelve el total correcto.
-		// Verificamos que sea un número y coincida con lo esperado (aprox)
+
 		expect(compra.total).to.be.closeTo(66.75, 0.1); // Margen por si hay envío
 	});
 
 	it("verifica que el stock se reduce tras la compra mediante el proxy", async () => {
-		// Obtener stock inicial Libro 3
-		const libro = await libreriaProxy.getLibroPorId(3);
+		const libros = await libreriaProxy.getLibros();
+		const libro = libros[2]; // Libro 3
+
 		const stockInicial = libro.stock;
 		const cantidadCompra = 2;
 
-		// Comprar
 		const compraPayload = {
 			clienteId: clienteId,
-			items: [{ libroId: 3, cantidad: cantidadCompra }],
+			items: [{ libroId: libro.id, cantidad: cantidadCompra }],
 			envio: {
 				nombre: "Test",
 				direccion: "Test Dir",
@@ -662,8 +680,7 @@ describe("Cálculos", () => {
 		};
 		await libreriaProxy.facturar(compraPayload);
 
-		// Verificar stock final
-		const libroFinal = await libreriaProxy.getLibroPorId(3);
+		const libroFinal = await libreriaProxy.getLibroPorId(libro.id);
 		expect(libroFinal.stock).to.equal(stockInicial - cantidadCompra);
 	});
 });

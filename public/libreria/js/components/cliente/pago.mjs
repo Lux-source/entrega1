@@ -250,7 +250,7 @@ export class ClientePago extends Presenter {
 		const datosEnvio = new FormData(this.formEnvio);
 		const totales = cartService.calcularTotales(this.items, { envio: 0 });
 		const usuario = session.getUser();
-		const clienteId = Number.parseInt(usuario?.id ?? "", 10) || null;
+		const clienteId = usuario?.id ? String(usuario.id).trim() : null;
 
 		const compraPayload = {
 			items: this.items.map((item) => ({

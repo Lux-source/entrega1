@@ -1,8 +1,8 @@
 import { libroService } from "../services/libro-service.mjs";
+import mongoose from "mongoose";
 
-const parsearIdNumerico = (valor) => {
-	const id = Number.parseInt(valor ?? "", 10);
-	return Number.isFinite(id) && id > 0 ? id : null;
+const validarObjectId = (valor) => {
+	return mongoose.Types.ObjectId.isValid(valor) ? valor : null;
 };
 
 export class LibroController {
@@ -37,7 +37,7 @@ export class LibroController {
 	}
 
 	async obtenerLibro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) {
 			return res.status(400).json({ error: "Id no valido" });
 		}
@@ -58,7 +58,7 @@ export class LibroController {
 	}
 
 	async actualizarLibro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) {
 			return res.status(400).json({ error: "Id no valido" });
 		}
@@ -74,7 +74,7 @@ export class LibroController {
 	}
 
 	async eliminarLibro(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) {
 			return res.status(400).json({ error: "Id no valido" });
 		}

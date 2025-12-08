@@ -1,6 +1,8 @@
 import { db } from "../data/db-context.mjs";
 import { libroService } from "./libro-service.mjs";
 import { usuarioService } from "./usuario-service.mjs";
+import { Factura, Libro } from "../models/index.mjs";
+import mongoose from "mongoose";
 
 export class FacturaService {
 	async obtenerTodas() {
@@ -12,81 +14,121 @@ export class FacturaService {
 	}
 
 	async obtenerPorNumero(numero) {
-		const facturas = await db.obtenerTodos("facturas");
-		const normalizado = numero.toString().trim().toUpperCase();
-		return (
-			facturas.find(
-				(f) => f.numero?.toString().trim().toUpperCase() === normalizado
-			) || null
-		);
+		if (!numero) return null;
+		const factura = await Factura.buscarPorNumero(numero.toString().trim());
+		return factura ? factura.toJSON() : null;
 	}
 
 	async obtenerPorClienteId(clienteId) {
-		const facturas = await db.obtenerTodos("facturas");
-		return facturas.filter((f) => f.clienteId === clienteId);
+		if (!clienteId || !mongoose.Types.ObjectId.isValid(clienteId)) {
+			return [];
+		}
+		const facturas = await Factura.buscarPorCliente(clienteId);
+		return facturas.map((f) => f.toJSON());
 	}
 
-	async crear(datos, { generarNumero = true } = {}) {
-		const itemsNormalizados = [];
-		let total = 0;
+	async crear(datos, { generarNumero = true } = {}) {
+		let session = null;
+		let useTransaction = false;
+		const canUseTransactions = false;
 
-		// Validar items y stock
-		for (const item of datos.items || []) {
-			const libroId = Number.parseInt(item.libroId ?? item.id ?? 0, 10);
-			const cantidad = Number.parseInt(item.cantidad ?? 0, 10);
+		if (canUseTransactions) {
+			try {
+				session = await mongoose.startSession();
+				await session.startTransaction();
+				await mongoose.connection.db.command({ ping: 1 }, { session });
+				useTransaction = true;
+			} catch (error) {
+				console.warn(
+					"Transacciones no disponibles, ejecutando sin transacción"
+				);
+				if (session) {
+					await session.endSession();
+				}
+				session = null;
+			}
+		}
 
-			if (
-				!Number.isFinite(libroId) ||
-				!Number.isFinite(cantidad) ||
-				cantidad <= 0
-			)
-				continue;
+		try {
+			const itemsNormalizados = [];
+			let total = 0;
+			for (const item of datos.items || []) {
+				const libroId = item.libroId?.toString() || item.id?.toString();
+				const cantidad = Number.parseInt(item.cantidad ?? 0, 10);
 
-			const libro = await libroService.obtenerPorId(libroId);
-			if (!libro) throw new Error("Libro no encontrado para la compra");
+				if (!libroId || !mongoose.Types.ObjectId.isValid(libroId)) {
+					throw new Error("ID de libro inválido");
+				}
 
-			if (cantidad > libro.stock) {
-				throw new Error(`Stock insuficiente para el libro con id ${libro.id}`);
+				if (!Number.isFinite(cantidad) || cantidad <= 0) {
+					throw new Error("Cantidad inválida");
+				}
+
+				const libro = session
+					? await Libro.findById(libroId).session(session)
+					: await Libro.findById(libroId);
+				if (!libro) {
+					throw new Error("Libro no encontrado para la compra");
+				}
+
+				if (cantidad > libro.stock) {
+					throw new Error(`Stock insuficiente para el libro "${libro.titulo}"`);
+				}
+
+				itemsNormalizados.push({
+					libroId: new mongoose.Types.ObjectId(libroId),
+					cantidad,
+				});
+				total += libro.precio * cantidad;
 			}
 
-			itemsNormalizados.push({ libroId, cantidad });
-			total += libro.precio * cantidad;
-		}
-
-		if (datos.total !== undefined) total = datos.total;
-
-		// Actualizar stock
-		for (const item of itemsNormalizados) {
-			const libro = await libroService.obtenerPorId(item.libroId);
-			await libroService.actualizar(libro.id, {
-				stock: libro.stock - item.cantidad,
+			if (datos.total !== undefined) {
+				total = Number.parseFloat(datos.total);
+			}
+			let numeroFactura = datos.numero;
+			if (generarNumero) {
+				numeroFactura = await Factura.generarNumeroFactura();
+			}
+			const factura = new Factura({
+				numero: numeroFactura,
+				fecha: datos.fecha ?? new Date(),
+				clienteId: datos.clienteId,
+				items: itemsNormalizados,
+				total,
+				envio: datos.envio ?? {},
 			});
+
+			if (session) {
+				await factura.save({ session });
+			} else {
+				await factura.save();
+			}
+			for (const item of itemsNormalizados) {
+				const updateOptions = session ? { session } : {};
+				await Libro.updateOne(
+					{ _id: item.libroId },
+					{ $inc: { stock: -item.cantidad } },
+					updateOptions
+				);
+			}
+			if (factura.clienteId) {
+				await db.eliminarCarro(factura.clienteId.toString());
+			}
+			if (useTransaction && session) {
+				await session.commitTransaction();
+			}
+
+			return factura.toJSON();
+		} catch (error) {
+			if (useTransaction && session) {
+				await session.abortTransaction();
+			}
+			throw error;
+		} finally {
+			if (session) {
+				session.endSession();
+			}
 		}
-
-		const factura = {
-			numero: generarNumero
-				? this._generarNumeroFactura(await db.obtenerTodos("facturas"))
-				: datos.numero,
-			fecha: datos.fecha ?? new Date().toISOString(),
-			clienteId: datos.clienteId ?? null,
-			items: itemsNormalizados,
-			total,
-			envio: datos.envio ?? {},
-		};
-
-		const nuevaFactura = await db.agregar("facturas", factura);
-
-		if (nuevaFactura.clienteId) {
-			await usuarioService.vaciarCarro(nuevaFactura.clienteId);
-		}
-
-		return nuevaFactura;
-	}
-
-	_generarNumeroFactura(facturas) {
-		const count = facturas.length + 1;
-		const numero = String(count).padStart(4, "0");
-		return `FAC-${numero}`;
 	}
 
 	async reemplazarTodas(datosFacturas) {

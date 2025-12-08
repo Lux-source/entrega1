@@ -66,7 +66,7 @@ export class ClienteVerLibro extends Presenter {
 
 	async loadLibro() {
 		const id = this.getLibroIdFromRoute();
-		if (!Number.isFinite(id)) {
+		if (!id) {
 			this.libro = null;
 			return;
 		}
@@ -80,12 +80,10 @@ export class ClienteVerLibro extends Presenter {
 	}
 
 	getLibroIdFromRoute() {
-		const match = window.location.pathname.match(/\/c\/libros\/(\d+)/);
-		if (!match) {
-			return null;
-		}
-		const id = Number.parseInt(match[1], 10);
-		return Number.isFinite(id) ? id : null;
+		const match = window.location.pathname.match(
+			/\/c\/libros\/([a-fA-F0-9]{24})/
+		);
+		return match ? match[1] : null;
 	}
 
 	renderLibro() {

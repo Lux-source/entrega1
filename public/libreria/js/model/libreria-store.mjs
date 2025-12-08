@@ -34,7 +34,6 @@ class LibreriaStore {
 		};
 	}
 
-	// Libros
 	async getLibros({ force = false } = {}) {
 		if (!this.flags.librosLoaded || force) {
 			this.cache.libros = await this.proxy.getLibros();
@@ -44,19 +43,19 @@ class LibreriaStore {
 	}
 
 	async getLibroById(id, { force = false } = {}) {
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (!Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (!stringId) {
 			return null;
 		}
 
 		if (!force && this.flags.librosLoaded) {
-			const match = this.cache.libros.find((libro) => libro.id === numericId);
+			const match = this.cache.libros.find((libro) => libro.id === stringId);
 			if (match) {
 				return clone(match);
 			}
 		}
 
-		const libro = await this.proxy.getLibroPorId(numericId);
+		const libro = await this.proxy.getLibroPorId(stringId);
 		this._upsertLibro(libro);
 		return clone(libro);
 	}
@@ -75,10 +74,10 @@ class LibreriaStore {
 
 	async borrarLibro(id) {
 		await this.proxy.borrarLibro(id);
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (stringId) {
 			this.cache.libros = this.cache.libros.filter(
-				(libro) => libro.id !== numericId
+				(libro) => libro.id !== stringId
 			);
 		}
 		return true;
@@ -96,7 +95,6 @@ class LibreriaStore {
 		}
 	}
 
-	// Clientes
 	async getClientes({ force = false } = {}) {
 		if (!this.flags.clientesLoaded || force) {
 			this.cache.clientes = await this.proxy.getClientes();
@@ -106,21 +104,21 @@ class LibreriaStore {
 	}
 
 	async getClienteById(id, { force = false } = {}) {
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (!Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (!stringId) {
 			return null;
 		}
 
 		if (!force && this.flags.clientesLoaded) {
 			const match = this.cache.clientes.find(
-				(cliente) => cliente.id === numericId
+				(cliente) => cliente.id === stringId
 			);
 			if (match) {
 				return clone(match);
 			}
 		}
 
-		const cliente = await this.proxy.getClientePorId(numericId);
+		const cliente = await this.proxy.getClientePorId(stringId);
 		this._upsertCliente(cliente);
 		return clone(cliente);
 	}
@@ -139,12 +137,12 @@ class LibreriaStore {
 
 	async borrarCliente(id) {
 		await this.proxy.borrarCliente(id);
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (stringId) {
 			this.cache.clientes = this.cache.clientes.filter(
-				(cliente) => cliente.id !== numericId
+				(cliente) => cliente.id !== stringId
 			);
-			this.cache.carros.delete(numericId);
+			this.cache.carros.delete(stringId);
 		}
 		return true;
 	}
@@ -163,10 +161,9 @@ class LibreriaStore {
 		}
 	}
 
-	// Carros
 	async getCarroCliente(clienteId, { force = false } = {}) {
-		const id = Number.parseInt(clienteId ?? "", 10);
-		if (!Number.isFinite(id)) {
+		const id = String(clienteId ?? "").trim();
+		if (!id) {
 			return [];
 		}
 
@@ -180,8 +177,8 @@ class LibreriaStore {
 	}
 
 	async agregarCarroItem(clienteId, { libroId, cantidad }) {
-		const id = Number.parseInt(clienteId ?? "", 10);
-		if (!Number.isFinite(id)) {
+		const id = String(clienteId ?? "").trim();
+		if (!id) {
 			throw new Error("Id de cliente invalido");
 		}
 		const carro = await this.proxy.agregarItemCarro(id, {
@@ -193,9 +190,9 @@ class LibreriaStore {
 	}
 
 	async actualizarCarroItem(clienteId, index, cantidad) {
-		const id = Number.parseInt(clienteId ?? "", 10);
+		const id = String(clienteId ?? "").trim();
 		const posicion = Number.parseInt(index ?? "", 10);
-		if (!Number.isFinite(id) || !Number.isFinite(posicion) || posicion < 0) {
+		if (!id || !Number.isFinite(posicion) || posicion < 0) {
 			throw new Error("Parametros invalidos");
 		}
 		const carro = await this.proxy.actualizarCantidadCarro(
@@ -208,9 +205,9 @@ class LibreriaStore {
 	}
 
 	async eliminarCarroItem(clienteId, index) {
-		const id = Number.parseInt(clienteId ?? "", 10);
+		const id = String(clienteId ?? "").trim();
 		const posicion = Number.parseInt(index ?? "", 10);
-		if (!Number.isFinite(id) || !Number.isFinite(posicion) || posicion < 0) {
+		if (!id || !Number.isFinite(posicion) || posicion < 0) {
 			throw new Error("Parametros invalidos");
 		}
 		const carro = await this.proxy.eliminarItemCarro(id, posicion);
@@ -219,8 +216,8 @@ class LibreriaStore {
 	}
 
 	async vaciarCarro(clienteId) {
-		const id = Number.parseInt(clienteId ?? "", 10);
-		if (!Number.isFinite(id)) {
+		const id = String(clienteId ?? "").trim();
+		if (!id) {
 			throw new Error("Id de cliente invalido");
 		}
 		await this.proxy.vaciarCarro(id);
@@ -228,7 +225,6 @@ class LibreriaStore {
 		return [];
 	}
 
-	// Admins
 	async getAdmins({ force = false } = {}) {
 		if (!this.flags.adminsLoaded || force) {
 			this.cache.admins = await this.proxy.getAdmins();
@@ -238,19 +234,19 @@ class LibreriaStore {
 	}
 
 	async getAdminById(id, { force = false } = {}) {
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (!Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (!stringId) {
 			return null;
 		}
 
 		if (!force && this.flags.adminsLoaded) {
-			const match = this.cache.admins.find((admin) => admin.id === numericId);
+			const match = this.cache.admins.find((admin) => admin.id === stringId);
 			if (match) {
 				return clone(match);
 			}
 		}
 
-		const admin = await this.proxy.getAdminPorId(numericId);
+		const admin = await this.proxy.getAdminPorId(stringId);
 		this._upsertAdmin(admin);
 		return clone(admin);
 	}
@@ -269,10 +265,10 @@ class LibreriaStore {
 
 	async borrarAdmin(id) {
 		await this.proxy.borrarAdmin(id);
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (stringId) {
 			this.cache.admins = this.cache.admins.filter(
-				(admin) => admin.id !== numericId
+				(admin) => admin.id !== stringId
 			);
 		}
 		return true;
@@ -290,7 +286,6 @@ class LibreriaStore {
 		}
 	}
 
-	// Facturas / Compras
 	async getFacturas({ force = false } = {}) {
 		if (!this.flags.facturasLoaded || force) {
 			this.cache.facturas = await this.proxy.getFacturas();
@@ -300,8 +295,8 @@ class LibreriaStore {
 	}
 
 	async getFacturasPorCliente(clienteId, { force = false } = {}) {
-		const id = Number.parseInt(clienteId ?? "", 10);
-		if (!Number.isFinite(id)) {
+		const id = String(clienteId ?? "").trim();
+		if (!id) {
 			return [];
 		}
 		const facturas = force
@@ -310,7 +305,6 @@ class LibreriaStore {
 					(factura) => factura.clienteId === id
 			  );
 		if (force) {
-			// fusionar cache con las actualizadas para el cliente concreto
 			const restantes = this.cache.facturas.filter(
 				(factura) => factura.clienteId !== id
 			);
@@ -320,21 +314,21 @@ class LibreriaStore {
 	}
 
 	async getFacturaById(id, { force = false } = {}) {
-		const numericId = Number.parseInt(id ?? "", 10);
-		if (!Number.isFinite(numericId)) {
+		const stringId = String(id ?? "").trim();
+		if (!stringId) {
 			return null;
 		}
 
 		if (!force && this.flags.facturasLoaded) {
 			const match = this.cache.facturas.find(
-				(factura) => factura.id === numericId
+				(factura) => factura.id === stringId
 			);
 			if (match) {
 				return clone(match);
 			}
 		}
 
-		const factura = await this.proxy.getFacturaPorId(numericId);
+		const factura = await this.proxy.getFacturaPorId(stringId);
 		this._upsertFactura(factura);
 		return clone(factura);
 	}
@@ -343,11 +337,10 @@ class LibreriaStore {
 		const factura = await this.proxy.facturar(payload);
 		this._upsertFactura(factura);
 		if (payload?.clienteId || payload?.usuarioId) {
-			const clienteId = Number.parseInt(
-				payload.clienteId ?? payload.usuarioId ?? "",
-				10
-			);
-			if (Number.isFinite(clienteId)) {
+			const clienteId = String(
+				payload.clienteId ?? payload.usuarioId ?? ""
+			).trim();
+			if (clienteId) {
 				this.cache.carros.delete(clienteId);
 			}
 		}
@@ -369,7 +362,6 @@ class LibreriaStore {
 		}
 	}
 
-	// Utilidades
 	reset() {
 		this.cache.libros = [];
 		this.cache.clientes = [];

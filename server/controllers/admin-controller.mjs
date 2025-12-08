@@ -1,8 +1,8 @@
 import { usuarioService } from "../services/usuario-service.mjs";
+import mongoose from "mongoose";
 
-const parsearIdNumerico = (valor) => {
-	const id = Number.parseInt(valor ?? "", 10);
-	return Number.isFinite(id) && id > 0 ? id : null;
+const validarObjectId = (valor) => {
+	return mongoose.Types.ObjectId.isValid(valor) ? valor : null;
 };
 
 export class AdminController {
@@ -23,7 +23,7 @@ export class AdminController {
 	}
 
 	async obtenerAdmin(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		const admin = await usuarioService.obtenerAdminPorId(id);
@@ -42,7 +42,7 @@ export class AdminController {
 	}
 
 	async actualizarAdmin(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		try {
@@ -56,7 +56,7 @@ export class AdminController {
 	}
 
 	async eliminarAdmin(req, res) {
-		const id = parsearIdNumerico(req.params.id);
+		const id = validarObjectId(req.params.id);
 		if (!id) return res.status(400).json({ error: "Id no valido" });
 
 		const eliminado = await usuarioService.eliminarAdmin(id);

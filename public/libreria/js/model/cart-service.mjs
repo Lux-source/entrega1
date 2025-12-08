@@ -1,24 +1,21 @@
 import { session } from "../commons/libreria-session.mjs";
 import { libreriaStore } from "./libreria-store.mjs";
 
-const parsePositiveInt = (value) => {
-	const parsed = Number.parseInt(value ?? "", 10);
-	return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-};
-
 class CartService {
 	constructor(store = libreriaStore) {
 		this.store = store;
 	}
 
 	_resolveClienteId(clienteId) {
-		const id = parsePositiveInt(clienteId);
-		if (id) {
-			return id;
+		if (clienteId !== undefined && clienteId !== null) {
+			const id = String(clienteId).trim();
+			if (id) {
+				return id;
+			}
 		}
 
 		const usuario = session.getUser();
-		const sessionId = parsePositiveInt(usuario?.id);
+		const sessionId = usuario?.id ? String(usuario.id).trim() : null;
 		if (!sessionId) {
 			throw new Error("Cliente no autenticado");
 		}

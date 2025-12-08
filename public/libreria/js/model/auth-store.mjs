@@ -6,9 +6,7 @@ class AlmacenAutenticacion {
 		this.error = null;
 		this.estaAutenticado = false;
 		this.observadores = [];
-	}
-
-	// Suscribir para cambios reactivos
+	}
 	suscribir(callback) {
 		this.observadores.push(callback);
 	}
@@ -79,9 +77,7 @@ class AlmacenAutenticacion {
 	limpiarError() {
 		this.error = null;
 		this.notificarObservadores();
-	}
-
-	// Recuperar sesión del localStorage
+	}
 	restaurarSesion() {
 		const user = localStorage.getItem("auth_user");
 		const token = localStorage.getItem("auth_token");
