@@ -9,7 +9,7 @@ SPA de libreria con backend Express/Mongo, proxy de datos en el front y vistas m
 - `app.mjs`: arranque de servidor Express y registro de rutas.
 - `server/`
   - `config/`: base de datos (`database.mjs`) y `passport`.
-  - `data/`: `db-context.mjs` (semillas/reinicio) y `database.json`.
+  - `data/`: `db-context.mjs` (semillas/reinicio).
   - `domain/`: entidades de dominio simples.
   - `models/`: modelos Mongoose (Libro, Usuario, Factura, Carro).
   - `controllers/`: logica de rutas (libros, cliente, admin, factura).
