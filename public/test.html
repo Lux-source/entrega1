@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tests - Librería Online</title>
+    <title>Tests Proxy - Librería Online</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.css">
 </head>
 
@@ -19,8 +19,8 @@
         mocha.setup('bdd');
         window.expect = chai.expect;
 
-        // Importamos los tests
-        await import('../test/model.spec.js');
+        // Importamos los tests del proxy
+        await import('../test/proxy.spec.js');
 
         // Ejecutamos tests
         mocha.run();

@@ -7,7 +7,8 @@
 	"scripts": {
 		"start": "node app.mjs",
 		"dev": "node app.mjs",
-		"test": "echo \"Abrir http://localhost:3000/test.html en el navegador\" && node app.mjs",
+		"test": "set NODE_ENV=test&& mocha ./test/model.spec.js ./test/rest.spec.js --exit",
+		"test-model": "set NODE_ENV=test&& mocha ./test/model.spec.js --exit",
 		"test-rest": "set NODE_ENV=test&& mocha ./test/rest.spec.js --exit"
 	},
 	"keywords": [
