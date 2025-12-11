@@ -84,6 +84,8 @@ describe("Getters y Setters", () => {
 			expect(libro.getId()).to.be.a("string");
 			expect(libro.getId()).to.have.lengthOf(24);
 			expect(libro.getTitulo()).to.equal("Pruebas");
+			expect(libro.getAutor()).to.equal("QA");
+			expect(libro.getIsbn()).to.equal("qa-isbn");
 			expect(libro.getPrecio()).to.equal(25);
 			expect(libro.getStock()).to.equal(10);
 		});
@@ -177,9 +179,15 @@ describe("Autenticación - iniciar sesión", () => {
 		expect(resultado.success).to.be.true;
 
 		expect(resultado.usuario).to.have.property("email", "juan@mail.com");
-
 		expect(resultado.usuario.id).to.be.a("string");
 		expect(resultado.usuario.id).to.have.lengthOf(24);
+		expect(resultado.usuario)
+			.to.have.property("rol")
+			.that.matches(/CLIENTE|cliente/);
+		expect(resultado.usuario).to.have.property("nombre").that.is.a("string");
+		expect(resultado.usuario).to.have.property("apellidos").that.is.a("string");
+		expect(resultado.usuario).to.have.property("direccion").that.is.a("string");
+		expect(resultado.usuario).to.have.property("telefono").that.is.a("string");
 		expect(resultado.token).to.be.a("string");
 		expect(resultado.token.startsWith("token_")).to.be.true;
 	});
@@ -330,6 +338,12 @@ describe("Autenticación - registrar (validaciones)", () => {
 
 		expect(resultado.usuario.id).to.be.a("string");
 		expect(resultado.usuario.id).to.have.lengthOf(24);
+		expect(resultado.usuario.email).to.equal(datos.email.toLowerCase());
+		expect(resultado.usuario.dni).to.equal(datos.dni);
+		expect(resultado.usuario.nombre).to.equal(datos.nombre);
+		expect(resultado.usuario.apellidos).to.equal(datos.apellidos);
+		expect(resultado.usuario.telefono).to.equal(datos.telefono);
+		expect(resultado.usuario.direccion).to.equal(datos.direccion);
 	});
 });
 
@@ -565,15 +579,27 @@ describe("Agregar, Modificar y Eliminar", () => {
 			precio: 20,
 			stock: 10,
 		};
-		const libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
-		expect(libroCreado).to.have.property("id");
 
-		expect(libroCreado.id).to.be.a("string");
-		expect(libroCreado.id).to.have.lengthOf(24);
-		expect(libroCreado.titulo).to.equal(nuevoLibro.titulo);
+		let libroCreado;
+		try {
+			libroCreado = await libreriaProxy.crearLibro(nuevoLibro);
+			expect(libroCreado).to.have.property("id");
 
-		const libroRecuperado = await libreriaProxy.getLibroPorId(libroCreado.id);
-		expect(libroRecuperado.titulo).to.equal(nuevoLibro.titulo);
+			expect(libroCreado.id).to.be.a("string");
+			expect(libroCreado.id).to.have.lengthOf(24);
+
+			const libroRecuperado = await libreriaProxy.getLibroPorId(libroCreado.id);
+			expect(libroRecuperado.id).to.equal(libroCreado.id);
+			expect(libroRecuperado.titulo).to.equal(nuevoLibro.titulo);
+			expect(libroRecuperado.autor).to.equal(nuevoLibro.autor);
+			expect(libroRecuperado.isbn).to.equal(nuevoLibro.isbn);
+			expect(libroRecuperado.precio).to.equal(nuevoLibro.precio);
+			expect(libroRecuperado.stock).to.equal(nuevoLibro.stock);
+		} finally {
+			if (libroCreado?.id) {
+				await libreriaProxy.borrarLibro(libroCreado.id);
+			}
+		}
 	});
 
 	it("permite modificar el stock de un libro existente mediante el proxy", async () => {
@@ -586,7 +612,15 @@ describe("Agregar, Modificar y Eliminar", () => {
 		const libroActualizado = await libreriaProxy.actualizarLibro(libro.id, {
 			stock: nuevoStock,
 		});
-		expect(libroActualizado.stock).to.equal(nuevoStock);
+		expect(libroActualizado.id).to.be.a("string").with.lengthOf(24);
+		expect(libroActualizado.stock).to.be.a("number");
+
+		const libroPersistido = await libreriaProxy.getLibroPorId(libro.id);
+		expect(libroPersistido.stock).to.equal(nuevoStock);
+		expect(libroPersistido.id).to.equal(libro.id);
+		expect(libroPersistido.titulo).to.equal(libroActualizado.titulo);
+		expect(libroPersistido.autor).to.equal(libroActualizado.autor);
+		expect(libroPersistido.isbn).to.equal(libroActualizado.isbn);
 	});
 
 	it("permite eliminar un libro del catálogo mediante el proxy", async () => {

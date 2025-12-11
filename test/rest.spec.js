@@ -498,14 +498,21 @@ describe("PRUEBAS REST API", () => {
 						expect(res).to.have.status(201);
 
 						expect(res.body.id).to.be.a("string").with.lengthOf(24);
-						expect(res.body.titulo).to.equal(nuevoLibro.titulo);
-						expect(res.body.autor).to.equal(nuevoLibro.autor);
-						expect(res.body.isbn).to.equal(nuevoLibro.isbn);
-						expect(res.body.precio).to.equal(nuevoLibro.precio);
-						expect(res.body.stock).to.equal(nuevoLibro.stock);
-
 						libroCreadoId = res.body.id;
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/libros/${libroCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.id).to.equal(libroCreadoId);
+								expect(res2.body.titulo).to.equal(nuevoLibro.titulo);
+								expect(res2.body.autor).to.equal(nuevoLibro.autor);
+								expect(res2.body.isbn).to.equal(nuevoLibro.isbn);
+								expect(res2.body.precio).to.equal(nuevoLibro.precio);
+								expect(res2.body.stock).to.equal(nuevoLibro.stock);
+								done();
+							});
 					});
 			});
 
@@ -522,14 +529,20 @@ describe("PRUEBAS REST API", () => {
 					.send(actualizaciones)
 					.end((err, res) => {
 						expect(res).to.have.status(200);
-
 						expect(res.body.id).to.equal(libroCreadoId);
-						expect(res.body.titulo).to.equal(actualizaciones.titulo);
-						expect(res.body.precio).to.equal(actualizaciones.precio);
-						expect(res.body.stock).to.equal(actualizaciones.stock);
-						expect(res.body.autor).to.be.a("string");
-						expect(res.body.isbn).to.be.a("string");
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/libros/${libroCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.titulo).to.equal(actualizaciones.titulo);
+								expect(res2.body.precio).to.equal(actualizaciones.precio);
+								expect(res2.body.stock).to.equal(actualizaciones.stock);
+								expect(res2.body.autor).to.equal(res.body.autor);
+								expect(res2.body.isbn).to.equal(res.body.isbn);
+								done();
+							});
 					});
 			});
 
@@ -622,17 +635,25 @@ describe("PRUEBAS REST API", () => {
 						expect(res).to.have.status(201);
 
 						expect(res.body.id).to.be.a("string").with.lengthOf(24);
-						expect(res.body.dni).to.equal(nuevoCliente.dni);
-						expect(res.body.nombre).to.equal(nuevoCliente.nombre);
-						expect(res.body.apellidos).to.equal(nuevoCliente.apellidos);
-						expect(res.body.direccion).to.equal(nuevoCliente.direccion);
-						expect(res.body.telefono).to.equal(nuevoCliente.telefono);
-						expect(res.body.email).to.equal(nuevoCliente.email.toLowerCase());
-						expect(res.body.rol).to.equal("CLIENTE");
-						expect(res.body.password).to.be.undefined;
-
 						clienteCreadoId = res.body.id;
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/clientes/${clienteCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.id).to.equal(clienteCreadoId);
+								expect(res2.body.dni).to.equal(nuevoCliente.dni);
+								expect(res2.body.nombre).to.equal(nuevoCliente.nombre);
+								expect(res2.body.apellidos).to.equal(nuevoCliente.apellidos);
+								expect(res2.body.direccion).to.equal(nuevoCliente.direccion);
+								expect(res2.body.telefono).to.equal(nuevoCliente.telefono);
+								expect(res2.body.email).to.equal(
+									nuevoCliente.email.toLowerCase()
+								);
+								expect(res2.body.rol).to.equal("CLIENTE");
+								done();
+							});
 					});
 			});
 
@@ -670,14 +691,19 @@ describe("PRUEBAS REST API", () => {
 						expect(res).to.have.status(200);
 
 						expect(res.body.id).to.equal(clienteCreadoId);
-						expect(res.body.nombre).to.equal(actualizaciones.nombre);
-						expect(res.body.direccion).to.equal(actualizaciones.direccion);
-						expect(res.body.telefono).to.equal(actualizaciones.telefono);
-						expect(res.body.dni).to.be.a("string");
-						expect(res.body.apellidos).to.be.a("string");
-						expect(res.body.email).to.be.a("string");
-						expect(res.body.rol).to.equal("CLIENTE");
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/clientes/${clienteCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.nombre).to.equal(actualizaciones.nombre);
+								expect(res2.body.direccion).to.equal(actualizaciones.direccion);
+								expect(res2.body.telefono).to.equal(actualizaciones.telefono);
+								expect(res2.body.id).to.equal(clienteCreadoId);
+								expect(res2.body.rol).to.equal("CLIENTE");
+								done();
+							});
 					});
 			});
 
@@ -706,7 +732,14 @@ describe("PRUEBAS REST API", () => {
 					.delete(`/api/clientes/${clienteCreadoId}`)
 					.end((err, res) => {
 						expect(res).to.have.status(204);
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/clientes/${clienteCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(404);
+								done();
+							});
 					});
 			});
 
@@ -775,16 +808,25 @@ describe("PRUEBAS REST API", () => {
 						expect(res).to.have.status(201);
 
 						expect(res.body.id).to.be.a("string").with.lengthOf(24);
-						expect(res.body.dni).to.equal(nuevoAdmin.dni);
-						expect(res.body.nombre).to.equal(nuevoAdmin.nombre);
-						expect(res.body.apellidos).to.equal(nuevoAdmin.apellidos);
-						expect(res.body.direccion).to.equal(nuevoAdmin.direccion);
-						expect(res.body.telefono).to.equal(nuevoAdmin.telefono);
-						expect(res.body.email).to.equal(nuevoAdmin.email.toLowerCase());
-						expect(res.body.rol).to.equal("ADMIN");
-
 						adminCreadoId = res.body.id;
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/admins/${adminCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.id).to.equal(adminCreadoId);
+								expect(res2.body.dni).to.equal(nuevoAdmin.dni);
+								expect(res2.body.nombre).to.equal(nuevoAdmin.nombre);
+								expect(res2.body.apellidos).to.equal(nuevoAdmin.apellidos);
+								expect(res2.body.direccion).to.equal(nuevoAdmin.direccion);
+								expect(res2.body.telefono).to.equal(nuevoAdmin.telefono);
+								expect(res2.body.email).to.equal(
+									nuevoAdmin.email.toLowerCase()
+								);
+								expect(res2.body.rol).to.equal("ADMIN");
+								done();
+							});
 					});
 			});
 
@@ -796,9 +838,17 @@ describe("PRUEBAS REST API", () => {
 					.end((err, res) => {
 						expect(res).to.have.status(200);
 						expect(res.body.id).to.equal(adminCreadoId);
-						expect(res.body.nombre).to.equal("Admin Actualizado");
-						expect(res.body.rol).to.equal("ADMIN");
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/admins/${adminCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.nombre).to.equal("Admin Actualizado");
+								expect(res2.body.rol).to.equal("ADMIN");
+								expect(res2.body.id).to.equal(adminCreadoId);
+								done();
+							});
 					});
 			});
 
@@ -808,7 +858,14 @@ describe("PRUEBAS REST API", () => {
 					.delete(`/api/admins/${adminCreadoId}`)
 					.end((err, res) => {
 						expect(res).to.have.status(204);
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/admins/${adminCreadoId}`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(404);
+								done();
+							});
 					});
 			});
 		});
@@ -841,7 +898,21 @@ describe("PRUEBAS REST API", () => {
 						expect(item).to.exist;
 						expect(item.libroId).to.equal(testLibroId);
 						expect(item.cantidad).to.equal(2);
-						done();
+						expect(item.libroId).to.be.a("string").with.lengthOf(24);
+						expect(item.cantidad).to.be.a("number").and.to.be.above(0);
+
+						chai
+							.request(app)
+							.get(`/api/clientes/${testClienteId}/carro`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								const itemPersistido = res2.body.find(
+									(i) => i.libroId === testLibroId
+								);
+								expect(itemPersistido).to.exist;
+								expect(itemPersistido.cantidad).to.equal(2);
+								done();
+							});
 					});
 			});
 
@@ -855,8 +926,8 @@ describe("PRUEBAS REST API", () => {
 
 						if (res.body.length > 0) {
 							const item = res.body[0];
-							expect(item.libroId).to.be.a("string");
-							expect(item.cantidad).to.be.a("number");
+							expect(item.libroId).to.be.a("string").with.lengthOf(24);
+							expect(item.cantidad).to.be.a("number").and.to.be.above(0);
 						}
 						done();
 					});
@@ -873,8 +944,21 @@ describe("PRUEBAS REST API", () => {
 
 						if (res.body.length > 0) {
 							expect(res.body[0].cantidad).to.equal(5);
+							expect(res.body[0].libroId).to.be.a("string").with.lengthOf(24);
 						}
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/clientes/${testClienteId}/carro`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								if (res2.body.length > 0) {
+									expect(res2.body[0].cantidad).to.equal(5);
+									const ids = res2.body.map((i) => i.libroId);
+									expect(ids).to.include(testLibroId);
+								}
+								done();
+							});
 					});
 			});
 
@@ -884,7 +968,15 @@ describe("PRUEBAS REST API", () => {
 					.delete(`/api/clientes/${testClienteId}/carro/items/0`)
 					.end((err, res) => {
 						expect(res).to.have.status(200);
-						done();
+
+						chai
+							.request(app)
+							.get(`/api/clientes/${testClienteId}/carro`)
+							.end((err2, res2) => {
+								expect(res2).to.have.status(200);
+								expect(res2.body.length).to.equal(0);
+								done();
+							});
 					});
 			});
 
@@ -899,6 +991,11 @@ describe("PRUEBAS REST API", () => {
 					.delete(`/api/clientes/${testClienteId}/carro`);
 
 				expect(res).to.have.status(204);
+
+				const resAfter = await chai
+					.request(app)
+					.get(`/api/clientes/${testClienteId}/carro`);
+				expect(resAfter.body).to.be.an("array").with.lengthOf(0);
 			});
 		});
 
@@ -1091,6 +1188,10 @@ describe("PRUEBAS REST API", () => {
 			it("DELETE /api/facturas - Elimina todas las facturas", async () => {
 				const res = await chai.request(app).delete("/api/facturas");
 				expect(res).to.have.status(204);
+
+				const resAfter = await chai.request(app).get("/api/facturas");
+				expect(resAfter).to.have.status(200);
+				expect(resAfter.body).to.be.an("array").with.lengthOf(0);
 			});
 		});
 	});

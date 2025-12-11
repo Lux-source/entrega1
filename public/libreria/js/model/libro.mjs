@@ -6,19 +6,27 @@ export class Libro {
 		this.isbn = isbn;
 		this.precio = precio;
 		this.stock = stock;
-	}
+	}
+
 	getId() {
 		return this.id;
 	}
 	getTitulo() {
 		return this.titulo;
 	}
+	getAutor() {
+		return this.autor;
+	}
+	getIsbn() {
+		return this.isbn;
+	}
 	getPrecio() {
 		return this.precio;
 	}
 	getStock() {
 		return this.stock;
-	}
+	}
+
 	setStock(stock) {
 		if (stock < 0) throw new Error("El stock no puede ser negativo");
 		this.stock = stock;

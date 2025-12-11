@@ -41,6 +41,8 @@ describe("PRUEBAS DE MODELO", () => {
 				expect(libroJSON.isbn).to.equal(datosLibro.isbn);
 				expect(libroJSON.precio).to.equal(datosLibro.precio);
 				expect(libroJSON.stock).to.equal(datosLibro.stock);
+				expect(libro.getAutor()).to.equal(datosLibro.autor);
+				expect(libro.getIsbn()).to.equal(datosLibro.isbn);
 
 				await Libro.findByIdAndDelete(libro._id);
 			});
@@ -81,8 +83,13 @@ describe("PRUEBAS DE MODELO", () => {
 				await libro.actualizarStock(20);
 
 				const libroActualizado = await Libro.findById(libro._id);
+				const libroJSON = libroActualizado.toJSON();
 				expect(libroActualizado.precio).to.equal(15.99);
 				expect(libroActualizado.stock).to.equal(20);
+				expect(libroJSON.titulo).to.equal("Test Update");
+				expect(libroJSON.autor).to.equal("Test Author");
+				expect(libroJSON.isbn).to.equal("978-84-000-0003-3");
+				expect(libroJSON.id).to.be.a("string").with.lengthOf(24);
 
 				await Libro.findByIdAndDelete(libro._id);
 			});
@@ -160,6 +167,14 @@ describe("PRUEBAS DE MODELO", () => {
 				expect(usuario.password).to.not.equal(passwordOriginal);
 				const esValida = await usuario.compararPassword(passwordOriginal);
 				expect(esValida).to.be.true;
+				const usuarioJSON = usuario.toJSON();
+				expect(usuarioJSON.id).to.be.a("string").with.lengthOf(24);
+				expect(usuarioJSON.email).to.equal("test.password@mail.com");
+				expect(usuarioJSON.rol).to.equal("CLIENTE");
+				expect(usuarioJSON.nombre).to.equal("Test");
+				expect(usuarioJSON.apellidos).to.equal("Password");
+				expect(usuarioJSON.direccion).to.equal("Calle Test");
+				expect(usuarioJSON.telefono).to.equal("600000001");
 
 				await Usuario.findByIdAndDelete(usuario._id);
 			});
@@ -868,6 +883,10 @@ describe("PRUEBAS DE MODELO", () => {
 				expect(usuarioJSON.nombre).to.equal(datosUsuario.nombre);
 				expect(usuarioJSON.apellidos).to.equal(datosUsuario.apellidos);
 				expect(usuarioJSON.email).to.equal(datosUsuario.email.toLowerCase());
+				expect(usuarioJSON.direccion).to.equal(datosUsuario.direccion);
+				expect(usuarioJSON.telefono).to.equal(datosUsuario.telefono);
+				expect(usuarioJSON.rol).to.equal("CLIENTE");
+				expect(usuarioJSON.id).to.be.a("string").with.lengthOf(24);
 
 				await Usuario.findByIdAndDelete(usuario._id);
 			});
@@ -895,6 +914,11 @@ describe("PRUEBAS DE MODELO", () => {
 				expect(usuario.dni).to.equal(datosUsuario.dni);
 				expect(usuario.nombre).to.equal(datosUsuario.nombre);
 				expect(usuario.email).to.equal(datosUsuario.email.toLowerCase());
+				expect(usuario.apellidos).to.equal(datosUsuario.apellidos);
+				expect(usuario.direccion).to.equal(datosUsuario.direccion);
+				expect(usuario.telefono).to.equal(datosUsuario.telefono);
+				expect(usuario.rol).to.equal("CLIENTE");
+				expect(usuario._id.toString()).to.have.lengthOf(24);
 
 				await Usuario.findByIdAndDelete(usuario._id);
 			});
@@ -1139,6 +1163,15 @@ describe("PRUEBAS DE MODELO", () => {
 				expect(facturaJSON.numero).to.equal("FAC-SEARCH-001");
 				expect(facturaJSON.clienteId).to.equal(clienteId.toString());
 				expect(facturaJSON.total).to.equal(50.0);
+				expect(facturaJSON.id).to.be.a("string").with.lengthOf(24);
+				expect(facturaJSON.items).to.be.an("array").with.lengthOf(1);
+				expect(facturaJSON.items[0].libroId).to.equal(libroId.toString());
+				expect(facturaJSON.items[0].cantidad).to.equal(2);
+				expect(facturaJSON.envio.nombre).to.equal("Test");
+				expect(facturaJSON.envio.direccion).to.equal("Test Dir");
+				expect(facturaJSON.envio.ciudad).to.equal("Madrid");
+				expect(facturaJSON.envio.cp).to.equal("28001");
+				expect(facturaJSON.envio.telefono).to.equal("600000000");
 
 				await Factura.findByIdAndDelete(factura._id);
 			});
@@ -1181,6 +1214,15 @@ describe("PRUEBAS DE MODELO", () => {
 				const numeros = facturas.map((f) => f.numero);
 				expect(numeros).to.include("FAC-CLIENT-001");
 				expect(numeros).to.include("FAC-CLIENT-002");
+				facturas.forEach((f) => {
+					expect(f.id.toString()).to.have.lengthOf(24);
+					expect(f.clienteId.toString()).to.equal(clienteId.toString());
+					expect(f.envio.nombre).to.be.a("string");
+					expect(f.envio.direccion).to.be.a("string");
+					expect(f.envio.ciudad).to.be.a("string");
+					expect(f.envio.cp).to.be.a("string");
+					expect(f.envio.telefono).to.be.a("string");
+				});
 
 				await Factura.findByIdAndDelete(factura1._id);
 				await Factura.findByIdAndDelete(factura2._id);
@@ -1459,7 +1501,7 @@ describe("PRUEBAS DE MODELO", () => {
 			const numero1 = await Factura.generarNumeroFactura();
 			expect(numero1).to.equal("FAC-0001");
 
-			await Factura.create({
+			const factura1 = await Factura.create({
 				numero: numero1,
 				fecha: new Date(),
 				clienteId: clienteId,
@@ -1473,11 +1515,16 @@ describe("PRUEBAS DE MODELO", () => {
 					telefono: "600000000",
 				},
 			});
+			const factura1JSON = factura1.toJSON();
+			expect(factura1JSON.id).to.be.a("string").with.lengthOf(24);
+			expect(factura1JSON.clienteId).to.equal(clienteId.toString());
+			expect(factura1JSON.items).to.be.an("array").with.lengthOf(0);
+			expect(factura1JSON.envio.nombre).to.equal("Test");
 
 			const numero2 = await Factura.generarNumeroFactura();
 			expect(numero2).to.equal("FAC-0002");
 
-			await Factura.create({
+			const factura2 = await Factura.create({
 				numero: numero2,
 				fecha: new Date(),
 				clienteId: clienteId,
@@ -1491,9 +1538,14 @@ describe("PRUEBAS DE MODELO", () => {
 					telefono: "600000000",
 				},
 			});
+			expect(factura2.clienteId.toString()).to.equal(clienteId.toString());
+			expect(factura2.items).to.have.lengthOf(0);
+			expect(factura2.envio.cp).to.equal("00000");
 
 			const numero3 = await Factura.generarNumeroFactura();
 			expect(numero3).to.equal("FAC-0003");
+
+			await Factura.deleteMany({});
 		});
 
 		it("agregar item existente al carro suma cantidades", async () => {
@@ -1507,6 +1559,10 @@ describe("PRUEBAS DE MODELO", () => {
 
 			expect(carroActualizado.items).to.have.lengthOf(1);
 			expect(carroActualizado.items[0].cantidad).to.equal(5);
+			expect(carroActualizado._id.toString()).to.have.lengthOf(24);
+			expect(carroActualizado.clienteId.toString()).to.equal(
+				clienteId.toString()
+			);
 
 			await Carro.findByIdAndDelete(carro._id);
 		});
@@ -1530,6 +1586,12 @@ describe("PRUEBAS DE MODELO", () => {
 			}
 
 			expect(totalCalculado).to.be.closeTo(50.8, 0.01);
+			expect(carroPopulado._id.toString()).to.have.lengthOf(24);
+			expect(carroPopulado.clienteId.toString()).to.equal(clienteId.toString());
+			carroPopulado.items.forEach((item) => {
+				expect(item.libroId._id.toString()).to.have.lengthOf(24);
+				expect(item.cantidad).to.be.a("number");
+			});
 
 			await Carro.findByIdAndDelete(carro._id);
 		});

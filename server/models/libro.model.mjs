@@ -23,7 +23,6 @@ const libroSchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (v) {
-
 					return /^[\d-]+$/.test(v);
 				},
 				message: "El ISBN debe contener solo números y guiones",
@@ -106,6 +105,14 @@ libroSchema.methods.actualizarStock = function (stock) {
 	}
 	this.stock = stock;
 	return this.save();
+};
+
+libroSchema.methods.getAutor = function () {
+	return this.autor;
+};
+
+libroSchema.methods.getIsbn = function () {
+	return this.isbn;
 };
 
 libroSchema.statics.buscarPorIsbn = function (isbn) {
